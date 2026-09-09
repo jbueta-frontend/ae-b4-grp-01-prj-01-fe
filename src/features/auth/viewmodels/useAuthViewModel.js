@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { validateAuthForm } from '../models/authModel';
+import { getAuthErrorMessage } from '../../../shared/utils/errorHandler';
 
 export function useAuthViewModel(defaultTab = 'login') {
   const [tab, setTab] = useState(defaultTab);
@@ -68,7 +69,7 @@ export function useAuthViewModel(defaultTab = 'login') {
       }
       navigate(redirectPath);
     } catch (err) {
-      setApiError(err.message || 'Authentication failed. Please try again.');
+      setApiError(getAuthErrorMessage(err, tab));
     } finally {
       setLoading(false);
     }

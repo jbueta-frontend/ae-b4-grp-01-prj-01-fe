@@ -4,6 +4,21 @@
  * into clear, user-friendly, actionable messages.
  */
 
+// Helper to safely extract a non-empty string and reject [object Object] artifacts
+function cleanString(val) {
+  if (typeof val !== 'string') return null;
+  const trimmed = val.trim();
+  if (!trimmed) return null;
+  // Reject raw Javascript object serialization artifacts
+  if (
+    trimmed.toLowerCase().includes('[object') ||
+    trimmed.includes('status code')
+  ) {
+    return null;
+  }
+  return trimmed;
+}
+
 export function getAuthErrorMessage(err, context = 'login') {
   if (!err) {
     return context === 'login'
@@ -11,29 +26,34 @@ export function getAuthErrorMessage(err, context = 'login') {
       : 'Registration failed. Please try again.';
   }
 
-  // 0. Handle string input
+  // 0. Handle raw string input safely
   if (typeof err === 'string') {
-    const lower = err.trim().toLowerCase();
-    if (
-      !['unauthorized', 'not found', 'bad request', 'error', 'failed'].includes(
-        lower
-      )
-    ) {
-      return err;
+    const cleaned = cleanString(err);
+    const genericPhrases = [
+      'unauthorized',
+      'bad request',
+      'not found',
+      'forbidden',
+      'internal server error',
+      'error',
+      'failed',
+      'request failed',
+    ];
+    if (cleaned && !genericPhrases.includes(cleaned.toLowerCase())) {
+      return cleaned;
     }
   }
 
-  // 1. Check if backend returned a specific, readable message string
+  // 1. Check if backend returned a specific readable message
+  // Backend format: { success: false, error: { code: "UNAUTHORIZED", message: "Invalid email or password" } }
   const rawBackendMessage =
-    (typeof err?.message === 'string' &&
-      err.message !== 'Network Error' &&
-      !err.message.includes('status code') &&
-      err.message) ||
-    (typeof err?.error === 'string' && err.error) ||
-    (typeof err?.data?.message === 'string' && err.data.message) ||
-    (typeof err?.response?.data?.message === 'string' &&
-      err.response.data.message) ||
-    (typeof err?.response?.data?.error === 'string' && err.response.data.error);
+    cleanString(err?.error?.message) ||
+    cleanString(err?.response?.data?.error?.message) ||
+    cleanString(err?.response?.data?.message) ||
+    cleanString(err?.data?.message) ||
+    cleanString(err?.data?.error?.message) ||
+    cleanString(typeof err?.error === 'string' ? err.error : null) ||
+    cleanString(err?.message);
 
   const genericPhrases = [
     'unauthorized',
@@ -48,25 +68,43 @@ export function getAuthErrorMessage(err, context = 'login') {
 
   if (
     rawBackendMessage &&
-    !genericPhrases.includes(rawBackendMessage.trim().toLowerCase())
+    !genericPhrases.includes(rawBackendMessage.toLowerCase())
   ) {
     return rawBackendMessage;
   }
 
   // 2. Check for backend array of validation errors (e.g. express-validator / Zod)
-  const validationErrors = err?.errors || err?.response?.data?.errors;
+  const validationErrors =
+    err?.errors ||
+    err?.error?.details ||
+    err?.response?.data?.errors ||
+    err?.response?.data?.error?.details;
+
   if (Array.isArray(validationErrors) && validationErrors.length > 0) {
     const first = validationErrors[0];
-    if (typeof first === 'string') return first;
-    if (first?.msg) return first.msg;
-    if (first?.message) return first.message;
+    if (typeof first === 'string') {
+      const cleaned = cleanString(first);
+      if (cleaned) return cleaned;
+    }
+    if (first?.msg) {
+      const cleaned = cleanString(first.msg);
+      if (cleaned) return cleaned;
+    }
+    if (first?.message) {
+      const cleaned = cleanString(first.message);
+      if (cleaned) return cleaned;
+    }
   }
 
-  // 3. Check HTTP Status Codes
+  // 3. Extract HTTP status code or backend error code
   const status =
     err?.response?.status ||
     err?.status ||
-    (typeof err?.statusCode === 'number' ? err.statusCode : null);
+    (typeof err?.statusCode === 'number' ? err.statusCode : null) ||
+    (typeof err?.error?.status === 'number' ? err.error.status : null) ||
+    (err?.error?.code === 'UNAUTHORIZED' ? 401 : null) ||
+    (err?.error?.code === 'NOT_FOUND' ? 404 : null) ||
+    (err?.error?.code === 'CONFLICT' ? 409 : null);
 
   if (status === 401) {
     return context === 'login'
@@ -108,6 +146,6 @@ export function getAuthErrorMessage(err, context = 'login') {
 
   // 5. Contextual Fallback
   return context === 'login'
-    ? 'Unable to sign in. Please verify your email and password.'
+    ? 'Incorrect email or password. Please double-check your credentials and try again.'
     : 'Registration could not be completed. Please review your details and try again.';
 }
