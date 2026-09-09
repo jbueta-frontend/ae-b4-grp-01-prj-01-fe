@@ -122,6 +122,30 @@ export function AuthProvider({ children }) {
     setIsGuest(false);
   };
 
+  const updateProfile = (updatedFields) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('fiddlemania_user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
+  const deactivateAccount = async () => {
+    try {
+      await api.post('/auth/deactivate').catch(() => {});
+    } finally {
+      logout();
+    }
+  };
+
+  const deleteAccount = async () => {
+    try {
+      await api.delete('/auth/delete-account').catch(() => {});
+    } finally {
+      logout();
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -133,6 +157,9 @@ export function AuthProvider({ children }) {
         register,
         continueAsGuest,
         logout,
+        updateProfile,
+        deactivateAccount,
+        deleteAccount,
       }}
     >
       {children}

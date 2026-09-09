@@ -446,7 +446,7 @@ export default function CheckoutView() {
                           <span style={{ fontWeight: 800, fontSize: '1rem' }}>
                             {opt.price === 0
                               ? 'FREE'
-                              : `$${opt.price.toFixed(2)}`}
+                              : `₱${opt.price.toFixed(2)}`}
                           </span>
                         </div>
                       ))}
@@ -471,7 +471,7 @@ export default function CheckoutView() {
                     {selectedDelivery.name} (
                     {selectedDelivery.price === 0
                       ? 'FREE'
-                      : `$${selectedDelivery.price.toFixed(2)}`}
+                      : `₱${selectedDelivery.price.toFixed(2)}`}
                     )
                   </p>
                 ) : null}
@@ -664,7 +664,7 @@ export default function CheckoutView() {
                       <span>
                         {isProcessing
                           ? 'Authorizing Payment...'
-                          : `Place Order — $${finalTotal.toFixed(2)}`}
+                          : `Place Order — ₱${finalTotal.toFixed(2)}`}
                       </span>
                     </button>
                   </div>
@@ -751,7 +751,7 @@ export default function CheckoutView() {
                       </span>
                     </div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 700 }}>
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₱{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -773,7 +773,7 @@ export default function CheckoutView() {
                   style={{ display: 'flex', justifyContent: 'space-between' }}
                 >
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>₱{subtotal.toFixed(2)}</span>
                 </div>
                 <div
                   style={{ display: 'flex', justifyContent: 'space-between' }}
@@ -782,14 +782,14 @@ export default function CheckoutView() {
                   <span>
                     {selectedDelivery.price === 0
                       ? 'FREE'
-                      : `$${selectedDelivery.price.toFixed(2)}`}
+                      : `₱${selectedDelivery.price.toFixed(2)}`}
                   </span>
                 </div>
                 <div
                   style={{ display: 'flex', justifyContent: 'space-between' }}
                 >
                   <span>Estimated Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>₱{tax.toFixed(2)}</span>
                 </div>
                 <div
                   style={{
@@ -803,7 +803,7 @@ export default function CheckoutView() {
                   }}
                 >
                   <span>Total Due</span>
-                  <span>${finalTotal.toFixed(2)}</span>
+                  <span>₱{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 

@@ -13,9 +13,9 @@ export const AGE_OPTIONS = [
 
 export const PRICE_OPTIONS = [
   { id: 'all', label: 'All Prices' },
-  { id: 'under-40', label: 'Under $40', min: 0, max: 40 },
-  { id: '40-70', label: '$40 to $70', min: 40, max: 70 },
-  { id: 'above-70', label: 'Over $70', min: 70, max: Infinity },
+  { id: 'under-40', label: 'Under ₱40', min: 0, max: 40 },
+  { id: '40-70', label: '₱40 to ₱70', min: 40, max: 70 },
+  { id: 'above-70', label: 'Over ₱70', min: 70, max: Infinity },
 ];
 
 export function useProductCatalogViewModel() {

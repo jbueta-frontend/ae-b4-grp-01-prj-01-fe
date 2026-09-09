@@ -11,15 +11,58 @@ import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
 
 export default function Navbar() {
-  const { itemCount, openCart } = useCart();
-  const { user, isAuthenticated, logout } = useAuth();
+  const {
+    itemCount = 0,
+    openCart = () => {},
+    justAdded = false,
+  } = useCart() || {};
+  const {
+    user = null,
+    isAuthenticated = false,
+    logout = () => {},
+  } = useAuth() || {};
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [isBouncing, setIsBouncing] = useState(false);
   const searchInputRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const prevCountRef = useRef(itemCount ?? 0);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(e.target)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
+
+  useEffect(() => {
+    setIsProfileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (itemCount > prevCountRef.current || justAdded) {
+      setIsBouncing(true);
+      const timer = setTimeout(() => setIsBouncing(false), 700);
+      prevCountRef.current = itemCount;
+      return () => clearTimeout(timer);
+    }
+    prevCountRef.current = itemCount;
+  }, [itemCount, justAdded]);
 
   useEffect(() => {
     setQuery(searchParams.get('q') || '');
@@ -211,22 +254,29 @@ export default function Navbar() {
               {isSearchOpen ? <X size={18} /> : <Search size={18} />}
             </button>
 
-            {/* Shopping Cart Icon with Badge */}
+            {/* Shopping Cart Icon with Dynamic Badge Update */}
             <button
               onClick={openCart}
+              className={isBouncing ? 'cart-btn-bounce' : ''}
               style={{
                 position: 'relative',
                 width: '42px',
                 height: '42px',
                 borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--border-hairline)',
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--text-main)',
+                border: isBouncing
+                  ? '1px solid #16A34A'
+                  : '1px solid var(--border-hairline)',
+                backgroundColor: isBouncing
+                  ? 'rgba(22, 163, 74, 0.08)'
+                  : 'var(--bg-card)',
+                color: isBouncing ? '#16A34A' : 'var(--text-main)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition:
-                  'border-color 0.15s ease, background-color 0.15s ease',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                boxShadow: isBouncing
+                  ? '0 0 0 3px rgba(22, 163, 74, 0.15)'
+                  : 'none',
                 cursor: 'pointer',
               }}
               aria-label={`Open shopping cart, ${itemCount} items`}
@@ -235,11 +285,13 @@ export default function Navbar() {
               <ShoppingCart size={19} />
               {itemCount > 0 && (
                 <span
+                  key={`badge-${itemCount}`}
+                  className={isBouncing ? 'badge-pop' : ''}
                   style={{
                     position: 'absolute',
                     top: '-4px',
                     right: '-4px',
-                    backgroundColor: 'var(--accent)',
+                    backgroundColor: isBouncing ? '#16A34A' : 'var(--accent)',
                     color: '#FFFFFF',
                     fontSize: '0.6875rem',
                     fontWeight: 800,
@@ -251,7 +303,11 @@ export default function Navbar() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     border: '2px solid var(--bg-page)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    boxShadow: isBouncing
+                      ? '0 0 10px rgba(22, 163, 74, 0.5)'
+                      : '0 1px 3px rgba(0,0,0,0.1)',
+                    transition:
+                      'background-color 0.25s ease, box-shadow 0.25s ease',
                   }}
                 >
                   {itemCount}
@@ -259,48 +315,159 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Login CTA / Profile */}
+            {/* Equal-Sized Profile Icon (42px) with Dropdown */}
             {isAuthenticated ? (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: 'var(--bg-card)',
-                  border: '1px solid var(--border-hairline)',
-                  padding: '4px 8px 4px 12px',
-                  borderRadius: 'var(--radius-full)',
-                }}
-              >
-                <Link
-                  to="/profile"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '0.8125rem',
-                    fontWeight: 700,
-                    color: 'var(--text-main)',
-                  }}
-                >
-                  <User size={14} color="var(--accent)" />
-                  <span>{user?.name || user?.email?.split('@')[0]}</span>
-                </Link>
+              <div ref={profileMenuRef} style={{ position: 'relative' }}>
                 <button
-                  onClick={logout}
-                  title="Sign Out"
+                  type="button"
+                  onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                   style={{
-                    color: 'var(--text-muted)',
-                    padding: '4px',
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: 'var(--radius-full)',
+                    border: isProfileMenuOpen
+                      ? '1px solid var(--accent)'
+                      : '1px solid var(--border-hairline)',
+                    backgroundColor: isProfileMenuOpen
+                      ? 'var(--accent-light)'
+                      : 'var(--bg-card)',
+                    color: isProfileMenuOpen
+                      ? 'var(--accent)'
+                      : 'var(--text-main)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    borderRadius: '50%',
+                    transition: 'all var(--transition-fast)',
+                    cursor: 'pointer',
+                    boxShadow: isProfileMenuOpen
+                      ? '0 0 0 3px var(--accent-light)'
+                      : 'none',
                   }}
-                  aria-label="Sign out"
+                  aria-label="User account menu"
+                  aria-expanded={isProfileMenuOpen}
+                  title={user?.name || user?.email || 'Account'}
                 >
-                  <LogOut size={14} />
+                  <User size={19} color="var(--accent)" />
                 </button>
+
+                {/* Dropdown Menu */}
+                {isProfileMenuOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      width: '190px',
+                      backgroundColor: 'var(--bg-card)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-hairline)',
+                      boxShadow:
+                        '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08)',
+                      padding: '6px',
+                      zIndex: 100,
+                      animation: 'fadeIn 0.15s ease',
+                    }}
+                  >
+                    {/* Compact User Header */}
+                    <div
+                      style={{
+                        padding: '8px 10px 10px',
+                        borderBottom: '1px solid var(--border-hairline)',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 700,
+                          color: 'var(--text-main)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {user?.name || user?.email?.split('@')[0]}
+                      </p>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          color: 'var(--text-muted)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: 'block',
+                        }}
+                      >
+                        {user?.email}
+                      </span>
+                    </div>
+
+                    {/* Item 1: Profile */}
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: 'var(--text-main)',
+                        textDecoration: 'none',
+                        transition: 'background-color var(--transition-fast)',
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          'var(--bg-subtle)')
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = 'transparent')
+                      }
+                    >
+                      <User size={16} color="var(--accent)" />
+                      <span>Profile</span>
+                    </Link>
+
+                    {/* Item 2: Logout */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false);
+                        logout();
+                        navigate('/');
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: '#DC2626',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background-color var(--transition-fast)',
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          'rgba(220, 38, 38, 0.08)')
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = 'transparent')
+                      }
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link

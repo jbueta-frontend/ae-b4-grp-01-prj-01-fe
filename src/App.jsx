@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './shared/components/Navbar';
 import Footer from './shared/components/Footer';
 import CartDrawer from './shared/components/CartDrawer';
+import CartToast from './shared/components/CartToast';
 
 // Feature Views
 import ProductCatalogView from './features/product-catalog/views/ProductCatalogView';
@@ -34,6 +35,7 @@ function App() {
           >
             <Navbar />
             <CartDrawer />
+            <CartToast />
 
             <main style={{ flex: 1 }}>
               <Routes>

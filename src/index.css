@@ -351,3 +351,57 @@ img {
   padding: 24px;
   box-shadow: var(--shadow-sm);
 }
+
+/* Top-Left Toast Keyframes */
+@keyframes toastSlideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastSlideOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-40px) scale(0.94);
+  }
+}
+
+/* Cart Badge Pulse Animation */
+@keyframes badgePop {
+  0% {
+    transform: scale(0.6);
+  }
+  50% {
+    transform: scale(1.38);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.badge-pop {
+  animation: badgePop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cartBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.cart-btn-bounce {
+  animation: cartBounce 0.4s ease;
+}

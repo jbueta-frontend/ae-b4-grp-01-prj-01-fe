@@ -155,7 +155,7 @@ export default function OrderHistoryView() {
                         Total
                       </span>
                       <p style={{ fontSize: '0.875rem', fontWeight: 800 }}>
-                        ${order.total.toFixed(2)}
+                        ₱{order.total.toFixed(2)}
                       </p>
                     </div>
                     <div>

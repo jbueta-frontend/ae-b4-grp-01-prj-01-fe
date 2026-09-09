@@ -114,7 +114,7 @@ export default function SupportView() {
               style={{ margin: '0 auto 6px' }}
             />
             <span style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
-              Free Over $75
+              Free Over ₱75
             </span>
           </div>
           <div

@@ -34,7 +34,7 @@ api.interceptors.response.use(
       } catch {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem('fiddlemania_user');
       }
     }
     return Promise.reject(error.response?.data || error);

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const CartContext = createContext(null);
 
@@ -29,6 +29,9 @@ export function CartProvider({ children }) {
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  const [toast, setToast] = useState({ isOpen: false, item: null });
+  const toastTimeoutRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -38,9 +41,38 @@ export function CartProvider({ children }) {
     }
   }, [items]);
 
+  const showToast = (item) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast({ isOpen: true, item });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast({ isOpen: false, item: null });
+    }, 4500);
+  };
+
+  const hideToast = () => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToast({ isOpen: false, item: null });
+  };
+
   const addToCart = (product, quantity = 1, variant = null) => {
     const selectedVariant =
       variant || (product.variants?.[0]?.name ?? 'Standard');
+
+    const addedItem = {
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      image: product.heroImage || product.image,
+      variant: selectedVariant,
+      quantity,
+    };
+
     setItems((prev) => {
       const existingIdx = prev.findIndex(
         (item) => item.id === product.id && item.variant === selectedVariant
@@ -53,21 +85,15 @@ export function CartProvider({ children }) {
         };
         return next;
       }
-      return [
-        ...prev,
-        {
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          price: product.price,
-          originalPrice: product.originalPrice,
-          image: product.heroImage || product.image,
-          variant: selectedVariant,
-          quantity,
-        },
-      ];
+      return [...prev, addedItem];
     });
-    setIsCartOpen(true);
+
+    // Trigger visual pulse on navbar cart icon
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 800);
+
+    // Trigger high-visibility top-left toast
+    showToast(addedItem);
   };
 
   const updateQuantity = (id, variant, newQty) => {
@@ -131,6 +157,10 @@ export function CartProvider({ children }) {
         updateQuantity,
         removeFromCart,
         clearCart,
+        justAdded,
+        toast,
+        showToast,
+        hideToast,
       }}
     >
       {children}

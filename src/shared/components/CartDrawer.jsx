@@ -96,12 +96,12 @@ export default function CartDrawer() {
               </span>
             ) : (
               <span>
-                Add <strong>${freeShippingRemaining.toFixed(2)}</strong> more
+                Add <strong>₱{freeShippingRemaining.toFixed(2)}</strong> more
                 for Free Shipping
               </span>
             )}
             <span>
-              ${subtotal.toFixed(2)} / ${freeShippingThreshold.toFixed(2)}
+              ₱{subtotal.toFixed(2)} / ₱{freeShippingThreshold.toFixed(2)}
             </span>
           </div>
           <div
@@ -222,7 +222,7 @@ export default function CartDrawer() {
                         marginTop: '6px',
                       }}
                     >
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₱{(item.price * item.quantity).toFixed(2)}
                     </span>
 
                     {/* Stepper + Delete */}
@@ -237,8 +237,9 @@ export default function CartDrawer() {
                       <div
                         className="stepper"
                         style={{
-                          transform: 'scale(0.88)',
-                          transformOrigin: 'left center',
+                          height: '32px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
                         }}
                       >
                         <button
@@ -315,7 +316,7 @@ export default function CartDrawer() {
                 }}
               >
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₱{subtotal.toFixed(2)}</span>
               </div>
               <div
                 style={{
@@ -327,7 +328,7 @@ export default function CartDrawer() {
               >
                 <span>Shipping</span>
                 <span>
-                  {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                  {shipping === 0 ? 'FREE' : `₱${shipping.toFixed(2)}`}
                 </span>
               </div>
               <div
@@ -339,7 +340,7 @@ export default function CartDrawer() {
                 }}
               >
                 <span>Estimated Tax (8%)</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>₱{tax.toFixed(2)}</span>
               </div>
               <div
                 style={{
@@ -353,7 +354,7 @@ export default function CartDrawer() {
                 }}
               >
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>₱{total.toFixed(2)}</span>
               </div>
             </div>
 

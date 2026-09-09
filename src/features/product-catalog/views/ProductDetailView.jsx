@@ -238,7 +238,7 @@ export default function ProductDetailView() {
                   letterSpacing: '-0.02em',
                 }}
               >
-                ${product.price.toFixed(2)}
+                ₱{product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
                 <span
@@ -248,7 +248,7 @@ export default function ProductDetailView() {
                     textDecoration: 'line-through',
                   }}
                 >
-                  ${product.originalPrice.toFixed(2)}
+                  ₱{product.originalPrice.toFixed(2)}
                 </span>
               )}
               <span
@@ -327,43 +327,115 @@ export default function ProductDetailView() {
               </div>
             )}
 
-            {/* Quantity & Add to Bag Row */}
+            {/* Quantity & Add to Bag Row (Balanced 52px height & matching radius) */}
             <div
               style={{
                 display: 'flex',
-                gap: '16px',
+                gap: '14px',
                 alignItems: 'center',
                 marginBottom: '32px',
               }}
             >
-              {/* Stepper */}
-              <div className="stepper">
+              {/* Symmetrical & Balanced Stepper */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: '52px',
+                  border: '1px solid var(--border-hairline)',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--bg-card)',
+                  overflow: 'hidden',
+                  boxShadow: 'var(--shadow-sm)',
+                  flexShrink: 0,
+                }}
+              >
                 <button
+                  type="button"
                   onClick={decrementQty}
-                  className="stepper-btn"
+                  style={{
+                    width: '46px',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                    fontWeight: 600,
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    transition: 'background-color var(--transition-fast)',
+                    borderRight: '1px solid var(--border-hairline)',
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--bg-subtle)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'transparent')
+                  }
                   aria-label="Decrease quantity"
                 >
                   −
                 </button>
-                <div className="stepper-value">{quantity}</div>
+                <div
+                  style={{
+                    width: '48px',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    color: 'var(--text-main)',
+                  }}
+                >
+                  {quantity}
+                </div>
                 <button
+                  type="button"
                   onClick={incrementQty}
-                  className="stepper-btn"
+                  style={{
+                    width: '46px',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                    fontWeight: 600,
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    transition: 'background-color var(--transition-fast)',
+                    borderLeft: '1px solid var(--border-hairline)',
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--bg-subtle)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'transparent')
+                  }
                   aria-label="Increase quantity"
                 >
                   +
                 </button>
               </div>
 
-              {/* Commanding Add to Bag CTA */}
+              {/* Commanding Add to Bag CTA (Matching 52px height) */}
               <button
+                type="button"
                 onClick={handleAddToCart}
                 className="btn btn-primary"
                 style={{
                   flex: 1,
-                  padding: '16px 28px',
+                  height: '52px',
+                  padding: '0 24px',
                   fontSize: '1rem',
+                  fontWeight: 700,
                   letterSpacing: '-0.01em',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                 }}
               >
                 {addedNotice ? (
@@ -373,7 +445,7 @@ export default function ProductDetailView() {
                   </>
                 ) : (
                   <span>
-                    Add to Bag — ${(product.price * quantity).toFixed(2)}
+                    Add to Bag — ₱{(product.price * quantity).toFixed(2)}
                   </span>
                 )}
               </button>

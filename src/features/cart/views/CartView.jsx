@@ -113,12 +113,12 @@ export default function CartView() {
               </span>
             ) : (
               <span>
-                Add <strong>${freeShippingRemaining.toFixed(2)}</strong> more to
+                Add <strong>₱{freeShippingRemaining.toFixed(2)}</strong> more to
                 qualify for Free Shipping
               </span>
             )}
             <span>
-              ${subtotal.toFixed(2)} / ${freeShippingThreshold.toFixed(2)}
+              ₱{subtotal.toFixed(2)} / ₱{freeShippingThreshold.toFixed(2)}
             </span>
           </div>
           <div
@@ -209,7 +209,7 @@ export default function CartView() {
                       )}
                     </div>
                     <span style={{ fontSize: '1.125rem', fontWeight: 800 }}>
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₱{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
 
@@ -294,7 +294,7 @@ export default function CartView() {
                 }}
               >
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>₱{subtotal.toFixed(2)}</span>
               </div>
               <div
                 style={{
@@ -305,7 +305,7 @@ export default function CartView() {
               >
                 <span>Carbon-Neutral Delivery</span>
                 <span>
-                  {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                  {shipping === 0 ? 'FREE' : `₱${shipping.toFixed(2)}`}
                 </span>
               </div>
               <div
@@ -316,7 +316,7 @@ export default function CartView() {
                 }}
               >
                 <span>Estimated Sales Tax (8%)</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>₱{tax.toFixed(2)}</span>
               </div>
               <div
                 style={{
@@ -329,7 +329,7 @@ export default function CartView() {
                 }}
               >
                 <span>Estimated Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>₱{total.toFixed(2)}</span>
               </div>
             </div>
 

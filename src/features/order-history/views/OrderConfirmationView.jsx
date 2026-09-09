@@ -277,7 +277,7 @@ export default function OrderConfirmationView() {
                   </span>
                 </div>
                 <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ₱{(item.price * item.quantity).toFixed(2)}
                 </span>
               </div>
             ))}

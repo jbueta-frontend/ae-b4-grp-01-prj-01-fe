@@ -191,7 +191,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
             letterSpacing: '-0.02em',
           }}
         >
-          ${product.price.toFixed(2)}
+          ₱{product.price.toFixed(2)}
         </span>
         {product.originalPrice && (
           <span
@@ -202,7 +202,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
               fontWeight: 500,
             }}
           >
-            ${product.originalPrice.toFixed(2)}
+            ₱{product.originalPrice.toFixed(2)}
           </span>
         )}
       </div>
@@ -253,13 +253,15 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         )}
       </div>
 
-      {/* 7. Emphasized Add to Cart Button (User request: Prioritize the same kind of UI display for each product card, emphasizing the add to cart button to it) */}
+      {/* 7. Emphasized Add to Cart Button (Uniform 44px height) */}
       <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
         <button
+          type="button"
           onClick={(e) => onQuickAdd(product, e)}
           className={`btn btn-block ${isAdded ? 'btn-secondary' : 'btn-primary'}`}
           style={{
-            padding: '11px 16px',
+            height: '44px',
+            padding: '0 16px',
             borderRadius: 'var(--radius-md)',
             fontSize: '0.875rem',
             fontWeight: 700,
