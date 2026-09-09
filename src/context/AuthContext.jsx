@@ -54,24 +54,18 @@ export function AuthProvider({ children }) {
       setIsGuest(false);
       return { success: true, user: userData };
     } catch (err) {
-      // Fallback for prototype testing if backend is unreachable or test credentials used
-      console.warn('API login failed, using prototype fallback:', err);
-      const fallbackUser = {
-        userId: 'proto-user-1',
-        email,
-        role: email.includes('admin') ? 'ADMIN' : 'CUSTOMER',
-        name: email.split('@')[0],
-      };
-      localStorage.setItem('fiddlemania_user', JSON.stringify(fallbackUser));
-      setUser(fallbackUser);
-      setIsGuest(false);
-      return { success: true, user: fallbackUser };
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        err?.error ||
+        'Invalid email or password. Please try again.';
+      throw new Error(message);
     }
   };
 
   const register = async (email, password, name) => {
     try {
-      const res = await api.post('/auth/register', { email, password });
+      const res = await api.post('/auth/register', { email, password, name });
       const token = res.accessToken;
       const refreshToken = res.refreshToken;
       const userData = res.user || { email, role: 'CUSTOMER', name };
@@ -85,17 +79,12 @@ export function AuthProvider({ children }) {
       setIsGuest(false);
       return { success: true, user: userData };
     } catch (err) {
-      console.warn('API register failed, using prototype fallback:', err);
-      const fallbackUser = {
-        userId: 'proto-user-2',
-        email,
-        name: name || email.split('@')[0],
-        role: 'CUSTOMER',
-      };
-      localStorage.setItem('fiddlemania_user', JSON.stringify(fallbackUser));
-      setUser(fallbackUser);
-      setIsGuest(false);
-      return { success: true, user: fallbackUser };
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        err?.error ||
+        'Registration failed. Please check your details and try again.';
+      throw new Error(message);
     }
   };
 
