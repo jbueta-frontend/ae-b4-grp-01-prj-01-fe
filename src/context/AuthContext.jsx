@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { getAuthErrorMessage } from '../shared/utils/errorHandler';
 
 const AuthContext = createContext(null);
 
@@ -54,12 +55,7 @@ export function AuthProvider({ children }) {
       setIsGuest(false);
       return { success: true, user: userData };
     } catch (err) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        err?.error ||
-        'Invalid email or password. Please try again.';
-      throw new Error(message);
+      throw new Error(getAuthErrorMessage(err, 'login'));
     }
   };
 
@@ -79,12 +75,7 @@ export function AuthProvider({ children }) {
       setIsGuest(false);
       return { success: true, user: userData };
     } catch (err) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        err?.error ||
-        'Registration failed. Please check your details and try again.';
-      throw new Error(message);
+      throw new Error(getAuthErrorMessage(err, 'register'));
     }
   };
 

@@ -5,6 +5,7 @@ import { validateAuthForm } from '../models/authModel';
 
 export function useAuthViewModel(defaultTab = 'login') {
   const [tab, setTab] = useState(defaultTab);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -17,11 +18,36 @@ export function useAuthViewModel(defaultTab = 'login') {
 
   const redirectPath = location.state?.from || '/';
 
+  const handleTabSwitch = (newTab) => {
+    setTab(newTab);
+    setApiError(null);
+    setErrors({});
+  };
+
+  const handleNameChange = (e) => {
+    setName(e.target.value);
+    if (apiError) setApiError(null);
+    if (errors.name) setErrors((prev) => ({ ...prev, name: null }));
+  };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (apiError) setApiError(null);
+    if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (apiError) setApiError(null);
+    if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
 
     const validation = validateAuthForm({
+      name,
       email,
       password,
       isRegister: tab === 'register',
@@ -37,7 +63,8 @@ export function useAuthViewModel(defaultTab = 'login') {
       if (tab === 'login') {
         await login(email, password);
       } else {
-        await register(email, password);
+        const registrationName = name.trim() || email.split('@')[0];
+        await register(email, password, registrationName);
       }
       navigate(redirectPath);
     } catch (err) {
@@ -62,11 +89,16 @@ export function useAuthViewModel(defaultTab = 'login') {
 
   return {
     tab,
-    setTab,
+    setTab: handleTabSwitch,
+    name,
+    setName,
+    handleNameChange,
     email,
     setEmail,
+    handleEmailChange,
     password,
     setPassword,
+    handlePasswordChange,
     errors,
     loading,
     apiError,

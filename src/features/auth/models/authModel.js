@@ -1,5 +1,8 @@
-export const validateAuthForm = ({ email, password, isRegister }) => {
+export const validateAuthForm = ({ email, password, name, isRegister }) => {
   const errors = {};
+  if (isRegister && typeof name === 'string' && !name.trim()) {
+    errors.name = 'Please enter your full name.';
+  }
   if (!email || !email.includes('@')) {
     errors.email = 'Please enter a valid email address.';
   }

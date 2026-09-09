@@ -41,6 +41,13 @@ api.interceptors.response.use(
         localStorage.removeItem('fiddlemania_user');
       }
     }
+
+    if (error.response?.data && typeof error.response.data === 'object') {
+      if (!error.response.data.status && error.response.status) {
+        error.response.data.status = error.response.status;
+      }
+      return Promise.reject(error.response.data);
+    }
     return Promise.reject(error.response?.data || error);
   }
 );

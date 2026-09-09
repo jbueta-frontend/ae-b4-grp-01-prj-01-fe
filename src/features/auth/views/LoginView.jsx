@@ -1,5 +1,5 @@
 import { useAuthViewModel } from '../viewmodels/useAuthViewModel';
-import { Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Logo from '../../../shared/components/Logo';
 
@@ -7,10 +7,12 @@ export default function LoginView({ initialTab = 'login' }) {
   const {
     tab,
     setTab,
+    name,
+    handleNameChange,
     email,
-    setEmail,
+    handleEmailChange,
     password,
-    setPassword,
+    handlePasswordChange,
     errors,
     loading,
     apiError,
@@ -190,21 +192,45 @@ export default function LoginView({ initialTab = 'login' }) {
           {/* Form */}
           {apiError && (
             <div
+              role="alert"
               style={{
-                padding: '10px 14px',
-                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px',
+                padding: '12px 14px',
+                backgroundColor: 'rgba(220, 38, 38, 0.08)',
                 border: '1px solid #DC2626',
                 borderRadius: 'var(--radius-md)',
                 color: '#DC2626',
-                fontSize: '0.8125rem',
-                marginBottom: '16px',
+                fontSize: '0.875rem',
+                lineHeight: '1.45',
+                marginBottom: '18px',
               }}
             >
-              {apiError}
+              <AlertCircle
+                size={18}
+                style={{ flexShrink: 0, marginTop: '2px' }}
+              />
+              <span style={{ fontWeight: 500 }}>{apiError}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
+            {tab === 'register' && (
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  required
+                  placeholder="Juan Dela Cruz"
+                  value={name}
+                  onChange={handleNameChange}
+                />
+                {errors.name && <p className="form-error">{errors.name}</p>}
+              </div>
+            )}
+
             <div className="form-group">
               <label className="form-label">Email Address</label>
               <input
@@ -213,7 +239,7 @@ export default function LoginView({ initialTab = 'login' }) {
                 required
                 placeholder="name@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
               />
               {errors.email && <p className="form-error">{errors.email}</p>}
             </div>
@@ -226,7 +252,7 @@ export default function LoginView({ initialTab = 'login' }) {
                 required
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
               />
               {errors.password && (
                 <p className="form-error">{errors.password}</p>
