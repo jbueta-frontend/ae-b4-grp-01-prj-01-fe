@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuthViewModel } from '../viewmodels/useAuthViewModel';
 import { ArrowRight, ShieldCheck, AlertCircle, Mail, RefreshCw } from 'lucide-react';
 import Logo from '../../../shared/components/Logo';
@@ -18,6 +19,7 @@ export default function LoginView({ initialTab = 'login' }) {
     isUnverified,
     registrationSuccess,
     registeredEmail,
+    directVerifyToken,
     resendLoading,
     resendStatus,
     handleResendVerification,
@@ -128,6 +130,31 @@ export default function LoginView({ initialTab = 'login' }) {
                   }}
                 >
                   {resendStatus.message}
+                </div>
+              )}
+
+              {directVerifyToken && (
+                <div style={{ marginBottom: '16px' }}>
+                  <Link
+                    to={`/verify-email?token=${encodeURIComponent(directVerifyToken)}`}
+                    className="btn btn-outline btn-block"
+                    style={{
+                      padding: '10px 14px',
+                      fontSize: '0.85rem',
+                      borderColor: '#D97706',
+                      color: '#B45309',
+                      backgroundColor: 'rgba(217, 119, 6, 0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      textDecoration: 'none',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <span>⚡ Verify Account Directly (Instant Link)</span>
+                    <ArrowRight size={14} />
+                  </Link>
                 </div>
               )}
 
@@ -390,6 +417,25 @@ export default function LoginView({ initialTab = 'login' }) {
                         >
                           {resendStatus.message}
                         </p>
+                      )}
+
+                      {directVerifyToken && (
+                        <div style={{ marginTop: '10px' }}>
+                          <Link
+                            to={`/verify-email?token=${encodeURIComponent(directVerifyToken)}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              color: '#B45309',
+                              fontWeight: 700,
+                              fontSize: '0.8125rem',
+                              textDecoration: 'underline',
+                            }}
+                          >
+                            <span>⚡ Click here to verify your account now →</span>
+                          </Link>
+                        </div>
                       )}
                     </div>
                   )}
