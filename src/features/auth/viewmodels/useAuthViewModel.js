@@ -13,7 +13,15 @@ export function useAuthViewModel(defaultTab = 'login') {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  const { login, register, continueAsGuest } = useAuth();
+  // Email verification state
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState(null);
+
+  const { login, register, resendVerification, continueAsGuest } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,6 +30,9 @@ export function useAuthViewModel(defaultTab = 'login') {
   const handleTabSwitch = (newTab) => {
     setTab(newTab);
     setApiError(null);
+    setIsUnverified(false);
+    setResendStatus(null);
+    setRegistrationSuccess(false);
     setErrors({});
   };
 
@@ -34,6 +45,8 @@ export function useAuthViewModel(defaultTab = 'login') {
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
     if (apiError) setApiError(null);
+    if (isUnverified) setIsUnverified(false);
+    if (resendStatus) setResendStatus(null);
     if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
   };
 
@@ -46,6 +59,8 @@ export function useAuthViewModel(defaultTab = 'login') {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
+    setIsUnverified(false);
+    setResendStatus(null);
 
     const validation = validateAuthForm({
       name,
@@ -63,15 +78,60 @@ export function useAuthViewModel(defaultTab = 'login') {
     try {
       if (tab === 'login') {
         await login(email, password);
+        navigate(redirectPath);
       } else {
         const registrationName = name.trim() || email.split('@')[0];
-        await register(email, password, registrationName);
+        const res = await register(email, password, registrationName);
+        if (res?.unverified) {
+          setRegistrationSuccess(true);
+          setRegisteredEmail(email);
+        } else {
+          navigate(redirectPath);
+        }
       }
-      navigate(redirectPath);
     } catch (err) {
-      setApiError(getAuthErrorMessage(err, tab));
+      const isEmailNotVerified =
+        err?.code === 'EMAIL_NOT_VERIFIED' ||
+        err?.raw?.code === 'EMAIL_NOT_VERIFIED' ||
+        err?.response?.data?.code === 'EMAIL_NOT_VERIFIED' ||
+        err?.status === 403;
+
+      if (isEmailNotVerified) {
+        setIsUnverified(true);
+        setUnverifiedEmail(email);
+        setApiError(
+          'Your email is not verified yet. Please check your inbox.'
+        );
+      } else {
+        setIsUnverified(false);
+        setApiError(getAuthErrorMessage(err, tab));
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async (targetEmail) => {
+    const emailToSend = targetEmail || unverifiedEmail || email;
+    if (!emailToSend) return;
+
+    setResendLoading(true);
+    setResendStatus(null);
+    try {
+      await resendVerification(emailToSend);
+      setResendStatus({
+        type: 'success',
+        message: 'Verification link resent! Please check your inbox.',
+      });
+    } catch (err) {
+      setResendStatus({
+        type: 'error',
+        message:
+          getAuthErrorMessage(err, 'resend') ||
+          'Failed to resend verification link. Please try again.',
+      });
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -103,6 +163,13 @@ export function useAuthViewModel(defaultTab = 'login') {
     errors,
     loading,
     apiError,
+    isUnverified,
+    unverifiedEmail,
+    registrationSuccess,
+    registeredEmail,
+    resendLoading,
+    resendStatus,
+    handleResendVerification,
     handleSubmit,
     handleSocialAuth,
     handleGuestCheckout,

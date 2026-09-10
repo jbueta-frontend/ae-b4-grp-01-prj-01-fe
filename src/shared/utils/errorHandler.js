@@ -97,6 +97,16 @@ export function getAuthErrorMessage(err, context = 'login') {
   }
 
   // 3. Extract HTTP status code or backend error code
+  const errorCode =
+    err?.code ||
+    err?.error?.code ||
+    err?.response?.data?.code ||
+    err?.response?.data?.error?.code;
+
+  if (errorCode === 'EMAIL_NOT_VERIFIED') {
+    return 'Your email is not verified yet. Please check your inbox.';
+  }
+
   const status =
     err?.response?.status ||
     err?.status ||
@@ -105,6 +115,10 @@ export function getAuthErrorMessage(err, context = 'login') {
     (err?.error?.code === 'UNAUTHORIZED' ? 401 : null) ||
     (err?.error?.code === 'NOT_FOUND' ? 404 : null) ||
     (err?.error?.code === 'CONFLICT' ? 409 : null);
+
+  if (status === 403) {
+    return 'Your email is not verified yet. Please check your inbox.';
+  }
 
   if (status === 401) {
     return context === 'login'
@@ -145,6 +159,12 @@ export function getAuthErrorMessage(err, context = 'login') {
   }
 
   // 5. Contextual Fallback
+  if (context === 'verify') {
+    return 'Verification link is invalid or has expired. Please request a new verification link.';
+  }
+  if (context === 'resend') {
+    return 'Unable to resend verification email. Please try again.';
+  }
   return context === 'login'
     ? 'Incorrect email or password. Please double-check your credentials and try again.'
     : 'Registration could not be completed. Please review your details and try again.';

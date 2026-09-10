@@ -14,14 +14,25 @@ api.interceptors.request.use((config) => {
 // Unwrap {success, data} envelope + handle token refresh on 401
 api.interceptors.response.use(
   (response) => {
-    if (response.data?.success) return response.data.data;
-    return Promise.reject(response.data);
+    if (response.data?.success !== undefined) {
+      if (response.data.success) {
+        return response.data.data !== undefined
+          ? response.data.data
+          : response.data;
+      }
+      return Promise.reject(response.data);
+    }
+    return response.data?.data !== undefined
+      ? response.data.data
+      : response.data;
   },
   async (error) => {
     const original = error.config;
     const isAuthEndpoint =
       original?.url?.includes('/auth/login') ||
-      original?.url?.includes('/auth/register');
+      original?.url?.includes('/auth/register') ||
+      original?.url?.includes('/auth/verify-email') ||
+      original?.url?.includes('/auth/resend-verification');
 
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true;

@@ -18,6 +18,7 @@ import OrderHistoryView from './features/order-history/views/OrderHistoryView';
 import ShipmentTrackingView from './features/shipment-tracking/views/ShipmentTrackingView';
 import LoginView from './features/auth/views/LoginView';
 import RegisterView from './features/auth/views/RegisterView';
+import VerifyEmailView from './features/auth/views/VerifyEmailView';
 import ProfileView from './features/profile/views/ProfileView';
 import SupportView from './features/support/views/SupportView';
 
@@ -69,6 +70,7 @@ function App() {
                   element={<LoginView initialTab="login" />}
                 />
                 <Route path="/register" element={<RegisterView />} />
+                <Route path="/verify-email" element={<VerifyEmailView />} />
                 <Route path="/profile" element={<ProfileView />} />
                 <Route path="/addresses" element={<ProfileView />} />
 
