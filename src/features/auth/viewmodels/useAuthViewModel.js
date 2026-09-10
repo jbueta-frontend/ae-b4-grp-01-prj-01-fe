@@ -4,17 +4,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { validateAuthForm } from '../models/authModel';
 import { getAuthErrorMessage } from '../../../shared/utils/errorHandler';
 
-function extractTokenFromLink(link) {
-  if (!link || typeof link !== 'string') return null;
-  try {
-    const parsed = new URL(link);
-    return parsed.searchParams.get('token');
-  } catch {
-    const match = link.match(/[?&]token=([^&]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
-  }
-}
-
 export function useAuthViewModel(defaultTab = 'login') {
   const [tab, setTab] = useState(defaultTab);
   const [name, setName] = useState('');
@@ -29,7 +18,6 @@ export function useAuthViewModel(defaultTab = 'login') {
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
-  const [directVerifyToken, setDirectVerifyToken] = useState(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendStatus, setResendStatus] = useState(null);
 
@@ -45,7 +33,6 @@ export function useAuthViewModel(defaultTab = 'login') {
     setIsUnverified(false);
     setResendStatus(null);
     setRegistrationSuccess(false);
-    setDirectVerifyToken(null);
     setErrors({});
   };
 
@@ -98,8 +85,6 @@ export function useAuthViewModel(defaultTab = 'login') {
         if (res?.unverified) {
           setRegistrationSuccess(true);
           setRegisteredEmail(email);
-          const token = extractTokenFromLink(res?.verificationLink);
-          if (token) setDirectVerifyToken(token);
         } else {
           navigate(redirectPath);
         }
@@ -133,9 +118,7 @@ export function useAuthViewModel(defaultTab = 'login') {
     setResendLoading(true);
     setResendStatus(null);
     try {
-      const res = await resendVerification(emailToSend);
-      const token = extractTokenFromLink(res?.verificationLink);
-      if (token) setDirectVerifyToken(token);
+      await resendVerification(emailToSend);
       setResendStatus({
         type: 'success',
         message: 'Verification link resent! Please check your inbox.',
@@ -184,7 +167,6 @@ export function useAuthViewModel(defaultTab = 'login') {
     unverifiedEmail,
     registrationSuccess,
     registeredEmail,
-    directVerifyToken,
     resendLoading,
     resendStatus,
     handleResendVerification,

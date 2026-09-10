@@ -84,12 +84,7 @@ export function AuthProvider({ children }) {
         return { success: true, user: userData, unverified: false };
       }
 
-      return {
-        success: true,
-        unverified: true,
-        email,
-        verificationLink: res?.verificationLink,
-      };
+      return { success: true, unverified: true, email };
     } catch (err) {
       const message = getAuthErrorMessage(err, 'register');
       const authError = new Error(message);
