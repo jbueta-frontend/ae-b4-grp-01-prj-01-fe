@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useProductDetailViewModel } from '../viewmodels/useProductDetailViewModel';
 import {
   Star,
@@ -7,6 +8,9 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  MessageSquare,
+  Sparkles,
+  Send,
 } from 'lucide-react';
 
 export default function ProductDetailView() {
@@ -24,7 +28,18 @@ export default function ProductDetailView() {
     handleAddToCart,
     addedNotice,
     goBack,
+    reviews,
+    reviewsLoading,
+    isSubmittingReview,
+    reviewFeedback,
+    handleAddReview,
+    isAuthenticated,
   } = useProductDetailViewModel();
+
+  const [formRating, setFormRating] = useState(5);
+  const [formTitle, setFormTitle] = useState('');
+  const [formComment, setFormComment] = useState('');
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   if (!product) {
     return (
@@ -147,8 +162,8 @@ export default function ProductDetailView() {
             >
               <span
                 style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
+                  fontSize: 'var(--font-small, 14px)',
+                  fontWeight: 700,
                   color: 'var(--text-muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
@@ -159,12 +174,14 @@ export default function ProductDetailView() {
               {product.tag && (
                 <span
                   style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
+                    fontSize: 'var(--font-small, 14px)',
+                    fontWeight: 800,
                     backgroundColor: 'var(--accent-light)',
                     color: 'var(--accent)',
-                    padding: '2px 8px',
+                    padding: '3px 10px',
                     borderRadius: 'var(--radius-full)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
                   }}
                 >
                   {product.tag}
@@ -172,15 +189,15 @@ export default function ProductDetailView() {
               )}
             </div>
 
-            {/* Product Title */}
+            {/* Product Title (H2: 40px) */}
             <h1
               style={{
-                fontSize: 'clamp(1.75rem, 3.5vw, 2.25rem)',
+                fontSize: 'var(--font-h2-fluid, 40px)',
                 fontWeight: 800,
                 color: 'var(--text-main)',
-                lineHeight: 1.2,
+                lineHeight: 1.18,
                 letterSpacing: '-0.02em',
-                marginBottom: '12px',
+                marginBottom: '14px',
               }}
             >
               {product.name}
@@ -209,21 +226,22 @@ export default function ProductDetailView() {
                   />
                 ))}
               </div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              <span style={{ fontSize: 'var(--font-small, 14px)', fontWeight: 700 }}>
                 {product.rating}
               </span>
               <span
-                style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}
+                style={{ fontSize: 'var(--font-small, 14px)', color: 'var(--text-muted)' }}
               >
                 ({product.reviewCount} verified reviews)
               </span>
             </div>
 
-            {/* Price Row */}
+            {/* Price Row (Text Sensitivity: Price Prominence & Stock Badge) */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'baseline',
+                flexWrap: 'wrap',
                 gap: '12px',
                 marginBottom: '24px',
                 paddingBottom: '20px',
@@ -232,10 +250,12 @@ export default function ProductDetailView() {
             >
               <span
                 style={{
-                  fontSize: '2rem',
+                  fontSize: 'var(--font-h2, 40px)',
                   fontWeight: 800,
                   color: 'var(--text-main)',
                   letterSpacing: '-0.02em',
+                  lineHeight: 1,
+                  fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 ₱{product.price.toFixed(2)}
@@ -243,9 +263,10 @@ export default function ProductDetailView() {
               {product.originalPrice && (
                 <span
                   style={{
-                    fontSize: '1.125rem',
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-light)',
                     textDecoration: 'line-through',
+                    fontWeight: 500,
                   }}
                 >
                   ₱{product.originalPrice.toFixed(2)}
@@ -253,22 +274,23 @@ export default function ProductDetailView() {
               )}
               <span
                 style={{
-                  fontSize: '0.8125rem',
+                  fontSize: 'var(--font-small, 14px)',
                   color: 'var(--success)',
-                  fontWeight: 600,
+                  fontWeight: 800,
                   backgroundColor: 'var(--success-bg)',
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   borderRadius: 'var(--radius-sm)',
+                  letterSpacing: '0.02em',
                 }}
               >
                 In Stock ({product.stockCount} ready to ship)
               </span>
             </div>
 
-            {/* Description */}
+            {/* Description (Body: 18px) */}
             <p
               style={{
-                fontSize: '0.9375rem',
+                fontSize: 'var(--font-body, 18px)',
                 color: 'var(--text-muted)',
                 lineHeight: 1.6,
                 marginBottom: '28px',
@@ -492,39 +514,44 @@ export default function ProductDetailView() {
                   onClick={() => toggleAccordion('dimensions')}
                   style={{
                     width: '100%',
-                    padding: '14px 0',
+                    padding: '16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-main)',
                   }}
                 >
                   <span>Dimensions & Materials</span>
                   {openAccordion === 'dimensions' ? (
-                    <ChevronUp size={16} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={16} />
+                    <ChevronDown size={18} />
                   )}
                 </button>
                 {openAccordion === 'dimensions' && (
                   <div
                     style={{
                       paddingBottom: '16px',
-                      fontSize: '0.875rem',
+                      fontSize: '1rem',
                       color: 'var(--text-muted)',
                       lineHeight: 1.6,
                     }}
                   >
                     <p>
-                      <strong>Dimensions:</strong> {product.specs.dimensions}
+                      <strong>Dimensions:</strong>{' '}
+                      {product.specs?.dimensions || '28 × 18 × 12 cm'}
                     </p>
                     <p style={{ marginTop: '4px' }}>
-                      <strong>Materials:</strong> {product.specs.materials}
+                      <strong>Materials:</strong>{' '}
+                      {product.specs?.materials ||
+                        'Sustainable FSC Certified Beechwood, Non-toxic Beeswax Seals, Organic Pigments'}
                     </p>
                     <p style={{ marginTop: '4px' }}>
-                      <strong>Craftsmanship:</strong> {product.specs.origin}
+                      <strong>Craftsmanship:</strong>{' '}
+                      {product.specs?.origin ||
+                        'Precision engineered and hand-finished for heirloom durability'}
                     </p>
                   </div>
                 )}
@@ -536,36 +563,39 @@ export default function ProductDetailView() {
                   onClick={() => toggleAccordion('safety')}
                   style={{
                     width: '100%',
-                    padding: '14px 0',
+                    padding: '16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-main)',
                   }}
                 >
                   <span>Safety Certifications & Age Group</span>
                   {openAccordion === 'safety' ? (
-                    <ChevronUp size={16} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={16} />
+                    <ChevronDown size={18} />
                   )}
                 </button>
                 {openAccordion === 'safety' && (
                   <div
                     style={{
                       paddingBottom: '16px',
-                      fontSize: '0.875rem',
+                      fontSize: '1rem',
                       color: 'var(--text-muted)',
                       lineHeight: 1.6,
                     }}
                   >
                     <p>
-                      <strong>Certifications:</strong> {product.specs.safety}
+                      <strong>Certifications:</strong>{' '}
+                      {product.specs?.safety ||
+                        'EN71, ASTM F963, 100% Non-toxic & BPA-Free Certified'}
                     </p>
                     <p style={{ marginTop: '4px' }}>
-                      <strong>Age Range:</strong> {product.specs.ageRange}
+                      <strong>Age Range:</strong>{' '}
+                      {product.specs?.ageRange || product.ageGroup || 'All Ages'}
                     </p>
                   </div>
                 )}
@@ -577,65 +607,278 @@ export default function ProductDetailView() {
                   onClick={() => toggleAccordion('reviews')}
                   style={{
                     width: '100%',
-                    padding: '14px 0',
+                    padding: '16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-main)',
                   }}
                 >
-                  <span>Customer Reviews ({product.reviews?.length || 0})</span>
+                  <span>Customer Reviews ({reviews.length})</span>
                   {openAccordion === 'reviews' ? (
-                    <ChevronUp size={16} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={16} />
+                    <ChevronDown size={18} />
                   )}
                 </button>
                 {openAccordion === 'reviews' && (
-                  <div style={{ paddingBottom: '20px' }}>
-                    {product.reviews?.map((r) => (
+                  <div style={{ paddingBottom: '24px' }}>
+                    {/* Header Action to Write a Review */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '16px',
+                        paddingBottom: '12px',
+                        borderBottom: '1px dashed var(--border-hairline)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Sparkles size={16} color="var(--accent)" />
+                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                          Verified Customer Feedback
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowReviewForm((prev) => !prev)}
+                        className="btn btn-outline btn-sm"
+                        style={{ fontSize: '0.8125rem', padding: '5px 12px', gap: '5px' }}
+                      >
+                        <MessageSquare size={13} />
+                        <span>{showReviewForm ? 'Cancel' : 'Write a Review'}</span>
+                      </button>
+                    </div>
+
+                    {/* Review Feedback Banner */}
+                    {reviewFeedback && (
                       <div
-                        key={r.id}
                         style={{
-                          backgroundColor: 'var(--bg-subtle)',
-                          padding: '14px 16px',
+                          padding: '12px 16px',
                           borderRadius: 'var(--radius-md)',
-                          marginBottom: '10px',
+                          marginBottom: '16px',
+                          fontSize: '0.8125rem',
+                          fontWeight: 600,
+                          backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                          color: '#15803d',
+                          border: '1px solid rgba(22, 163, 74, 0.25)',
                         }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            marginBottom: '6px',
-                          }}
-                        >
-                          <span
-                            style={{ fontWeight: 600, fontSize: '0.875rem' }}
-                          >
-                            {r.author}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--text-muted)',
-                            }}
-                          >
-                            {r.date}
-                          </span>
+                        {reviewFeedback.message}
+                      </div>
+                    )}
+
+                    {/* Interactive Review Submission Form (POST /products/:productId/reviews) */}
+                    {showReviewForm && (
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          if (!formTitle.trim() || !formComment.trim()) {
+                            alert('Please provide both a title and your feedback comment.');
+                            return;
+                          }
+                          const ok = await handleAddReview({
+                            rating: formRating,
+                            title: formTitle,
+                            comment: formComment,
+                          });
+                          if (ok) {
+                            setFormTitle('');
+                            setFormComment('');
+                            setShowReviewForm(false);
+                          }
+                        }}
+                        style={{
+                          backgroundColor: '#FAF7F5',
+                          border: '1px solid #E4DDD6',
+                          borderRadius: 'var(--radius-md)',
+                          padding: '18px',
+                          marginBottom: '20px',
+                        }}
+                      >
+                        <h4 style={{ fontSize: '0.9375rem', fontWeight: 800, marginBottom: '12px' }}>
+                          Share Your Toy Experience
+                        </h4>
+
+                        {/* Star Rating Picker */}
+                        <div style={{ marginBottom: '14px' }}>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                            Rating ({formRating} / 5 Stars)
+                          </label>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {[1, 2, 3, 4, 5].map((starVal) => (
+                              <button
+                                key={starVal}
+                                type="button"
+                                onClick={() => setFormRating(starVal)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  padding: '2px',
+                                  cursor: 'pointer',
+                                }}
+                                title={`${starVal} Star${starVal > 1 ? 's' : ''}`}
+                              >
+                                <Star
+                                  size={22}
+                                  fill={starVal <= formRating ? '#f59e0b' : 'none'}
+                                  color={starVal <= formRating ? '#f59e0b' : '#d4ccc4'}
+                                />
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                        <p
-                          style={{
-                            fontSize: '0.8125rem',
-                            color: 'var(--text-muted)',
-                          }}
+
+                        {/* Review Title */}
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                            Headline or Summary
+                          </label>
+                          <input
+                            type="text"
+                            value={formTitle}
+                            onChange={(e) => setFormTitle(e.target.value)}
+                            placeholder="e.g. Exceptional craftsmanship & kinetic movement!"
+                            required
+                            style={{
+                              width: '100%',
+                              padding: '8px 12px',
+                              fontSize: '0.875rem',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid var(--border-hairline)',
+                              backgroundColor: '#FFFFFF',
+                            }}
+                          />
+                        </div>
+
+                        {/* Review Comment */}
+                        <div style={{ marginBottom: '14px' }}>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                            Detailed Feedback
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={formComment}
+                            onChange={(e) => setFormComment(e.target.value)}
+                            placeholder="Describe the build quality, play value, and packaging..."
+                            required
+                            style={{
+                              width: '100%',
+                              padding: '8px 12px',
+                              fontSize: '0.875rem',
+                              borderRadius: 'var(--radius-sm)',
+                              border: '1px solid var(--border-hairline)',
+                              backgroundColor: '#FFFFFF',
+                              resize: 'vertical',
+                            }}
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSubmittingReview}
+                          className="btn btn-primary btn-sm"
+                          style={{ gap: '6px', width: '100%', justifyContent: 'center' }}
                         >
-                          "{r.text}"
+                          <Send size={13} />
+                          <span>{isSubmittingReview ? 'Submitting...' : 'Submit Verified Review'}</span>
+                        </button>
+                      </form>
+                    )}
+
+                    {/* List of Reviews */}
+                    {reviewsLoading ? (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '16px 0' }}>
+                        Loading verified reviews...
+                      </p>
+                    ) : reviews.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '24px 16px', backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
+                        <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '4px' }}>
+                          No customer reviews yet
+                        </p>
+                        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                          Be the first to review this handcrafted architectural toy!
                         </p>
                       </div>
-                    ))}
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {reviews.map((r, i) => {
+                          const authorName =
+                            r.user?.profile
+                              ? `${r.user.profile.firstName || ''} ${r.user.profile.lastName || ''}`.trim()
+                              : r.author || 'Verified Collector';
+
+                          const starCount = Number(r.rating) || 5;
+
+                          return (
+                            <div
+                              key={r.reviewId || r.id || i}
+                              style={{
+                                backgroundColor: 'var(--bg-subtle)',
+                                padding: '14px 16px',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid var(--border-hairline)',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '6px',
+                                  flexWrap: 'wrap',
+                                  gap: '8px',
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div style={{ display: 'flex', gap: '2px' }}>
+                                    {[1, 2, 3, 4, 5].map((s) => (
+                                      <Star
+                                        key={s}
+                                        size={14}
+                                        fill={s <= starCount ? '#f59e0b' : 'none'}
+                                        color={s <= starCount ? '#f59e0b' : '#d4ccc4'}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)' }}>
+                                    {authorName || 'Verified Collector'}
+                                  </span>
+                                </div>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                  {r.createdAt
+                                    ? new Date(r.createdAt).toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                      })
+                                    : r.date || 'Verified Purchase'}
+                                </span>
+                              </div>
+
+                              {r.title && (
+                                <h5 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
+                                  {r.title}
+                                </h5>
+                              )}
+
+                              <p
+                                style={{
+                                  fontSize: '0.8125rem',
+                                  color: 'var(--text-muted)',
+                                  lineHeight: 1.5,
+                                }}
+                              >
+                                "{r.comment || r.text}"
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

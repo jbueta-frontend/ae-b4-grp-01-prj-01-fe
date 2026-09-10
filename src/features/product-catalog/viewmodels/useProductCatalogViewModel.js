@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PRODUCTS, CATEGORIES } from '../models/productModel';
+import api from '../../../services/api';
+import { CATEGORIES, mapApiProduct } from '../models/productModel';
 import { useCart } from '../../../context/CartContext';
 
 export const AGE_OPTIONS = [
@@ -9,6 +10,7 @@ export const AGE_OPTIONS = [
   'Ages 2+',
   'Ages 3+',
   'Ages 5+',
+  'Ages 8+',
 ];
 
 export const PRICE_OPTIONS = [
@@ -29,14 +31,69 @@ export function useProductCatalogViewModel() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [addedNotice, setAddedNotice] = useState(null);
 
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const { addToCart } = useCart();
 
+  const fetchCatalog = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get('/products');
+      const list = Array.isArray(res) ? res : res?.products || res?.data || [];
+      const normalized = list.map(mapApiProduct).filter(Boolean);
+
+      // Merge with seeded products if present
+      const cached = localStorage.getItem('fiddlemania_seeded_products');
+      let combined = [...normalized];
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            const existingIds = new Set(combined.map((p) => p.id));
+            parsed.forEach((raw) => {
+              const mapped = mapApiProduct(raw);
+              if (mapped && !existingIds.has(mapped.id)) {
+                combined.push(mapped);
+              }
+            });
+          }
+        } catch {}
+      }
+
+      setProducts(combined);
+    } catch (err) {
+      // Fallback to cached products if API fails
+      const cached = localStorage.getItem('fiddlemania_seeded_products');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProducts(parsed.map(mapApiProduct).filter(Boolean));
+            setLoading(false);
+            return;
+          }
+        } catch {}
+      }
+      setError(err?.message || 'Failed to load products');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCatalog();
+  }, [fetchCatalog]);
+
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       // 1. Category Filter
       const matchCat =
         selectedCategory === 'All Toys' ||
-        product.category === selectedCategory ||
+        product.category.toLowerCase() === selectedCategory.toLowerCase() ||
         (selectedCategory === 'Ages 0–3' && product.ageGroup.includes('0–3'));
 
       // 2. Age Filter
@@ -67,7 +124,7 @@ export function useProductCatalogViewModel() {
 
       return matchCat && matchAge && matchPrice && matchStock && matchSearch;
     });
-  }, [selectedCategory, selectedAge, selectedPrice, inStockOnly, urlQuery]);
+  }, [products, selectedCategory, selectedAge, selectedPrice, inStockOnly, urlQuery]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -109,12 +166,40 @@ export function useProductCatalogViewModel() {
     setSearchParams(next, { replace: true });
   };
 
+  // Pagination State (12 products per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12;
+
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedAge, selectedPrice, inStockOnly, urlQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
+
+  const goToPage = (page) => {
+    const target = Math.max(1, Math.min(totalPages, page));
+    setCurrentPage(target);
+    const el = document.getElementById('products');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const nextPage = () => goToPage(currentPage + 1);
+  const prevPage = () => goToPage(currentPage - 1);
+
   const resetFilters = () => {
     setSelectedCategory('All Toys');
     setSelectedAge('All Ages');
     setSelectedPrice('all');
     setInStockOnly(false);
     handleSetSearchQuery('');
+    setCurrentPage(1);
   };
 
   return {
@@ -133,8 +218,18 @@ export function useProductCatalogViewModel() {
     resetFilters,
     searchQuery: urlQuery,
     setSearchQuery: handleSetSearchQuery,
-    products: filteredProducts,
-    totalProductsCount: PRODUCTS.length,
+    products: paginatedProducts,
+    totalFilteredCount: filteredProducts.length,
+    totalProductsCount: products.length,
+    currentPage,
+    totalPages,
+    pageSize,
+    goToPage,
+    nextPage,
+    prevPage,
+    loading,
+    error,
+    refresh: fetchCatalog,
     handleQuickAdd,
     addedNotice,
   };

@@ -290,21 +290,32 @@ export default function CartView() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  color: 'var(--text-muted)',
+                  alignItems: 'center',
                 }}
               >
-                <span>Subtotal</span>
-                <span>₱{subtotal.toFixed(2)}</span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-muted)' }}>Subtotal</span>
+                <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
+                  ₱{subtotal.toFixed(2)}
+                </span>
               </div>
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  color: 'var(--text-muted)',
+                  alignItems: 'center',
                 }}
               >
-                <span>Carbon-Neutral Delivery</span>
-                <span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-muted)' }}>Carbon-Neutral Delivery</span>
+                <span
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 800,
+                    color: '#16A34A',
+                    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                    padding: '3px 8px',
+                    borderRadius: 'var(--radius-sm)',
+                  }}
+                >
                   {shipping === 0 ? 'FREE' : `₱${shipping.toFixed(2)}`}
                 </span>
               </div>
@@ -312,24 +323,49 @@ export default function CartView() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  color: 'var(--text-muted)',
+                  alignItems: 'center',
                 }}
               >
-                <span>Estimated Sales Tax (8%)</span>
-                <span>₱{tax.toFixed(2)}</span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-muted)' }}>Estimated Sales Tax (8%)</span>
+                <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--text-main)', fontVariantNumeric: 'tabular-nums' }}>
+                  ₱{tax.toFixed(2)}
+                </span>
               </div>
+
+              {/* Prominently Highlighted Total Due Box */}
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '1.25rem',
-                  fontWeight: 800,
-                  paddingTop: '16px',
-                  borderTop: '1px solid var(--border-hairline)',
+                  alignItems: 'center',
+                  padding: '16px',
+                  backgroundColor: '#FAF7F5',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid #E4DDD6',
+                  marginTop: '8px',
                 }}
               >
-                <span>Estimated Total</span>
-                <span>₱{total.toFixed(2)}</span>
+                <span
+                  style={{
+                    fontSize: '1.0625rem',
+                    fontWeight: 800,
+                    color: 'var(--text-main)',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  TOTAL DUE
+                </span>
+                <span
+                  style={{
+                    fontSize: '1.5rem',
+                    fontWeight: 800,
+                    color: 'var(--accent)',
+                    letterSpacing: '-0.02em',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  ₱{total.toFixed(2)}
+                </span>
               </div>
             </div>
 

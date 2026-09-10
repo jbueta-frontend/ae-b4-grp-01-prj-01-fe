@@ -74,15 +74,23 @@ export default function Navbar() {
     }
   }, [isSearchOpen]);
 
-  // Hide on checkout for distraction-free tunnel
-  if (location.pathname === '/checkout') return null;
+  // Hide on checkout and admin portal
+  if (location.pathname === '/checkout' || location.pathname.startsWith('/admin')) return null;
 
   const handleNavClick = (e, sectionId) => {
     e.preventDefault();
     if (location.pathname === '/') {
+      if (sectionId === 'hero') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.history.pushState(null, '', '#hero');
+        return;
+      }
       const el = document.getElementById(sectionId);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const navHeight = 58;
+        const targetY =
+          el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
         window.history.pushState(null, '', `#${sectionId}`);
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -99,7 +107,12 @@ export default function Navbar() {
     if (trimmed) {
       if (location.pathname === '/') {
         const el = document.getElementById('products');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        if (el) {
+          const navHeight = 58;
+          const targetY =
+            el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
+        }
         navigate(`/?q=${encodeURIComponent(trimmed)}#products`);
       } else {
         navigate(`/?q=${encodeURIComponent(trimmed)}#products`);
@@ -131,16 +144,16 @@ export default function Navbar() {
       <div className="container">
         <div
           style={{
-            height: '74px',
+            height: '58px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '20px',
           }}
         >
-          {/* 1. Left-most: Brand Logo */}
+          {/* 1. Left-most: Brand Logo (Optimized for 58px bar) */}
           <div style={{ flexShrink: 0 }}>
-            <Logo size="md" />
+            <Logo size={30} />
           </div>
 
           {/* 2. Center: Navigation Links (Home, Categories, Product) */}
@@ -148,7 +161,7 @@ export default function Navbar() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '32px',
+              gap: '28px',
             }}
             aria-label="Primary Navigation"
           >
@@ -162,7 +175,7 @@ export default function Navbar() {
                 letterSpacing: '-0.01em',
                 transition: 'color var(--transition-fast)',
                 position: 'relative',
-                padding: '6px 0',
+                padding: '4px 0',
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.color = 'var(--accent)')
@@ -184,7 +197,7 @@ export default function Navbar() {
                 letterSpacing: '-0.01em',
                 transition: 'color var(--transition-fast)',
                 position: 'relative',
-                padding: '6px 0',
+                padding: '4px 0',
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.color = 'var(--accent)')
@@ -206,7 +219,7 @@ export default function Navbar() {
                 letterSpacing: '-0.01em',
                 transition: 'color var(--transition-fast)',
                 position: 'relative',
-                padding: '6px 0',
+                padding: '4px 0',
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.color = 'var(--accent)')
@@ -224,7 +237,7 @@ export default function Navbar() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: '10px',
               flexShrink: 0,
             }}
           >
@@ -232,8 +245,8 @@ export default function Navbar() {
             <button
               onClick={() => setIsSearchOpen((prev) => !prev)}
               style={{
-                width: '42px',
-                height: '42px',
+                width: '38px',
+                height: '38px',
                 borderRadius: 'var(--radius-full)',
                 border: isSearchOpen
                   ? '1px solid var(--accent)'
@@ -251,7 +264,7 @@ export default function Navbar() {
               aria-label="Toggle search bar"
               title="Search Products"
             >
-              {isSearchOpen ? <X size={18} /> : <Search size={18} />}
+              {isSearchOpen ? <X size={17} /> : <Search size={17} />}
             </button>
 
             {/* Shopping Cart Icon with Dynamic Badge Update */}
@@ -260,8 +273,8 @@ export default function Navbar() {
               className={isBouncing ? 'cart-btn-bounce' : ''}
               style={{
                 position: 'relative',
-                width: '42px',
-                height: '42px',
+                width: '38px',
+                height: '38px',
                 borderRadius: 'var(--radius-full)',
                 border: isBouncing
                   ? '1px solid #16A34A'
@@ -282,7 +295,7 @@ export default function Navbar() {
               aria-label={`Open shopping cart, ${itemCount} items`}
               title="Shopping Cart"
             >
-              <ShoppingCart size={19} />
+              <ShoppingCart size={18} />
               {itemCount > 0 && (
                 <span
                   key={`badge-${itemCount}`}
@@ -293,11 +306,11 @@ export default function Navbar() {
                     right: '-4px',
                     backgroundColor: isBouncing ? '#16A34A' : 'var(--accent)',
                     color: '#FFFFFF',
-                    fontSize: '0.6875rem',
+                    fontSize: 'var(--font-small, 14px)',
                     fontWeight: 800,
-                    minWidth: '20px',
-                    height: '20px',
-                    padding: '0 4px',
+                    minWidth: '22px',
+                    height: '22px',
+                    padding: '0 5px',
                     borderRadius: 'var(--radius-full)',
                     display: 'flex',
                     alignItems: 'center',
@@ -315,15 +328,15 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Equal-Sized Profile Icon (42px) with Dropdown */}
+            {/* Equal-Sized Profile Icon (38px) with Dropdown */}
             {isAuthenticated ? (
               <div ref={profileMenuRef} style={{ position: 'relative' }}>
                 <button
                   type="button"
                   onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                   style={{
-                    width: '42px',
-                    height: '42px',
+                    width: '38px',
+                    height: '38px',
                     borderRadius: 'var(--radius-full)',
                     border: isProfileMenuOpen
                       ? '1px solid var(--accent)'
@@ -347,7 +360,7 @@ export default function Navbar() {
                   aria-expanded={isProfileMenuOpen}
                   title={user?.name || user?.email || 'Account'}
                 >
-                  <User size={19} color="var(--accent)" />
+                  <User size={18} color="var(--accent)" />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -474,7 +487,7 @@ export default function Navbar() {
                 to="/login"
                 className="btn btn-primary btn-sm"
                 style={{
-                  padding: '9px 18px',
+                  padding: '7px 16px',
                   borderRadius: 'var(--radius-full)',
                   fontSize: '0.875rem',
                   fontWeight: 700,

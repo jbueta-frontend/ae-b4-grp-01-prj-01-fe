@@ -18,13 +18,13 @@ export default function CatalogFilters({
   return (
     <aside
       style={{
-        backgroundColor: 'var(--bg-card)',
-        border: '1px solid var(--border-hairline)',
+        backgroundColor: '#FFFFFF',
+        border: '1px solid #D4CCC4',
         borderRadius: 'var(--radius-lg)',
         padding: '24px',
-        boxShadow: 'var(--shadow-sm)',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04)',
         position: 'sticky',
-        top: '90px',
+        top: '74px',
       }}
       aria-label="Product Catalog Filters"
     >
@@ -35,7 +35,7 @@ export default function CatalogFilters({
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingBottom: '16px',
-          borderBottom: '1px solid var(--border-hairline)',
+          borderBottom: '1px solid #EBE5DF',
           marginBottom: '20px',
         }}
       >
@@ -225,7 +225,7 @@ export default function CatalogFilters({
                   border: '1px solid',
                   borderColor: isSelected
                     ? 'var(--text-main)'
-                    : 'var(--border-hairline)',
+                    : '#D4CCC4',
                   cursor: 'pointer',
                   transition: 'all var(--transition-fast)',
                 }}
@@ -241,7 +241,7 @@ export default function CatalogFilters({
       <div
         style={{
           paddingTop: '16px',
-          borderTop: '1px solid var(--border-hairline)',
+          borderTop: '1px solid #EBE5DF',
         }}
       >
         <label

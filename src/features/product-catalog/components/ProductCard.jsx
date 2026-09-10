@@ -11,26 +11,28 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
     <div
       style={{
         backgroundColor: '#FFFFFF',
-        border: '1px solid var(--border-hairline)',
+        border: '1px solid #D4CCC4',
         borderRadius: 'var(--radius-lg)',
         padding: '16px',
         display: 'flex',
         flexDirection: 'column',
         transition:
-          'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+          'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease',
         position: 'relative',
-        boxShadow: 'var(--shadow-sm)',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)',
       }}
       className="product-card"
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-3px)';
-        e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        e.currentTarget.style.borderColor = '#D4CECA';
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow =
+          '0 12px 28px rgba(0, 0, 0, 0.09), 0 3px 8px rgba(0, 0, 0, 0.04)';
+        e.currentTarget.style.borderColor = 'var(--accent)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-        e.currentTarget.style.borderColor = 'var(--border-hairline)';
+        e.currentTarget.style.boxShadow =
+          '0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)';
+        e.currentTarget.style.borderColor = '#D4CCC4';
       }}
     >
       {/* 1. Top Badges: Discount Badge (matching reference blue/accent pill) */}
@@ -50,15 +52,15 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         {product.discount ? (
           <span
             style={{
-              backgroundColor: '#3B82F6', // Reference image has crisp blue discount badges like '20% OFF'
+              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
               color: '#FFFFFF',
-              fontSize: '0.6875rem',
+              fontSize: '12px',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-sm)',
-              boxShadow: '0 2px 6px rgba(59, 130, 246, 0.3)',
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.35)',
             }}
           >
             {product.discount}
@@ -68,12 +70,13 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
             style={{
               backgroundColor: 'var(--accent)',
               color: '#FFFFFF',
-              fontSize: '0.6875rem',
+              fontSize: '12px',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-sm)',
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              boxShadow: '0 2px 8px rgba(200, 90, 50, 0.3)',
             }}
           >
             {product.tag}
@@ -82,21 +85,50 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
           <span />
         )}
 
-        {product.stockCount <= 10 && (
+        {product.stockCount <= 0 ? (
           <span
             style={{
-              backgroundColor: 'rgba(24, 24, 27, 0.8)',
+              backgroundColor: '#64748B',
               color: '#FFFFFF',
-              fontSize: '0.6875rem',
-              fontWeight: 700,
-              padding: '3px 8px',
+              fontSize: '11px',
+              fontWeight: 800,
+              padding: '4px 10px',
               borderRadius: 'var(--radius-full)',
-              backdropFilter: 'blur(4px)',
+              letterSpacing: '0.03em',
+              textTransform: 'uppercase',
             }}
           >
-            Low Stock
+            Out of Stock
           </span>
-        )}
+        ) : product.stockCount <= 10 ? (
+          <span
+            style={{
+              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+              color: '#FFFFFF',
+              fontSize: '11px',
+              fontWeight: 800,
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              letterSpacing: '0.02em',
+              boxShadow: '0 2px 10px rgba(220, 38, 38, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+          >
+            <span
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: '#FFFFFF',
+                display: 'inline-block',
+              }}
+            />
+            <span>Only {product.stockCount} left!</span>
+          </span>
+        ) : null}
       </div>
 
       {/* 2. Product Image Canvas (Centered, high contrast, clean) */}
@@ -105,6 +137,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         style={{
           display: 'block',
           backgroundColor: '#FAF7F5',
+          border: '1px solid #ECE6E1',
           borderRadius: 'var(--radius-md)',
           overflow: 'hidden',
           aspectRatio: '1 / 1',
@@ -145,7 +178,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         </div>
         <span
           style={{
-            fontSize: '0.75rem',
+            fontSize: 'var(--font-small, 14px)',
             fontWeight: 600,
             color: 'var(--text-muted)',
           }}
@@ -154,16 +187,16 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         </span>
       </div>
 
-      {/* 4. Product Title */}
+      {/* 4. Product Title (Body: 18px) */}
       <Link
         to={`/products/${product.slug}`}
         style={{
-          fontSize: '0.9375rem',
+          fontSize: 'var(--font-body, 18px)',
           fontWeight: 700,
           color: 'var(--text-main)',
           lineHeight: 1.35,
           marginBottom: '8px',
-          letterSpacing: '-0.01em',
+          letterSpacing: '-0.015em',
           minHeight: '2.7em',
           display: '-webkit-box',
           WebkitLineClamp: 2,
@@ -174,7 +207,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         {product.name}
       </Link>
 
-      {/* 5. Pricing Row (Current Price + Strikethrough Original Price) */}
+      {/* 5. Pricing Row (Current Price + Strikethrough Original Price) - Emphasized Text Sensitivity */}
       <div
         style={{
           display: 'flex',
@@ -185,10 +218,11 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
       >
         <span
           style={{
-            fontSize: '1.1875rem',
+            fontSize: '1.375rem', /* 22px */
             fontWeight: 800,
             color: 'var(--text-main)',
             letterSpacing: '-0.02em',
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
           ₱{product.price.toFixed(2)}
@@ -196,7 +230,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         {product.originalPrice && (
           <span
             style={{
-              fontSize: '0.875rem',
+              fontSize: 'var(--font-small, 14px)',
               color: 'var(--text-light)',
               textDecoration: 'line-through',
               fontWeight: 500,
