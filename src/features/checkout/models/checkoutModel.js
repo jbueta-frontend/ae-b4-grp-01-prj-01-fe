@@ -1,27 +1,36 @@
-export const DELIVERY_OPTIONS = [
-  {
-    id: 'standard',
-    name: 'Standard Carbon-Neutral',
-    time: '3–5 business days',
-    price: 0.0,
-    desc: 'Dispatched via certified zero-emission courier in biodegradable boxes',
-  },
-  {
-    id: 'express',
-    name: 'Express Heirloom Courier',
-    time: '1–2 business days',
-    price: 12.0,
-    desc: 'Priority packing and guaranteed air delivery with signature required',
-  },
-];
+export const DEFAULT_DELIVERY = {
+  id: 'standard',
+  name: 'Standard Carbon-Neutral Delivery',
+  time: '3–5 business days',
+  price: 0.0,
+  desc: 'Dispatched via certified zero-emission courier in biodegradable boxes',
+};
 
 export const INITIAL_SHIPPING = {
-  fullName: 'Alexander Wright',
-  email: 'alex.wright@example.com',
-  address: '427 Maplewood Avenue',
-  suite: 'Apt 4B',
-  city: 'Portland',
-  state: 'OR',
-  zip: '97201',
-  country: 'United States',
+  fullName: '',
+  email: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  stateProvince: '',
+  postalCode: '',
+  country: 'Philippines',
 };
+
+export const PAYMENT_METHODS = [
+  {
+    id: 'card',
+    name: 'Credit / Debit Card',
+    desc: 'Instant secure checkout with 256-bit SSL encryption',
+  },
+  {
+    id: 'cod',
+    name: 'Cash on Delivery (COD)',
+    desc: 'Pay cash to the delivery courier directly upon arrival',
+  },
+  {
+    id: 'ewallet',
+    name: 'GCash / Maya / E-Wallet',
+    desc: 'Fast and convenient payment via local mobile wallet',
+  },
+];

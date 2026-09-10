@@ -3,7 +3,16 @@ import { DATE_PRESETS } from '../models/reportsModel';
 import { formatPHP } from '../../../shared/utils/currency';
 import RevenueAreaChart from '../components/RevenueAreaChart';
 import OrderBreakdownMeters from '../components/OrderBreakdownMeters';
-import { TrendingUp, ShoppingCart, DollarSign, Calendar, ArrowUpRight } from 'lucide-react';
+import {
+  TrendingUp,
+  ShoppingCart,
+  DollarSign,
+  Calendar,
+  ArrowUpRight,
+  AlertTriangle,
+  Box,
+  CheckCircle2,
+} from 'lucide-react';
 
 export default function AdminReportsView() {
   const {
@@ -195,11 +204,11 @@ export default function AdminReportsView() {
         </div>
       )}
 
-      {/* 3. Primary KPI Cards Grid */}
+      {/* 3. Primary KPI Cards Grid (Executive BI: Revenue, Order Metrics, Active Products, Low-Stock Alerts) */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '20px',
           marginBottom: '28px',
         }}
@@ -255,19 +264,12 @@ export default function AdminReportsView() {
           <div
             style={{
               marginTop: '10px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: 'var(--font-small, 14px)',
-              fontWeight: 700,
-              color: '#16a34a',
-              backgroundColor: 'rgba(22, 163, 74, 0.08)',
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
             }}
           >
-            <TrendingUp size={14} />
-            <span>+14.8% vs prior period</span>
+            Real-time aggregate turnover
           </div>
         </div>
 
@@ -290,7 +292,7 @@ export default function AdminReportsView() {
                 color: 'var(--text-muted)',
               }}
             >
-              Orders Completed
+              Total Orders
             </span>
             <div
               style={{
@@ -322,23 +324,16 @@ export default function AdminReportsView() {
           <div
             style={{
               marginTop: '10px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: 'var(--font-small, 14px)',
-              fontWeight: 700,
-              color: '#2563eb',
-              backgroundColor: 'rgba(37, 99, 235, 0.08)',
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
             }}
           >
-            <ArrowUpRight size={14} />
-            <span>+8.4% order volume</span>
+            Live database transactions
           </div>
         </div>
 
-        {/* KPI 3: Average Order Value */}
+        {/* KPI 3: Active Products */}
         <div className="admin-card">
           <div
             style={{
@@ -357,21 +352,21 @@ export default function AdminReportsView() {
                 color: 'var(--text-muted)',
               }}
             >
-              Average Order Value (AOV)
+              Active Toys
             </span>
             <div
               style={{
                 width: '32px',
                 height: '32px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                color: '#7c3aed',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                color: '#10b981',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <TrendingUp size={18} />
+              <Box size={18} />
             </div>
           </div>
           <div
@@ -384,23 +379,169 @@ export default function AdminReportsView() {
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {loading ? '...' : formatPHP(data.averageOrderValue)}
+            {loading ? '...' : (data.activeProductsCount || 0).toLocaleString()}
           </div>
           <div
             style={{
               marginTop: '10px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontSize: 'var(--font-small, 14px)',
+              fontSize: '0.8125rem',
               fontWeight: 600,
               color: 'var(--text-muted)',
             }}
           >
-            <span>Healthy checkout basket density</span>
+            Catalog SKUs in warehouse
+          </div>
+        </div>
+
+        {/* KPI 4: Low-Stock Alerts */}
+        <div className="admin-card">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 'var(--font-small, 14px)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                color: data.lowStockAlerts?.length > 0 ? '#dc2626' : 'var(--text-muted)',
+              }}
+            >
+              Low-Stock Alerts
+            </span>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor:
+                  data.lowStockAlerts?.length > 0
+                    ? 'rgba(239, 68, 68, 0.1)'
+                    : 'rgba(22, 163, 74, 0.1)',
+                color: data.lowStockAlerts?.length > 0 ? '#dc2626' : '#16a34a',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {data.lowStockAlerts?.length > 0 ? (
+                <AlertTriangle size={18} />
+              ) : (
+                <CheckCircle2 size={18} />
+              )}
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: 'var(--font-h2, 40px)',
+              fontWeight: 800,
+              color: data.lowStockAlerts?.length > 0 ? '#dc2626' : 'var(--text-main)',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {loading ? '...' : data.lowStockAlerts?.length || 0}
+          </div>
+          <div
+            style={{
+              marginTop: '10px',
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              color: data.lowStockAlerts?.length > 0 ? '#dc2626' : '#16a34a',
+            }}
+          >
+            {data.lowStockAlerts?.length > 0
+              ? 'Replenishment action required'
+              : 'Warehouse stock levels healthy'}
           </div>
         </div>
       </div>
+
+      {/* Low-Stock Warehouse Alerts Panel (Executive BI) */}
+      {data.lowStockAlerts?.length > 0 && (
+        <div
+          className="admin-card"
+          style={{
+            marginBottom: '28px',
+            border: '1.5px solid rgba(220, 38, 38, 0.3)',
+            backgroundColor: '#FFFBFB',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertTriangle size={20} color="#dc2626" />
+              <h3 style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#dc2626' }}>
+                Warehouse Low-Stock Priority Alerts ({data.lowStockAlerts.length})
+              </h3>
+            </div>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: '#dc2626',
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              Action Required
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+            {data.lowStockAlerts.map((item, idx) => (
+              <div
+                key={item.productId || idx}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid #fecaca',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    {item.name || item.productName || 'Toy Product'}
+                  </h4>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    SKU: {item.sku || 'N/A'} • Threshold: {item.lowStockThreshold || 5} units
+                  </span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 800,
+                      color: '#dc2626',
+                      backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    {item.stockQuantity ?? item.stock ?? 0} left
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 4. Visual Graphs & Charts Grid */}
       <div

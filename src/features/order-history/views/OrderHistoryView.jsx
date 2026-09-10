@@ -1,47 +1,96 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Package, Truck, ArrowRight, RotateCcw } from 'lucide-react';
+import { Package, Truck, ArrowRight, RotateCcw, XCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../../../context/CartContext';
+import { getCustomerOrders, cancelOrder } from '../../../services/orderService';
 
 export default function OrderHistoryView() {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [feedback, setFeedback] = useState(null);
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  useEffect(() => {
+  const loadOrders = async () => {
+    setLoading(true);
     try {
-      const saved = JSON.parse(
+      const serverOrders = await getCustomerOrders();
+      const localOrders = JSON.parse(
         localStorage.getItem('fiddlemania_orders') || '[]'
       );
-      if (saved.length > 0) {
-        setOrders(saved);
-      } else {
-        // Seed default sample order for prototype exploration
-        const defaultOrder = {
-          orderId: 'FM-824109',
-          trackingNumber: 'TRK-98314512',
-          createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-          total: 96.0,
-          status: 'In Transit',
-          estimatedDelivery: 'Sep 14 – Sep 16',
-          items: [
-            {
-              id: 'prod-01',
-              name: 'Architect Beechwood Block Set',
-              price: 48.0,
-              quantity: 2,
-              variant: 'Natural Beech',
-              image:
-                'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80',
-            },
-          ],
-        };
-        setOrders([defaultOrder]);
-      }
+
+      // Merge backend orders with any local orders
+      const combined = [...serverOrders];
+      const seenIds = new Set(serverOrders.map((o) => o.orderId || o.orderNumber));
+
+      localOrders.forEach((lo) => {
+        const id = lo.orderId || lo.orderNumber;
+        if (!seenIds.has(id)) {
+          combined.push(lo);
+        }
+      });
+
+      setOrders(combined);
     } catch {
-      setOrders([]);
+      const localOrders = JSON.parse(
+        localStorage.getItem('fiddlemania_orders') || '[]'
+      );
+      setOrders(localOrders);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadOrders();
   }, []);
+
+  const handleCancelOrder = async (orderId) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to cancel Order ${orderId}? This will release the reserved inventory back to available warehouse stock.`
+      )
+    ) {
+      return;
+    }
+
+    setCancellingId(orderId);
+    setFeedback(null);
+    try {
+      await cancelOrder(orderId);
+
+      // Update state locally
+      setOrders((prev) =>
+        prev.map((ord) => {
+          const match = ord.orderId === orderId || ord.orderNumber === orderId;
+          return match ? { ...ord, status: 'CANCELLED' } : ord;
+        })
+      );
+
+      // Update localStorage cache as well
+      try {
+        const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+        const updated = local.map((ord) => {
+          const match = ord.orderId === orderId || ord.orderNumber === orderId;
+          return match ? { ...ord, status: 'CANCELLED' } : ord;
+        });
+        localStorage.setItem('fiddlemania_orders', JSON.stringify(updated));
+      } catch {}
+
+      setFeedback({
+        type: 'success',
+        message: `Order ${orderId} has been successfully cancelled and warehouse inventory released.`,
+      });
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err?.message || `Could not cancel order ${orderId}.`,
+      });
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <div style={{ padding: '40px 0 80px' }}>
@@ -73,6 +122,35 @@ export default function OrderHistoryView() {
           </Link>
         </div>
 
+        {/* Feedback Alert */}
+        {feedback && (
+          <div
+            style={{
+              padding: '14px 18px',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              backgroundColor:
+                feedback.type === 'success'
+                  ? 'rgba(22, 163, 74, 0.08)'
+                  : 'rgba(220, 38, 38, 0.08)',
+              color: feedback.type === 'success' ? '#15803d' : '#b91c1c',
+              border: `1px solid ${feedback.type === 'success' ? 'rgba(22, 163, 74, 0.25)' : 'rgba(220, 38, 38, 0.25)'}`,
+            }}
+          >
+            {feedback.type === 'success' ? (
+              <CheckCircle2 size={18} />
+            ) : (
+              <AlertCircle size={18} />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+        )}
+
         {orders.length === 0 ? (
           <div
             className="card-clean"
@@ -102,189 +180,228 @@ export default function OrderHistoryView() {
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
           >
-            {orders.map((order) => (
-              <div key={order.orderId} className="card-clean">
-                {/* Order Meta Bar */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px',
-                    paddingBottom: '16px',
-                    borderBottom: '1px solid var(--border-hairline)',
-                    marginBottom: '16px',
-                  }}
-                >
+            {orders.map((order) => {
+              const currentOrderId = order.orderId || order.orderNumber;
+              const isCancelled = order.status === 'CANCELLED';
+              const isDelivered = order.status === 'Delivered';
+
+              return (
+                <div key={currentOrderId} className="card-clean">
+                  {/* Order Meta Bar */}
                   <div
                     style={{
                       display: 'flex',
-                      gap: '16px',
+                      flexWrap: 'wrap',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
+                      gap: '12px',
+                      paddingBottom: '16px',
+                      borderBottom: '1px solid var(--border-hairline)',
+                      marginBottom: '16px',
                     }}
                   >
-                    <div>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--text-muted)',
-                          textTransform: 'uppercase',
-                          fontWeight: 700,
-                        }}
-                      >
-                        Order Placed
-                      </span>
-                      <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                        {new Date(order.createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                    <div>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--text-muted)',
-                          textTransform: 'uppercase',
-                          fontWeight: 700,
-                        }}
-                      >
-                        Total
-                      </span>
-                      <p style={{ fontSize: '0.875rem', fontWeight: 800 }}>
-                        ₱{order.total.toFixed(2)}
-                      </p>
-                    </div>
-                    <div>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--text-muted)',
-                          textTransform: 'uppercase',
-                          fontWeight: 700,
-                        }}
-                      >
-                        Order #
-                      </span>
-                      <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                        {order.orderId}
-                      </p>
-                    </div>
-                  </div>
-
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      backgroundColor:
-                        order.status === 'Delivered'
-                          ? 'var(--success-bg)'
-                          : 'var(--accent-light)',
-                      color:
-                        order.status === 'Delivered'
-                          ? 'var(--success)'
-                          : 'var(--accent)',
-                      padding: '4px 10px',
-                      borderRadius: 'var(--radius-full)',
-                    }}
-                  >
-                    <Truck size={13} /> {order.status || 'In Transit'}
-                  </span>
-                </div>
-
-                {/* Items in order */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    marginBottom: '20px',
-                  }}
-                >
-                  {order.items?.map((item, idx) => (
                     <div
-                      key={idx}
                       style={{
                         display: 'flex',
-                        justifyContent: 'space-between',
+                        gap: '16px',
                         alignItems: 'center',
+                        flexWrap: 'wrap',
                       }}
                     >
+                      <div>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                          }}
+                        >
+                          Order Placed
+                        </span>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                          {new Date(order.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                          }}
+                        >
+                          Total
+                        </span>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 800 }}>
+                          ₱{(Number(order.totalAmount || order.total) || 0).toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--text-muted)',
+                            textTransform: 'uppercase',
+                            fontWeight: 700,
+                          }}
+                        >
+                          Order #
+                        </span>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--accent)' }}>
+                          {currentOrderId}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        backgroundColor: isCancelled
+                          ? 'rgba(220, 38, 38, 0.08)'
+                          : isDelivered
+                            ? 'var(--success-bg)'
+                            : 'var(--accent-light)',
+                        color: isCancelled
+                          ? '#dc2626'
+                          : isDelivered
+                            ? 'var(--success)'
+                            : 'var(--accent)',
+                        padding: '4px 10px',
+                        borderRadius: 'var(--radius-full)',
+                        border: isCancelled ? '1px solid rgba(220, 38, 38, 0.25)' : 'none',
+                      }}
+                    >
+                      {isCancelled ? (
+                        <XCircle size={13} />
+                      ) : (
+                        <Truck size={13} />
+                      )}
+                      <span>{order.status || 'In Transit'}</span>
+                    </span>
+                  </div>
+
+                  {/* Items in order */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    {order.items?.map((item, idx) => (
                       <div
+                        key={idx}
                         style={{
                           display: 'flex',
+                          justifyContent: 'space-between',
                           alignItems: 'center',
-                          gap: '12px',
                         }}
                       >
-                        <img
-                          src={item.image}
-                          alt={item.name}
+                        <div
                           style={{
-                            width: '48px',
-                            height: '48px',
-                            objectFit: 'cover',
-                            borderRadius: 'var(--radius-sm)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
                           }}
-                        />
-                        <div>
-                          <h4 style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                            {item.name}
-                          </h4>
-                          <span
+                        >
+                          <img
+                            src={item.image}
+                            alt={item.name}
                             style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--text-muted)',
+                              width: '48px',
+                              height: '48px',
+                              objectFit: 'cover',
+                              borderRadius: 'var(--radius-sm)',
                             }}
-                          >
-                            Qty: {item.quantity} • {item.variant}
-                          </span>
+                          />
+                          <div>
+                            <h4 style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                              {item.name}
+                            </h4>
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                color: 'var(--text-muted)',
+                              }}
+                            >
+                              Qty: {item.quantity} {item.variant ? `• ${item.variant}` : ''}
+                            </span>
+                          </div>
                         </div>
+
+                        <button
+                          onClick={() => addToCart(item, 1, item.variant)}
+                          className="btn btn-ghost btn-sm"
+                          style={{ gap: '6px', fontSize: '0.8125rem' }}
+                        >
+                          <RotateCcw size={13} />
+                          <span>Reorder</span>
+                        </button>
                       </div>
+                    ))}
+                  </div>
 
-                      <button
-                        onClick={() => addToCart(item, 1, item.variant)}
-                        className="btn btn-ghost btn-sm"
-                        style={{ gap: '6px', fontSize: '0.8125rem' }}
-                      >
-                        <RotateCcw size={13} />
-                        <span>Reorder</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Action CTA */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    gap: '10px',
-                  }}
-                >
-                  <button
-                    onClick={() =>
-                      navigate(`/track/${order.trackingNumber}`, {
-                        state: { order },
-                      })
-                    }
-                    className="btn btn-secondary btn-sm"
-                    style={{ gap: '6px' }}
+                  {/* Action CTA */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      gap: '10px',
+                      flexWrap: 'wrap',
+                    }}
                   >
-                    <Truck size={14} />
-                    <span>Track Package</span>
-                    <ArrowRight size={14} />
-                  </button>
+                    {!isCancelled && !isDelivered && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelOrder(currentOrderId)}
+                        disabled={cancellingId === currentOrderId}
+                        className="btn btn-outline btn-sm"
+                        style={{
+                          color: '#dc2626',
+                          borderColor: '#fca5a5',
+                          gap: '6px',
+                          fontSize: '0.8125rem',
+                        }}
+                      >
+                        <XCircle size={14} />
+                        <span>
+                          {cancellingId === currentOrderId
+                            ? 'Cancelling...'
+                            : 'Cancel Order'}
+                        </span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() =>
+                        navigate(`/track/${order.trackingNumber || currentOrderId}`, {
+                          state: { order },
+                        })
+                      }
+                      className="btn btn-secondary btn-sm"
+                      style={{ gap: '6px' }}
+                    >
+                      <Truck size={14} />
+                      <span>Track Package</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

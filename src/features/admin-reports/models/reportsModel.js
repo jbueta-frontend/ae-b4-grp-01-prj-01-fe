@@ -58,5 +58,14 @@ export const INITIAL_REPORTS_STATE = {
   totalRevenue: 0,
   orderCount: 0,
   averageOrderValue: 0,
+  activeProductsCount: 0,
+  lowStockAlerts: [],
+  orderMetrics: {
+    total: 0,
+    confirmed: 0,
+    processing: 0,
+    delivered: 0,
+    cancelled: 0,
+  },
   topProducts: [],
 };

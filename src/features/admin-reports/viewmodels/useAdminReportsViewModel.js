@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../../../services/api';
+import { getAdminReportsOverview } from '../../../services/adminService';
 import {
   getDateRangeByPreset,
   INITIAL_REPORTS_STATE,
@@ -24,11 +24,35 @@ export function useAdminReportsViewModel() {
       if (from) params.from = from;
       if (to) params.to = to;
 
-      const res = await api.get('/admin/reports', { params });
-      // api unwraps res.data.data -> res is { totalRevenue, orderCount, topProducts }
-      const revenue = Number(res?.totalRevenue || res?.revenue || 0);
-      const orders = Number(res?.orderCount || res?.orders || 0);
-      const aov = orders > 0 ? revenue / orders : 0;
+      // 6. Executive BI Dashboard Overview endpoint GET /admin/reports/overview
+      const res = await getAdminReportsOverview(params);
+
+      const revenue = Number(res?.totalRevenue ?? res?.revenue ?? 0);
+      const orders = Number(
+        res?.orderCount ??
+        res?.orders ??
+        res?.orderMetrics?.total ??
+        0
+      );
+      const aov = Number(res?.averageOrderValue ?? (orders > 0 ? revenue / orders : 0));
+      const activeProductsCount = Number(
+        res?.activeProductsCount ??
+        res?.activeProducts ??
+        res?.productCount ??
+        0
+      );
+      const lowStockAlerts = Array.isArray(res?.lowStockAlerts)
+        ? res.lowStockAlerts
+        : Array.isArray(res?.lowStock)
+          ? res.lowStock
+          : [];
+      const orderMetrics = res?.orderMetrics || {
+        total: orders,
+        confirmed: Number(res?.confirmedOrders || 0),
+        processing: Number(res?.processingOrders || 0),
+        delivered: Number(res?.deliveredOrders || 0),
+        cancelled: Number(res?.cancelledOrders || 0),
+      };
       const topProducts = Array.isArray(res?.topProducts)
         ? res.topProducts
         : [];
@@ -37,19 +61,16 @@ export function useAdminReportsViewModel() {
         totalRevenue: revenue,
         orderCount: orders,
         averageOrderValue: aov,
+        activeProductsCount,
+        lowStockAlerts,
+        orderMetrics,
         topProducts,
       });
     } catch (err) {
-      // If backend returns 404 route not found, format a clear, developer-friendly message
-      if (err?.response?.status === 404) {
-        setError(
-          'Notice: Backend endpoint GET /api/v1/admin/reports is not yet registered on the server router. Once the backend mounts this route, live aggregations will populate automatically.'
-        );
-      } else {
-        setError(
-          getErrorMessage(err, 'Failed to fetch business reports from server')
-        );
-      }
+      setError(
+        getErrorMessage(err, 'Failed to fetch executive business reports from database')
+      );
+      setData(INITIAL_REPORTS_STATE);
     } finally {
       setLoading(false);
     }

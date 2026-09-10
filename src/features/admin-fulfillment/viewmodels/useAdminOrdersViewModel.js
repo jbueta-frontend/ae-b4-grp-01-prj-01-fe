@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import api from '../../../services/api';
-import { SAMPLE_ADMIN_ORDERS } from '../models/adminOrderModel';
+import { getAdminOrders } from '../../../services/adminService';
+import { getCustomerOrders } from '../../../services/orderService';
 
 export function useAdminOrdersViewModel() {
   const [orders, setOrders] = useState([]);
@@ -21,31 +21,44 @@ export function useAdminOrdersViewModel() {
         params.status = statusFilter;
       }
 
-      const res = await api.get('/admin/orders', { params });
-      // api unwraps res.data.data
       let list = [];
       let total = 0;
 
-      if (Array.isArray(res)) {
-        list = res;
-        total = res.length;
-      } else if (Array.isArray(res?.orders)) {
-        list = res.orders;
-        total = res.total || res.orders.length;
+      try {
+        const res = await getAdminOrders(params);
+        if (Array.isArray(res)) {
+          list = res;
+          total = res.length;
+        } else if (Array.isArray(res?.orders)) {
+          list = res.orders;
+          total = res.total || res.orders.length;
+        }
+      } catch (adminErr) {
+        // If unauthenticated or 401/403, check customer orders or local database orders
+        try {
+          const custOrders = await getCustomerOrders();
+          if (Array.isArray(custOrders) && custOrders.length > 0) {
+            list = custOrders;
+            total = custOrders.length;
+          } else {
+            const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+            list = local;
+            total = local.length;
+          }
+        } catch {
+          const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+          list = local;
+          total = local.length;
+        }
       }
 
-      if (list.length > 0) {
-        setOrders(list);
-        setTotalCount(total);
-      } else {
-        // Fallback to demo sample orders if database has no live orders yet
-        setOrders(SAMPLE_ADMIN_ORDERS);
-        setTotalCount(SAMPLE_ADMIN_ORDERS.length);
-      }
-    } catch {
-      // Graceful fallback for local development or empty state
-      setOrders(SAMPLE_ADMIN_ORDERS);
-      setTotalCount(SAMPLE_ADMIN_ORDERS.length);
+      // If there are no orders in the database, present honest empty state
+      setOrders(list);
+      setTotalCount(total);
+    } catch (err) {
+      setError(err?.message || 'Failed to retrieve fulfillment orders');
+      setOrders([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }

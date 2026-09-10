@@ -244,7 +244,7 @@ export default function HeroCarousel({ onSelectCategory }) {
                     display: 'inline-block',
                   }}
                 />
-                <span>Don't Miss!! Limited Drop Deal</span>
+                <span>Don't Miss Out! Limited Drop Deal</span>
               </div>
 
               {/* 4 Countdown Unit Boxes */}
@@ -537,8 +537,8 @@ export default function HeroCarousel({ onSelectCategory }) {
                   cursor: 'pointer',
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.transform =
-                    'scale(1.025) translateY(-3px)')
+                (e.currentTarget.style.transform =
+                  'scale(1.025) translateY(-3px)')
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.transform = 'scale(1) translateY(0)')

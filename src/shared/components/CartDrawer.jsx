@@ -25,7 +25,7 @@ export default function CartDrawer() {
 
   const handleCheckout = () => {
     closeCart();
-    navigate('/checkout');
+    navigate('/cart');
   };
 
   return (

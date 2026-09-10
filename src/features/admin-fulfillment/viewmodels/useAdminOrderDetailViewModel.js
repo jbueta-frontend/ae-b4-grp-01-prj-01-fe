@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../../../services/api';
-import { SAMPLE_ADMIN_ORDERS } from '../models/adminOrderModel';
+import { getAdminOrderDetail, updateAdminOrderStatus } from '../../../services/adminService';
+import { getCustomerOrderById, cancelOrder } from '../../../services/orderService';
 
 export function useAdminOrderDetailViewModel() {
   const { orderId } = useParams();
@@ -16,28 +16,35 @@ export function useAdminOrderDetailViewModel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/admin/orders/${orderId}`);
-      const data = res?.order || res;
+      let data = null;
+      try {
+        data = await getAdminOrderDetail(orderId);
+      } catch (adminErr) {
+        // Try customer order lookup or local storage
+        try {
+          data = await getCustomerOrderById(orderId);
+        } catch {
+          const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+          data = local.find((o) => o.orderId === orderId || o.orderNumber === orderId);
+        }
+      }
+
       if (data) {
         setOrder(data);
       } else {
-        throw new Error('Order data not found');
+        // Look in local storage for order
+        const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+        const found = local.find((o) => o.orderId === orderId || o.orderNumber === orderId);
+        if (found) {
+          setOrder(found);
+        } else {
+          setError(`Order "${orderId}" not found in database.`);
+          setOrder(null);
+        }
       }
-    } catch {
-      // Look up in sample orders
-      const sample = SAMPLE_ADMIN_ORDERS.find(
-        (o) => o.orderId === orderId || o.orderNumber === orderId
-      );
-      if (sample) {
-        setOrder(sample);
-      } else {
-        // Synthesize an order for mock id
-        setOrder({
-          ...SAMPLE_ADMIN_ORDERS[0],
-          orderId,
-          orderNumber: `FM-${orderId.replace(/\D/g, '') || '901234'}`,
-        });
-      }
+    } catch (err) {
+      setError(err?.message || `Order "${orderId}" could not be retrieved.`);
+      setOrder(null);
     } finally {
       setLoading(false);
     }
@@ -50,8 +57,14 @@ export function useAdminOrderDetailViewModel() {
   const updateOrderStatus = async (newStatus) => {
     if (!orderId) return;
     setIsUpdating(true);
+    setFeedback(null);
     try {
-      await api.put(`/admin/orders/${orderId}/status`, { status: newStatus }).catch(() => {});
+      if (newStatus === 'CANCELLED') {
+        // 3. Order Cancellation: PUT /orders/:orderId/cancel
+        await cancelOrder(orderId);
+      } else {
+        await updateAdminOrderStatus(orderId, newStatus);
+      }
       setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
       setFeedback(`Order status updated to ${newStatus}`);
     } catch {

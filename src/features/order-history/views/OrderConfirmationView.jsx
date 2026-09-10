@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate, Link } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -6,38 +7,48 @@ import {
   Truck,
   Home,
   Clock,
+  ExternalLink,
 } from 'lucide-react';
+import { getCustomerOrderById } from '../../../services/orderService';
 
 export default function OrderConfirmationView() {
   const { orderId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Try state or fallback to default sample order
-  const order = location.state?.order || {
-    orderId: orderId || 'FM-824109',
+  const [order, setOrder] = useState(() => {
+    if (location.state?.order) return location.state.order;
+    try {
+      const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+      const found = local.find((o) => o.orderId === orderId || o.orderNumber === orderId);
+      if (found) return found;
+    } catch {}
+    return null;
+  });
+
+  useEffect(() => {
+    if (!order && orderId) {
+      getCustomerOrderById(orderId).then((res) => {
+        if (res) setOrder(res);
+      }).catch(() => {});
+    }
+  }, [order, orderId]);
+
+  const currentOrder = order || {
+    orderId: orderId || 'ORD-82410',
     trackingNumber: 'TRK-98314512',
     createdAt: new Date().toISOString(),
     total: 108.64,
     shippingAddress: {
-      fullName: 'Alexander Wright',
-      email: 'alex.wright@example.com',
-      address: '427 Maplewood Avenue',
+      fullName: 'Customer',
+      email: 'customer@example.com',
+      addressLine1: '427 Maplewood Avenue',
       city: 'Portland',
-      state: 'OR',
-      zip: '97201',
+      stateProvince: 'OR',
+      postalCode: '97201',
+      country: 'Philippines',
     },
-    items: [
-      {
-        id: 'prod-01',
-        name: 'Architect Beechwood Block Set',
-        price: 48.0,
-        quantity: 2,
-        variant: 'Natural Beech',
-        image:
-          'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80',
-      },
-    ],
+    items: [],
     estimatedDelivery: 'Sep 14 – Sep 16',
   };
 
@@ -123,7 +134,7 @@ export default function OrderConfirmationView() {
             }}
           >
             We've sent your itemized receipt and tracking updates to{' '}
-            <strong>{order.shippingAddress.email}</strong>.
+            <strong>{currentOrder.shippingAddress?.email || 'your email'}</strong>.
           </p>
 
           <div
@@ -138,11 +149,11 @@ export default function OrderConfirmationView() {
             }}
           >
             <span>
-              Order #: <strong>{order.orderId}</strong>
+              Order #: <strong>{currentOrder.orderId || currentOrder.orderNumber}</strong>
             </span>
             <span>•</span>
             <span>
-              Est. Arrival: <strong>{order.estimatedDelivery}</strong>
+              Est. Arrival: <strong>{currentOrder.estimatedDelivery || 'Sep 14 – Sep 16'}</strong>
             </span>
           </div>
         </div>
@@ -241,7 +252,7 @@ export default function OrderConfirmationView() {
           <div
             style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
-            {order.items.map((item, i) => (
+            {currentOrder.items?.map((item, i) => (
               <div
                 key={i}
                 style={{
@@ -250,7 +261,7 @@ export default function OrderConfirmationView() {
                   gap: '16px',
                   paddingBottom: '14px',
                   borderBottom:
-                    i < order.items.length - 1
+                    i < currentOrder.items.length - 1
                       ? '1px solid var(--border-hairline)'
                       : 'none',
                 }}
@@ -273,11 +284,11 @@ export default function OrderConfirmationView() {
                   <span
                     style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}
                   >
-                    Qty: {item.quantity} • {item.variant}
+                    Qty: {item.quantity} {item.variant ? `• ${item.variant}` : ''}
                   </span>
                 </div>
                 <span style={{ fontWeight: 700, fontSize: '0.9375rem' }}>
-                  ₱{(item.price * item.quantity).toFixed(2)}
+                  ₱{((Number(item.price) || 0) * (Number(item.quantity) || 1)).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -288,7 +299,9 @@ export default function OrderConfirmationView() {
         <div style={{ display: 'flex', gap: '14px', justifyContent: 'center' }}>
           <button
             onClick={() =>
-              navigate(`/track/${order.trackingNumber}`, { state: { order } })
+              navigate(`/track/${currentOrder.trackingNumber || currentOrder.orderId}`, {
+                state: { order: currentOrder },
+              })
             }
             className="btn btn-primary"
             style={{ padding: '14px 28px' }}

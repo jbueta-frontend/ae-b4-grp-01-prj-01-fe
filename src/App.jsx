@@ -73,6 +73,7 @@ function App() {
                     path="/track/:trackingNumber"
                     element={<ShipmentTrackingView />}
                   />
+                  <Route path="/track" element={<ShipmentTrackingView />} />
 
                   {/* 5. Account Authentication */}
                   <Route
