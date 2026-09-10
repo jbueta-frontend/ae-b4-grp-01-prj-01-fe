@@ -70,8 +70,21 @@ export function useCheckoutViewModel() {
 
   // Delivery is standardized as Carbon-Neutral Free Delivery (Step 2 Delivery Method removed)
   const selectedDelivery = DEFAULT_DELIVERY;
-  const deliveryPrice = selectedDelivery.price;
-  const finalTotal = Number((subtotal + tax + deliveryPrice).toFixed(2));
+  const deliveryPrice =
+    backendSummary?.shippingFee != null
+      ? Number(backendSummary.shippingFee)
+      : selectedDelivery.price;
+
+  // Compute tax (8% backend aligned)
+  const computedTax =
+    backendSummary?.taxAmount != null
+      ? Number(backendSummary.taxAmount)
+      : (tax != null ? Number(tax) : Number((subtotal * 0.08).toFixed(2)));
+
+  const finalTotal =
+    backendSummary?.total != null
+      ? Number(backendSummary.total)
+      : Number((subtotal + computedTax + deliveryPrice).toFixed(2));
 
   // Payment method: 'card' | 'cod' | 'ewallet'
   const [paymentType, setPaymentType] = useState('card');
