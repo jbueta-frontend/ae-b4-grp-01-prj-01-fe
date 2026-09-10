@@ -74,8 +74,8 @@ export default function Navbar() {
     }
   }, [isSearchOpen]);
 
-  // Hide on checkout for distraction-free tunnel
-  if (location.pathname === '/checkout') return null;
+  // Hide on checkout and admin portal
+  if (location.pathname === '/checkout' || location.pathname.startsWith('/admin')) return null;
 
   const handleNavClick = (e, sectionId) => {
     e.preventDefault();

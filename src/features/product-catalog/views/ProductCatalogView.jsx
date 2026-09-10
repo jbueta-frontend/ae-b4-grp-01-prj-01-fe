@@ -37,7 +37,15 @@ export default function ProductCatalogView() {
     searchQuery,
     setSearchQuery,
     products,
+    totalFilteredCount,
     totalProductsCount,
+    currentPage,
+    totalPages,
+    pageSize,
+    goToPage,
+    nextPage,
+    prevPage,
+    loading,
     handleQuickAdd,
     addedNotice,
   } = useProductCatalogViewModel();
@@ -454,7 +462,7 @@ export default function ProductCatalogView() {
                   fontWeight: 500,
                 }}
               >
-                Showing {products.length} of {totalProductsCount} items
+                Showing {products.length} of {totalFilteredCount || totalProductsCount} items
               </span>
             </div>
           </div>
@@ -487,7 +495,17 @@ export default function ProductCatalogView() {
 
             {/* Right Product Grid */}
             <div>
-              {products.length === 0 ? (
+              {loading ? (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '72px 24px',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  <p style={{ fontWeight: 600 }}>Loading toys catalog...</p>
+                </div>
+              ) : products.length === 0 ? (
                 <div
                   style={{
                     textAlign: 'center',
@@ -525,23 +543,158 @@ export default function ProductCatalogView() {
                   </button>
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns:
-                      'repeat(auto-fill, minmax(240px, 1fr))',
-                    gap: '20px',
-                  }}
-                >
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onQuickAdd={handleQuickAdd}
-                      isAdded={addedNotice === product.id}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns:
+                        'repeat(auto-fill, minmax(240px, 1fr))',
+                      gap: '20px',
+                    }}
+                  >
+                    {products.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onQuickAdd={handleQuickAdd}
+                        isAdded={addedNotice === product.id}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination Bar */}
+                  {totalPages > 1 && (
+                    <div
+                      style={{
+                        marginTop: '36px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '16px',
+                        padding: '16px 20px',
+                        backgroundColor: '#FAF7F5',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid var(--border-hairline)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '0.8125rem',
+                          color: 'var(--text-muted)',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Showing {(currentPage - 1) * pageSize + 1}–
+                        {Math.min(currentPage * pageSize, totalFilteredCount)} of{' '}
+                        {totalFilteredCount} toys
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={prevPage}
+                          disabled={currentPage === 1}
+                          className="btn btn-outline btn-sm"
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 'var(--radius-md)',
+                            opacity: currentPage === 1 ? 0.4 : 1,
+                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          }}
+                          aria-label="Previous Page"
+                        >
+                          <ChevronLeft size={16} />
+                          <span>Prev</span>
+                        </button>
+
+                        {/* Page Numbers with Smart Windowing */}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter((p) => {
+                            return (
+                              p === 1 ||
+                              p === totalPages ||
+                              Math.abs(p - currentPage) <= 1
+                            );
+                          })
+                          .reduce((acc, p, idx, arr) => {
+                            if (idx > 0 && p - arr[idx - 1] > 1) {
+                              acc.push('ellipsis-' + p);
+                            }
+                            acc.push(p);
+                            return acc;
+                          }, [])
+                          .map((item) => {
+                            if (typeof item === 'string') {
+                              return (
+                                <span
+                                  key={item}
+                                  style={{
+                                    padding: '0 6px',
+                                    color: 'var(--text-muted)',
+                                    fontSize: '0.875rem',
+                                  }}
+                                >
+                                  …
+                                </span>
+                              );
+                            }
+
+                            const isActive = item === currentPage;
+                            return (
+                              <button
+                                key={item}
+                                type="button"
+                                onClick={() => goToPage(item)}
+                                style={{
+                                  minWidth: '36px',
+                                  height: '36px',
+                                  borderRadius: 'var(--radius-md)',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 700,
+                                  border: isActive
+                                    ? '1px solid var(--accent)'
+                                    : '1px solid var(--border-hairline)',
+                                  backgroundColor: isActive
+                                    ? 'var(--accent)'
+                                    : '#FFFFFF',
+                                  color: isActive ? '#FFFFFF' : 'var(--text-main)',
+                                  cursor: 'pointer',
+                                  transition: 'all var(--transition-fast)',
+                                }}
+                              >
+                                {item}
+                              </button>
+                            );
+                          })}
+
+                        <button
+                          type="button"
+                          onClick={nextPage}
+                          disabled={currentPage === totalPages}
+                          className="btn btn-outline btn-sm"
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: 'var(--radius-md)',
+                            opacity: currentPage === totalPages ? 0.4 : 1,
+                            cursor:
+                              currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          }}
+                          aria-label="Next Page"
+                        >
+                          <span>Next</span>
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

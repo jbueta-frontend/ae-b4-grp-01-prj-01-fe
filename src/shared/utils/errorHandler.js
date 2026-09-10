@@ -149,3 +149,23 @@ export function getAuthErrorMessage(err, context = 'login') {
     ? 'Incorrect email or password. Please double-check your credentials and try again.'
     : 'Registration could not be completed. Please review your details and try again.';
 }
+
+/**
+ * Universal safe error message extractor that guarantees a string return value.
+ * Prevents objects like { code, message } from ever being rendered directly in React.
+ */
+export function getErrorMessage(err, fallback = 'An unexpected error occurred') {
+  if (!err) return fallback;
+  if (typeof err === 'string') return err;
+  if (typeof err?.message === 'string') return err.message;
+  if (typeof err?.error?.message === 'string') return err.error.message;
+  if (typeof err?.error === 'string') return err.error;
+  if (typeof err?.response?.data?.message === 'string') return err.response.data.message;
+  if (typeof err?.response?.data?.error?.message === 'string') return err.response.data.error.message;
+  if (typeof err?.data?.message === 'string') return err.data.message;
+  if (typeof err?.data?.error?.message === 'string') return err.data.error.message;
+  if (typeof err?.code === 'string') return err.code;
+  if (typeof err?.error?.code === 'string') return err.error.code;
+  return fallback;
+}
+

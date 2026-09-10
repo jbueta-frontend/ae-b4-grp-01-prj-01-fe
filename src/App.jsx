@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 
@@ -7,6 +7,9 @@ import Navbar from './shared/components/Navbar';
 import Footer from './shared/components/Footer';
 import CartDrawer from './shared/components/CartDrawer';
 import CartToast from './shared/components/CartToast';
+import AdminGuard from './shared/components/AdminGuard';
+import AdminLayout from './shared/components/AdminLayout';
+import CustomerGuard from './shared/components/CustomerGuard';
 
 // Feature Views
 import ProductCatalogView from './features/product-catalog/views/ProductCatalogView';
@@ -20,6 +23,12 @@ import LoginView from './features/auth/views/LoginView';
 import RegisterView from './features/auth/views/RegisterView';
 import ProfileView from './features/profile/views/ProfileView';
 import SupportView from './features/support/views/SupportView';
+
+// Admin Persona Views
+import AdminReportsView from './features/admin-reports/views/AdminReportsView';
+import AdminProductsView from './features/admin-inventory/views/AdminProductsView';
+import AdminOrdersListView from './features/admin-fulfillment/views/AdminOrdersListView';
+import AdminOrderDetailView from './features/admin-fulfillment/views/AdminOrderDetailView';
 
 function App() {
   return (
@@ -39,118 +48,61 @@ function App() {
 
             <main style={{ flex: 1 }}>
               <Routes>
-                {/* 1. Landing & Product Catalog */}
-                <Route path="/" element={<ProductCatalogView />} />
-                <Route
-                  path="/products/:idOrSlug"
-                  element={<ProductDetailView />}
-                />
+                {/* Customer Storefront (Redirects Admin to /admin/reports) */}
+                <Route element={<CustomerGuard />}>
+                  {/* 1. Landing & Product Catalog */}
+                  <Route path="/" element={<ProductCatalogView />} />
+                  <Route
+                    path="/products/:idOrSlug"
+                    element={<ProductDetailView />}
+                  />
 
-                {/* 2. Cart & Bag */}
-                <Route path="/cart" element={<CartView />} />
+                  {/* 2. Cart & Bag */}
+                  <Route path="/cart" element={<CartView />} />
 
-                {/* 3. Checkout Tunnel */}
-                <Route path="/checkout" element={<CheckoutView />} />
+                  {/* 3. Checkout Tunnel */}
+                  <Route path="/checkout" element={<CheckoutView />} />
 
-                {/* 4. Order Confirmation & Tracking */}
-                <Route path="/orders" element={<OrderHistoryView />} />
-                <Route
-                  path="/orders/:orderId"
-                  element={<OrderConfirmationView />}
-                />
-                <Route
-                  path="/track/:trackingNumber"
-                  element={<ShipmentTrackingView />}
-                />
+                  {/* 4. Order Confirmation & Tracking */}
+                  <Route path="/orders" element={<OrderHistoryView />} />
+                  <Route
+                    path="/orders/:orderId"
+                    element={<OrderConfirmationView />}
+                  />
+                  <Route
+                    path="/track/:trackingNumber"
+                    element={<ShipmentTrackingView />}
+                  />
 
-                {/* 5. Account Authentication */}
-                <Route
-                  path="/login"
-                  element={<LoginView initialTab="login" />}
-                />
-                <Route path="/register" element={<RegisterView />} />
-                <Route path="/profile" element={<ProfileView />} />
-                <Route path="/addresses" element={<ProfileView />} />
+                  {/* 5. Account Authentication */}
+                  <Route
+                    path="/login"
+                    element={<LoginView initialTab="login" />}
+                  />
+                  <Route path="/register" element={<RegisterView />} />
+                  <Route path="/profile" element={<ProfileView />} />
+                  <Route path="/addresses" element={<ProfileView />} />
 
-                {/* 6. Support & FAQ */}
-                <Route path="/support" element={<SupportView />} />
+                  {/* 6. Support & FAQ */}
+                  <Route path="/support" element={<SupportView />} />
+                </Route>
 
-                {/* 7. Admin (Placeholders) */}
-                <Route
-                  path="/admin/reports"
-                  element={
-                    <div
-                      className="container"
-                      style={{ padding: '60px 0', textAlign: 'center' }}
-                    >
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>
-                        Admin Reports Dashboard
-                      </h2>
-                      <p
-                        style={{ color: 'var(--text-muted)', marginTop: '8px' }}
-                      >
-                        Backend metrics reporting endpoint active.
-                      </p>
-                      <Link
-                        to="/"
-                        className="btn btn-outline"
-                        style={{ marginTop: '20px' }}
-                      >
-                        Back to Store
-                      </Link>
-                    </div>
-                  }
-                />
-                <Route
-                  path="/admin/inventory"
-                  element={
-                    <div
-                      className="container"
-                      style={{ padding: '60px 0', textAlign: 'center' }}
-                    >
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>
-                        Admin Inventory Management
-                      </h2>
-                      <p
-                        style={{ color: 'var(--text-muted)', marginTop: '8px' }}
-                      >
-                        Active stock ledger synchronized.
-                      </p>
-                      <Link
-                        to="/"
-                        className="btn btn-outline"
-                        style={{ marginTop: '20px' }}
-                      >
-                        Back to Store
-                      </Link>
-                    </div>
-                  }
-                />
-                <Route
-                  path="/admin/orders"
-                  element={
-                    <div
-                      className="container"
-                      style={{ padding: '60px 0', textAlign: 'center' }}
-                    >
-                      <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>
-                        Admin Fulfillment Terminal
-                      </h2>
-                      <p
-                        style={{ color: 'var(--text-muted)', marginTop: '8px' }}
-                      >
-                        Zero-emission dispatch manifests ready.
-                      </p>
-                      <Link
-                        to="/"
-                        className="btn btn-outline"
-                        style={{ marginTop: '20px' }}
-                      >
-                        Back to Store
-                      </Link>
-                    </div>
-                  }
-                />
+                {/* 7. Admin Portal (Protected with Role Guard) */}
+                <Route path="/admin" element={<AdminGuard />}>
+                  <Route element={<AdminLayout />}>
+                    <Route
+                      index
+                      element={<Navigate to="/admin/reports" replace />}
+                    />
+                    <Route path="reports" element={<AdminReportsView />} />
+                    <Route path="inventory" element={<AdminProductsView />} />
+                    <Route path="orders" element={<AdminOrdersListView />} />
+                    <Route
+                      path="orders/:orderId"
+                      element={<AdminOrderDetailView />}
+                    />
+                  </Route>
+                </Route>
 
                 {/* 8. 404 Fallback */}
                 <Route

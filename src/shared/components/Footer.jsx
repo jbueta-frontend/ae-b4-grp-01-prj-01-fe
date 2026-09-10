@@ -4,8 +4,8 @@ import Logo from './Logo';
 export default function Footer() {
   const location = useLocation();
 
-  // Hide on checkout
-  if (location.pathname === '/checkout') return null;
+  // Hide on checkout and admin portal
+  if (location.pathname === '/checkout' || location.pathname.startsWith('/admin')) return null;
 
   return (
     <footer

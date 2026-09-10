@@ -20,6 +20,12 @@
   --success: #16a34a;
   --success-bg: rgba(22, 163, 74, 0.1);
 
+  /* Admin Surface System */
+  --admin-canvas: #f2ece4;
+  --admin-card-bg: #ffffff;
+  --admin-card-border: #dfd5ca;
+  --admin-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+
   /* Typography */
   --font-sans:
     'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont,
@@ -94,14 +100,14 @@ img {
   display: block;
 }
 
-/* Layout Utilities */
+/* Layout Utilities - Maximized Screen Layout */
 .container {
   width: 100%;
-  max-width: 1240px;
+  max-width: 1600px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-left: clamp(16px, 2.5vw, 36px);
+  padding-right: clamp(16px, 2.5vw, 36px);
 }
 
 .container-narrow {
@@ -350,6 +356,23 @@ img {
   border-radius: var(--radius-lg);
   padding: 24px;
   box-shadow: var(--shadow-sm);
+}
+
+.admin-card {
+  background-color: #ffffff;
+  border: 1px solid var(--admin-card-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--admin-card-shadow);
+}
+
+.admin-card-header {
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f0ebe4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* Top-Left Toast Keyframes */

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { validateAuthForm } from '../models/authModel';
@@ -13,11 +13,18 @@ export function useAuthViewModel(defaultTab = 'login') {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  const { login, register, continueAsGuest } = useAuth();
+  const { user, isAuthenticated, login, register, continueAsGuest } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const redirectPath = location.state?.from || '/';
+
+  // Automatically redirect active admin users to admin dashboard
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'ADMIN') {
+      navigate('/admin/reports', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleTabSwitch = (newTab) => {
     setTab(newTab);
@@ -62,10 +69,18 @@ export function useAuthViewModel(defaultTab = 'login') {
 
     try {
       if (tab === 'login') {
-        await login(email, password);
+        const res = await login(email, password);
+        if (res?.user?.role === 'ADMIN') {
+          navigate('/admin/reports', { replace: true });
+          return;
+        }
       } else {
         const registrationName = name.trim() || email.split('@')[0];
-        await register(email, password, registrationName);
+        const res = await register(email, password, registrationName);
+        if (res?.user?.role === 'ADMIN') {
+          navigate('/admin/reports', { replace: true });
+          return;
+        }
       }
       navigate(redirectPath);
     } catch (err) {
