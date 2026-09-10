@@ -147,8 +147,8 @@ export default function ProductDetailView() {
             >
               <span
                 style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
+                  fontSize: 'var(--font-small, 14px)',
+                  fontWeight: 700,
                   color: 'var(--text-muted)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
@@ -159,12 +159,14 @@ export default function ProductDetailView() {
               {product.tag && (
                 <span
                   style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
+                    fontSize: 'var(--font-small, 14px)',
+                    fontWeight: 800,
                     backgroundColor: 'var(--accent-light)',
                     color: 'var(--accent)',
-                    padding: '2px 8px',
+                    padding: '3px 10px',
                     borderRadius: 'var(--radius-full)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
                   }}
                 >
                   {product.tag}
@@ -172,15 +174,15 @@ export default function ProductDetailView() {
               )}
             </div>
 
-            {/* Product Title */}
+            {/* Product Title (H2: 40px) */}
             <h1
               style={{
-                fontSize: 'clamp(1.75rem, 3.5vw, 2.25rem)',
+                fontSize: 'var(--font-h2-fluid, 40px)',
                 fontWeight: 800,
                 color: 'var(--text-main)',
-                lineHeight: 1.2,
+                lineHeight: 1.18,
                 letterSpacing: '-0.02em',
-                marginBottom: '12px',
+                marginBottom: '14px',
               }}
             >
               {product.name}
@@ -209,21 +211,22 @@ export default function ProductDetailView() {
                   />
                 ))}
               </div>
-              <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              <span style={{ fontSize: 'var(--font-small, 14px)', fontWeight: 700 }}>
                 {product.rating}
               </span>
               <span
-                style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}
+                style={{ fontSize: 'var(--font-small, 14px)', color: 'var(--text-muted)' }}
               >
                 ({product.reviewCount} verified reviews)
               </span>
             </div>
 
-            {/* Price Row */}
+            {/* Price Row (Text Sensitivity: Price Prominence & Stock Badge) */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'baseline',
+                flexWrap: 'wrap',
                 gap: '12px',
                 marginBottom: '24px',
                 paddingBottom: '20px',
@@ -232,10 +235,12 @@ export default function ProductDetailView() {
             >
               <span
                 style={{
-                  fontSize: '2rem',
+                  fontSize: 'var(--font-h2, 40px)',
                   fontWeight: 800,
                   color: 'var(--text-main)',
                   letterSpacing: '-0.02em',
+                  lineHeight: 1,
+                  fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 ₱{product.price.toFixed(2)}
@@ -243,9 +248,10 @@ export default function ProductDetailView() {
               {product.originalPrice && (
                 <span
                   style={{
-                    fontSize: '1.125rem',
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-light)',
                     textDecoration: 'line-through',
+                    fontWeight: 500,
                   }}
                 >
                   ₱{product.originalPrice.toFixed(2)}
@@ -253,22 +259,23 @@ export default function ProductDetailView() {
               )}
               <span
                 style={{
-                  fontSize: '0.8125rem',
+                  fontSize: 'var(--font-small, 14px)',
                   color: 'var(--success)',
-                  fontWeight: 600,
+                  fontWeight: 800,
                   backgroundColor: 'var(--success-bg)',
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   borderRadius: 'var(--radius-sm)',
+                  letterSpacing: '0.02em',
                 }}
               >
                 In Stock ({product.stockCount} ready to ship)
               </span>
             </div>
 
-            {/* Description */}
+            {/* Description (Body: 18px) */}
             <p
               style={{
-                fontSize: '0.9375rem',
+                fontSize: 'var(--font-body, 18px)',
                 color: 'var(--text-muted)',
                 lineHeight: 1.6,
                 marginBottom: '28px',
@@ -492,27 +499,27 @@ export default function ProductDetailView() {
                   onClick={() => toggleAccordion('dimensions')}
                   style={{
                     width: '100%',
-                    padding: '14px 0',
+                    padding: '16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-main)',
                   }}
                 >
                   <span>Dimensions & Materials</span>
                   {openAccordion === 'dimensions' ? (
-                    <ChevronUp size={16} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={16} />
+                    <ChevronDown size={18} />
                   )}
                 </button>
                 {openAccordion === 'dimensions' && (
                   <div
                     style={{
                       paddingBottom: '16px',
-                      fontSize: '0.875rem',
+                      fontSize: '1rem',
                       color: 'var(--text-muted)',
                       lineHeight: 1.6,
                     }}
@@ -536,27 +543,27 @@ export default function ProductDetailView() {
                   onClick={() => toggleAccordion('safety')}
                   style={{
                     width: '100%',
-                    padding: '14px 0',
+                    padding: '16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-main)',
                   }}
                 >
                   <span>Safety Certifications & Age Group</span>
                   {openAccordion === 'safety' ? (
-                    <ChevronUp size={16} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={16} />
+                    <ChevronDown size={18} />
                   )}
                 </button>
                 {openAccordion === 'safety' && (
                   <div
                     style={{
                       paddingBottom: '16px',
-                      fontSize: '0.875rem',
+                      fontSize: '1rem',
                       color: 'var(--text-muted)',
                       lineHeight: 1.6,
                     }}
@@ -577,20 +584,20 @@ export default function ProductDetailView() {
                   onClick={() => toggleAccordion('reviews')}
                   style={{
                     width: '100%',
-                    padding: '14px 0',
+                    padding: '16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    fontWeight: 600,
-                    fontSize: '0.9375rem',
+                    fontWeight: 700,
+                    fontSize: 'var(--font-body, 18px)',
                     color: 'var(--text-main)',
                   }}
                 >
                   <span>Customer Reviews ({product.reviews?.length || 0})</span>
                   {openAccordion === 'reviews' ? (
-                    <ChevronUp size={16} />
+                    <ChevronUp size={18} />
                   ) : (
-                    <ChevronDown size={16} />
+                    <ChevronDown size={18} />
                   )}
                 </button>
                 {openAccordion === 'reviews' && (

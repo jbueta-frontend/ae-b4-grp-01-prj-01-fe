@@ -42,15 +42,17 @@ export default function CartDrawer() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ShoppingBag size={20} color="var(--accent)" />
+            <ShoppingBag size={22} color="var(--accent)" />
             <h2
               style={{
-                fontSize: '1.125rem',
-                fontWeight: 700,
+                fontSize: 'var(--font-h3, 28px)',
+                fontWeight: 800,
                 letterSpacing: '-0.02em',
+                lineHeight: 1.2,
+                color: 'var(--text-main)',
               }}
             >
-              Your Shopping Bag ({itemCount})
+              Your Bag ({itemCount})
             </h2>
           </div>
           <button
@@ -79,7 +81,7 @@ export default function CartDrawer() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: '0.8125rem',
+              fontSize: 'var(--font-small, 14px)',
               fontWeight: 600,
               color:
                 freeShippingRemaining === 0
@@ -311,7 +313,7 @@ export default function CartDrawer() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '0.875rem',
+                  fontSize: 'var(--font-small, 14px)',
                   color: 'var(--text-muted)',
                 }}
               >
@@ -322,7 +324,7 @@ export default function CartDrawer() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '0.875rem',
+                  fontSize: 'var(--font-small, 14px)',
                   color: 'var(--text-muted)',
                 }}
               >
@@ -335,7 +337,7 @@ export default function CartDrawer() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '0.875rem',
+                  fontSize: 'var(--font-small, 14px)',
                   color: 'var(--text-muted)',
                 }}
               >
@@ -346,15 +348,18 @@ export default function CartDrawer() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '1.125rem',
+                  alignItems: 'baseline',
+                  fontSize: '1.375rem', /* 22px */
                   fontWeight: 800,
                   color: 'var(--text-main)',
-                  paddingTop: '10px',
+                  paddingTop: '12px',
                   borderTop: '1px solid var(--border-hairline)',
                 }}
               >
                 <span>Total</span>
-                <span>₱{total.toFixed(2)}</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  ₱{total.toFixed(2)}
+                </span>
               </div>
             </div>
 
@@ -362,7 +367,11 @@ export default function CartDrawer() {
             <button
               onClick={handleCheckout}
               className="btn btn-primary btn-block"
-              style={{ padding: '16px 24px', fontSize: '1rem' }}
+              style={{
+                padding: '16px 24px',
+                fontSize: '1.0625rem',
+                fontWeight: 700,
+              }}
             >
               <span>Proceed to Checkout</span>
               <ArrowRight size={18} />

@@ -54,10 +54,11 @@ export default function AdminProductsView() {
         <div>
           <h1
             style={{
-              fontSize: '1.75rem',
+              fontSize: 'var(--font-h2, 40px)',
               fontWeight: 800,
               color: 'var(--text-main)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.18,
             }}
           >
             Product Catalog Management
@@ -65,8 +66,8 @@ export default function AdminProductsView() {
           <p
             style={{
               color: 'var(--text-muted)',
-              fontSize: '0.875rem',
-              marginTop: '4px',
+              fontSize: 'var(--font-body, 18px)',
+              marginTop: '6px',
             }}
           >
             Create, edit, price, and organize sensory fidget toys in the live store.
@@ -308,7 +309,7 @@ export default function AdminProductsView() {
                         style={{
                           padding: '16px 20px',
                           fontFamily: 'monospace',
-                          fontSize: '0.8125rem',
+                          fontSize: 'var(--font-small, 14px)',
                           color: 'var(--text-muted)',
                           whiteSpace: 'nowrap',
                         }}
@@ -321,6 +322,7 @@ export default function AdminProductsView() {
                         <div
                           style={{
                             fontWeight: 700,
+                            fontSize: '1rem',
                             color: 'var(--text-main)',
                           }}
                         >
@@ -328,7 +330,7 @@ export default function AdminProductsView() {
                         </div>
                         <div
                           style={{
-                            fontSize: '0.75rem',
+                            fontSize: 'var(--font-small, 14px)',
                             color: 'var(--text-muted)',
                             marginTop: '2px',
                           }}
@@ -338,12 +340,14 @@ export default function AdminProductsView() {
                         </div>
                       </td>
 
-                      {/* Price */}
+                      {/* Price - Text Sensitivity Emphasis */}
                       <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
                         <div
                           style={{
-                            fontWeight: 700,
+                            fontWeight: 800,
+                            fontSize: '1.0625rem',
                             color: 'var(--accent)',
+                            fontVariantNumeric: 'tabular-nums',
                           }}
                         >
                           {formatPHP(item.price)}
@@ -351,7 +355,7 @@ export default function AdminProductsView() {
                         {item.compareAtPrice && (
                           <div
                             style={{
-                              fontSize: '0.75rem',
+                              fontSize: 'var(--font-small, 14px)',
                               color: 'var(--text-light)',
                               textDecoration: 'line-through',
                             }}

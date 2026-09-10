@@ -50,324 +50,54 @@ export default function ProductCatalogView() {
     addedNotice,
   } = useProductCatalogViewModel();
 
-  // Handle URL Hash navigation (#hero, #categories, #products)
+  // Handle URL Hash navigation (#hero, #categories, #products) with sticky navbar offset
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace('#', '');
+      if (id === 'hero') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       const element = document.getElementById(id);
       if (element) {
         setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const navHeight = 58;
+          const targetY =
+            element.getBoundingClientRect().top + window.pageYOffset - navHeight;
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
         }, 100);
       }
     }
   }, [location.hash]);
 
-  // Dynamic countdown timer for promotional banner (matching reference)
-  const [timeLeft, setTimeLeft] = useState({
-    days: 16,
-    hours: 10,
-    mins: 56,
-    secs: 54,
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.secs > 0) {
-          return { ...prev, secs: prev.secs - 1 };
-        } else if (prev.mins > 0) {
-          return { ...prev, mins: 59, secs: 59 };
-        } else if (prev.hours > 0) {
-          return { ...prev, hours: prev.hours - 1, mins: 59, secs: 59 };
-        } else if (prev.days > 0) {
-          return {
-            ...prev,
-            days: prev.days - 1,
-            hours: 23,
-            mins: 59,
-            secs: 59,
-          };
-        }
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   const scrollToSection = (id) => {
+    if (id === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const navHeight = 58;
+      const targetY =
+        element.getBoundingClientRect().top + window.pageYOffset - navHeight;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
   };
 
   return (
     <div>
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION (Id: #hero) - Interactive Carousel with Transparent Cutouts */}
+      {/* 1. HERO SECTION (Id: #hero) - Interactive Carousel with Integrated Deal   */}
       {/* ========================================================================= */}
       <HeroCarousel onSelectCategory={setSelectedCategory} />
 
       {/* ========================================================================= */}
-      {/* 2. BROWSE BY CATEGORY (Id: #categories) - Replicating Image Reference     */}
+      {/* 2. BROWSE BY CATEGORY (Id: #categories) - Immediately Following Hero      */}
       {/* ========================================================================= */}
       <CategoryShowcase
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
-
-      {/* ========================================================================= */}
-      {/* 3. PROMOTIONAL MIDDLE BANNER ("Enhance Play Experience") - From Reference  */}
-      {/* ========================================================================= */}
-      <section
-        style={{
-          padding: '60px 0',
-          backgroundColor: '#FAF7F5',
-          borderBottom: '1px solid var(--border-hairline)',
-        }}
-      >
-        <div className="container">
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '24px',
-              border: '1px solid var(--border-hairline)',
-              padding: '48px 40px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '40px',
-              alignItems: 'center',
-              boxShadow: 'var(--shadow-sm)',
-            }}
-          >
-            {/* Left Content with Countdown Timer */}
-            <div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  color: 'var(--accent)',
-                  marginBottom: '14px',
-                }}
-              >
-                <span
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--accent)',
-                    display: 'inline-block',
-                  }}
-                />
-                <span>Don't Miss!!</span>
-              </div>
-
-              <h2
-                style={{
-                  fontSize: 'clamp(2rem, 4vw, 2.75rem)',
-                  fontWeight: 800,
-                  color: 'var(--text-main)',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.15,
-                  marginBottom: '24px',
-                }}
-              >
-                Enhance Your <br />
-                Play Experience
-              </h2>
-
-              {/* Countdown Timer Circles (Reference format) */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '12px',
-                  marginBottom: '32px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--bg-subtle)',
-                    border: '1px solid var(--border-hairline)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '1.125rem',
-                      fontWeight: 800,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {timeLeft.days}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.6875rem',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    Day
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--bg-subtle)',
-                    border: '1px solid var(--border-hairline)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '1.125rem',
-                      fontWeight: 800,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {timeLeft.hours}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.6875rem',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    Hrs
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--bg-subtle)',
-                    border: '1px solid var(--border-hairline)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '1.125rem',
-                      fontWeight: 800,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {timeLeft.mins}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.6875rem',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    Min
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--bg-subtle)',
-                    border: '1px solid var(--border-hairline)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: '1.125rem',
-                      fontWeight: 800,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {timeLeft.secs}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '0.6875rem',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    Sec
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <button
-                onClick={() => scrollToSection('products')}
-                className="btn btn-primary"
-                style={{
-                  padding: '12px 28px',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.9375rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                <span>Check it Out!</span>
-                <ArrowRight size={16} />
-              </button>
-            </div>
-
-            {/* Right Showcase Image */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <div
-                style={{
-                  width: '100%',
-                  maxWidth: '380px',
-                  aspectRatio: '1 / 1',
-                  borderRadius: '20px',
-                  overflow: 'hidden',
-                  backgroundColor: '#FAF7F5',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.06)',
-                }}
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80"
-                  alt="Curved Nordic Balance Board Promo"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ========================================================================= */}
       {/* 4. PRODUCT CATALOG (Id: #products) - Reference Layout with Left Filter     */}
@@ -376,7 +106,7 @@ export default function ProductCatalogView() {
         id="products"
         style={{
           padding: '64px 0 88px',
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'var(--bg-page)',
         }}
       >
         <div className="container">
@@ -396,7 +126,7 @@ export default function ProductCatalogView() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  fontSize: '0.8125rem',
+                  fontSize: 'var(--font-small, 14px)',
                   fontWeight: 700,
                   color: 'var(--accent)',
                   marginBottom: '8px',
@@ -414,13 +144,14 @@ export default function ProductCatalogView() {
                 <span>Our Products</span>
               </div>
 
+              {/* Section Headline (H2: 40px) */}
               <h2
                 style={{
-                  fontSize: 'clamp(1.75rem, 3.5vw, 2.25rem)',
+                  fontSize: 'var(--font-h2-fluid, 40px)',
                   fontWeight: 800,
                   color: 'var(--text-main)',
                   letterSpacing: '-0.02em',
-                  lineHeight: 1.15,
+                  lineHeight: 1.18,
                 }}
               >
                 Explore our Products
@@ -562,136 +293,196 @@ export default function ProductCatalogView() {
                     ))}
                   </div>
 
-                  {/* Pagination Bar */}
+                  {/* Enhanced Centered Pagination Bar */}
                   {totalPages > 1 && (
                     <div
                       style={{
-                        marginTop: '36px',
+                        marginTop: '44px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '16px',
-                        padding: '16px 20px',
-                        backgroundColor: '#FAF7F5',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '18px 24px',
+                        backgroundColor: '#FFFFFF',
                         borderRadius: 'var(--radius-lg)',
-                        border: '1px solid var(--border-hairline)',
+                        border: '1px solid #D4CCC4',
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.05)',
+                        flexWrap: 'wrap',
                       }}
+                      aria-label="Product Catalog Pagination"
                     >
-                      <div
+                      {/* Previous Page Button */}
+                      <button
+                        type="button"
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
                         style={{
-                          fontSize: '0.8125rem',
-                          color: 'var(--text-muted)',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Showing {(currentPage - 1) * pageSize + 1}–
-                        {Math.min(currentPage * pageSize, totalFilteredCount)} of{' '}
-                        {totalFilteredCount} toys
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'flex',
+                          height: '42px',
+                          padding: '0 16px',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1.5px solid #D4CCC4',
+                          backgroundColor: '#FFFFFF',
+                          color: currentPage === 1 ? 'var(--text-light)' : 'var(--text-main)',
+                          fontSize: '0.9375rem',
+                          fontWeight: 700,
+                          display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
+                          opacity: currentPage === 1 ? 0.4 : 1,
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          transition: 'all var(--transition-fast)',
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
                         }}
+                        onMouseEnter={(e) => {
+                          if (currentPage > 1) {
+                            e.currentTarget.style.borderColor = 'var(--accent)';
+                            e.currentTarget.style.color = 'var(--accent)';
+                            e.currentTarget.style.backgroundColor = 'var(--accent-light)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentPage > 1) {
+                            e.currentTarget.style.borderColor = '#D4CCC4';
+                            e.currentTarget.style.color = 'var(--text-main)';
+                            e.currentTarget.style.backgroundColor = '#FFFFFF';
+                          }
+                        }}
+                        aria-label="Go to Previous Page"
                       >
-                        <button
-                          type="button"
-                          onClick={prevPage}
-                          disabled={currentPage === 1}
-                          className="btn btn-outline btn-sm"
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: 'var(--radius-md)',
-                            opacity: currentPage === 1 ? 0.4 : 1,
-                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                          }}
-                          aria-label="Previous Page"
-                        >
-                          <ChevronLeft size={16} />
-                          <span>Prev</span>
-                        </button>
+                        <ChevronLeft size={18} strokeWidth={2.5} />
+                        <span>Prev</span>
+                      </button>
 
-                        {/* Page Numbers with Smart Windowing */}
-                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                          .filter((p) => {
+                      {/* Page Numbers with Smart Windowing */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((p) => {
+                          return (
+                            p === 1 ||
+                            p === totalPages ||
+                            Math.abs(p - currentPage) <= 1
+                          );
+                        })
+                        .reduce((acc, p, idx, arr) => {
+                          if (idx > 0 && p - arr[idx - 1] > 1) {
+                            acc.push('ellipsis-' + p);
+                          }
+                          acc.push(p);
+                          return acc;
+                        }, [])
+                        .map((item) => {
+                          if (typeof item === 'string') {
                             return (
-                              p === 1 ||
-                              p === totalPages ||
-                              Math.abs(p - currentPage) <= 1
-                            );
-                          })
-                          .reduce((acc, p, idx, arr) => {
-                            if (idx > 0 && p - arr[idx - 1] > 1) {
-                              acc.push('ellipsis-' + p);
-                            }
-                            acc.push(p);
-                            return acc;
-                          }, [])
-                          .map((item) => {
-                            if (typeof item === 'string') {
-                              return (
-                                <span
-                                  key={item}
-                                  style={{
-                                    padding: '0 6px',
-                                    color: 'var(--text-muted)',
-                                    fontSize: '0.875rem',
-                                  }}
-                                >
-                                  …
-                                </span>
-                              );
-                            }
-
-                            const isActive = item === currentPage;
-                            return (
-                              <button
+                              <span
                                 key={item}
-                                type="button"
-                                onClick={() => goToPage(item)}
                                 style={{
-                                  minWidth: '36px',
-                                  height: '36px',
-                                  borderRadius: 'var(--radius-md)',
-                                  fontSize: '0.875rem',
-                                  fontWeight: 700,
-                                  border: isActive
-                                    ? '1px solid var(--accent)'
-                                    : '1px solid var(--border-hairline)',
-                                  backgroundColor: isActive
-                                    ? 'var(--accent)'
-                                    : '#FFFFFF',
-                                  color: isActive ? '#FFFFFF' : 'var(--text-main)',
-                                  cursor: 'pointer',
-                                  transition: 'all var(--transition-fast)',
+                                  padding: '0 8px',
+                                  color: 'var(--text-muted)',
+                                  fontSize: '1.125rem',
+                                  fontWeight: 800,
+                                  userSelect: 'none',
                                 }}
                               >
-                                {item}
-                              </button>
+                                …
+                              </span>
                             );
-                          })}
+                          }
 
-                        <button
-                          type="button"
-                          onClick={nextPage}
-                          disabled={currentPage === totalPages}
-                          className="btn btn-outline btn-sm"
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: 'var(--radius-md)',
-                            opacity: currentPage === totalPages ? 0.4 : 1,
-                            cursor:
-                              currentPage === totalPages ? 'not-allowed' : 'pointer',
-                          }}
-                          aria-label="Next Page"
-                        >
-                          <span>Next</span>
-                          <ChevronRight size={16} />
-                        </button>
-                      </div>
+                          const isActive = item === currentPage;
+                          return (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => goToPage(item)}
+                              style={{
+                                minWidth: '42px',
+                                height: '42px',
+                                padding: '0 10px',
+                                borderRadius: 'var(--radius-md)',
+                                fontSize: '0.9375rem',
+                                fontWeight: 800,
+                                border: isActive
+                                  ? '1.5px solid var(--accent)'
+                                  : '1.5px solid #D4CCC4',
+                                backgroundColor: isActive
+                                  ? 'var(--accent)'
+                                  : '#FFFFFF',
+                                color: isActive ? '#FFFFFF' : 'var(--text-main)',
+                                cursor: 'pointer',
+                                transition: 'all var(--transition-fast)',
+                                boxShadow: isActive
+                                  ? '0 4px 14px rgba(200, 90, 50, 0.38)'
+                                  : '0 2px 6px rgba(0, 0, 0, 0.04)',
+                                transform: isActive ? 'scale(1.04)' : 'none',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.borderColor = 'var(--accent)';
+                                  e.currentTarget.style.color = 'var(--accent)';
+                                  e.currentTarget.style.backgroundColor = 'var(--accent-light)';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) {
+                                  e.currentTarget.style.borderColor = '#D4CCC4';
+                                  e.currentTarget.style.color = 'var(--text-main)';
+                                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                                }
+                              }}
+                              aria-label={`Page ${item}`}
+                              aria-current={isActive ? 'page' : undefined}
+                            >
+                              {item}
+                            </button>
+                          );
+                        })}
+
+                      {/* Next Page Button */}
+                      <button
+                        type="button"
+                        onClick={nextPage}
+                        disabled={currentPage === totalPages}
+                        style={{
+                          height: '42px',
+                          padding: '0 16px',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1.5px solid #D4CCC4',
+                          backgroundColor: '#FFFFFF',
+                          color:
+                            currentPage === totalPages
+                              ? 'var(--text-light)'
+                              : 'var(--text-main)',
+                          fontSize: '0.9375rem',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          opacity: currentPage === totalPages ? 0.4 : 1,
+                          cursor:
+                            currentPage === totalPages
+                              ? 'not-allowed'
+                              : 'pointer',
+                          transition: 'all var(--transition-fast)',
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (currentPage < totalPages) {
+                            e.currentTarget.style.borderColor = 'var(--accent)';
+                            e.currentTarget.style.color = 'var(--accent)';
+                            e.currentTarget.style.backgroundColor = 'var(--accent-light)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentPage < totalPages) {
+                            e.currentTarget.style.borderColor = '#D4CCC4';
+                            e.currentTarget.style.color = 'var(--text-main)';
+                            e.currentTarget.style.backgroundColor = '#FFFFFF';
+                          }
+                        }}
+                        aria-label="Go to Next Page"
+                      >
+                        <span>Next</span>
+                        <ChevronRight size={18} strokeWidth={2.5} />
+                      </button>
                     </div>
                   )}
                 </>
@@ -741,19 +532,19 @@ export default function ProductCatalogView() {
               <div>
                 <h3
                   style={{
-                    fontSize: '0.9375rem',
+                    fontSize: 'var(--font-body, 18px)',
                     fontWeight: 700,
                     color: 'var(--text-main)',
-                    marginBottom: '4px',
+                    marginBottom: '6px',
                   }}
                 >
                   100% Non-Toxic Beechwood
                 </h3>
                 <p
                   style={{
-                    fontSize: '0.8125rem',
+                    fontSize: 'var(--font-small, 14px)',
                     color: 'var(--text-muted)',
-                    lineHeight: 1.4,
+                    lineHeight: 1.5,
                   }}
                 >
                   Organic beeswax seals and zero formaldehyde. Meets ASTM & EN71
@@ -784,19 +575,19 @@ export default function ProductCatalogView() {
               <div>
                 <h3
                   style={{
-                    fontSize: '0.9375rem',
+                    fontSize: 'var(--font-body, 18px)',
                     fontWeight: 700,
                     color: 'var(--text-main)',
-                    marginBottom: '4px',
+                    marginBottom: '6px',
                   }}
                 >
                   Carbon-Neutral Delivery
                 </h3>
                 <p
                   style={{
-                    fontSize: '0.8125rem',
+                    fontSize: 'var(--font-small, 14px)',
                     color: 'var(--text-muted)',
-                    lineHeight: 1.4,
+                    lineHeight: 1.5,
                   }}
                 >
                   Dispatched in 100% recycled biodegradable boxes. Free shipping
@@ -827,19 +618,19 @@ export default function ProductCatalogView() {
               <div>
                 <h3
                   style={{
-                    fontSize: '0.9375rem',
+                    fontSize: 'var(--font-body, 18px)',
                     fontWeight: 700,
                     color: 'var(--text-main)',
-                    marginBottom: '4px',
+                    marginBottom: '6px',
                   }}
                 >
                   30-Day Happiness Guarantee
                 </h3>
                 <p
                   style={{
-                    fontSize: '0.8125rem',
+                    fontSize: 'var(--font-small, 14px)',
                     color: 'var(--text-muted)',
-                    lineHeight: 1.4,
+                    lineHeight: 1.5,
                   }}
                 >
                   No-hassle returns and replacement warranty on every heirloom

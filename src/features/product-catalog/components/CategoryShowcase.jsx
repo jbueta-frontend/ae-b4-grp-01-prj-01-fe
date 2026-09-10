@@ -70,7 +70,10 @@ export default function CategoryShowcase({
     onSelectCategory(categoryKey);
     const target = document.getElementById('products');
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
+      const navHeight = 58;
+      const targetY =
+        target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
   };
 
@@ -100,7 +103,7 @@ export default function CategoryShowcase({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontSize: '0.8125rem',
+                fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
                 color: 'var(--accent)',
                 marginBottom: '8px',
@@ -118,13 +121,14 @@ export default function CategoryShowcase({
               <span>Categories</span>
             </div>
 
+            {/* Section Headline (H2: 40px) */}
             <h2
               style={{
-                fontSize: 'clamp(1.75rem, 3.5vw, 2.25rem)',
+                fontSize: 'var(--font-h2-fluid, 40px)',
                 fontWeight: 800,
                 color: 'var(--text-main)',
                 letterSpacing: '-0.02em',
-                lineHeight: 1.15,
+                lineHeight: 1.18,
               }}
             >
               Browse by Category
@@ -218,7 +222,7 @@ export default function CategoryShowcase({
               border:
                 selectedCategory === 'All Toys'
                   ? '2px solid var(--accent)'
-                  : '1px solid var(--border-hairline)',
+                  : '1px solid #D4CCC4',
               borderRadius: 'var(--radius-lg)',
               display: 'flex',
               flexDirection: 'column',
@@ -229,21 +233,23 @@ export default function CategoryShowcase({
               transition: 'all 0.2s ease',
               boxShadow:
                 selectedCategory === 'All Toys'
-                  ? '0 6px 18px rgba(200, 90, 50, 0.15)'
-                  : 'var(--shadow-sm)',
+                  ? '0 8px 20px rgba(200, 90, 50, 0.18)'
+                  : '0 4px 12px rgba(0, 0, 0, 0.05)',
               padding: '12px',
               textAlign: 'center',
             }}
             onMouseEnter={(e) => {
               if (selectedCategory !== 'All Toys') {
                 e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.borderColor = '#D4CECA';
+                e.currentTarget.style.borderColor = 'var(--accent)';
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.08)';
               }
             }}
             onMouseLeave={(e) => {
               if (selectedCategory !== 'All Toys') {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'var(--border-hairline)';
+                e.currentTarget.style.borderColor = '#D4CCC4';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
               }
             }}
           >
@@ -266,7 +272,7 @@ export default function CategoryShowcase({
             </div>
             <span
               style={{
-                fontSize: '0.875rem',
+                fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
                 color:
                   selectedCategory === 'All Toys'
@@ -293,7 +299,7 @@ export default function CategoryShowcase({
                     : '#FFFFFF',
                   border: isSelected
                     ? '2px solid var(--accent)'
-                    : '1px solid var(--border-hairline)',
+                    : '1px solid #D4CCC4',
                   borderRadius: 'var(--radius-lg)',
                   display: 'flex',
                   flexDirection: 'column',
@@ -303,22 +309,23 @@ export default function CategoryShowcase({
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   boxShadow: isSelected
-                    ? '0 6px 18px rgba(200, 90, 50, 0.15)'
-                    : 'var(--shadow-sm)',
+                    ? '0 8px 20px rgba(200, 90, 50, 0.18)'
+                    : '0 4px 12px rgba(0, 0, 0, 0.05)',
                   padding: '12px',
                   textAlign: 'center',
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
                     e.currentTarget.style.transform = 'translateY(-3px)';
-                    e.currentTarget.style.borderColor = '#D4CECA';
+                    e.currentTarget.style.borderColor = 'var(--accent)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.08)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor =
-                      'var(--border-hairline)';
+                    e.currentTarget.style.borderColor = '#D4CCC4';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
                   }
                 }}
               >
@@ -344,7 +351,7 @@ export default function CategoryShowcase({
                 </div>
                 <span
                   style={{
-                    fontSize: '0.875rem',
+                    fontSize: 'var(--font-small, 14px)',
                     fontWeight: 700,
                     color: isSelected ? 'var(--accent)' : 'var(--text-main)',
                     whiteSpace: 'nowrap',

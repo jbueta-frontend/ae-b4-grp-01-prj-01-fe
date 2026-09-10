@@ -38,10 +38,11 @@ export default function AdminReportsView() {
         <div>
           <h1
             style={{
-              fontSize: '1.75rem',
+              fontSize: 'var(--font-h2, 40px)',
               fontWeight: 800,
               color: 'var(--text-main)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.18,
             }}
           >
             Business Analytics & Visual Reports
@@ -49,8 +50,8 @@ export default function AdminReportsView() {
           <p
             style={{
               color: 'var(--text-muted)',
-              fontSize: '0.875rem',
-              marginTop: '4px',
+              fontSize: 'var(--font-body, 18px)',
+              marginTop: '6px',
             }}
           >
             Live revenue velocity, fulfillment pipeline distribution, and catalog movement.
@@ -215,7 +216,7 @@ export default function AdminReportsView() {
           >
             <span
               style={{
-                fontSize: '0.8125rem',
+                fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
@@ -241,10 +242,12 @@ export default function AdminReportsView() {
           </div>
           <div
             style={{
-              fontSize: '2.125rem',
+              fontSize: 'var(--font-h2, 40px)',
               fontWeight: 800,
               color: 'var(--accent)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              fontVariantNumeric: 'tabular-nums',
             }}
           >
             {loading ? '...' : formatPHP(data.totalRevenue)}
@@ -255,15 +258,15 @@ export default function AdminReportsView() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              fontSize: '0.75rem',
+              fontSize: 'var(--font-small, 14px)',
               fontWeight: 700,
               color: '#16a34a',
               backgroundColor: 'rgba(22, 163, 74, 0.08)',
-              padding: '2px 8px',
+              padding: '3px 10px',
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            <TrendingUp size={12} />
+            <TrendingUp size={14} />
             <span>+14.8% vs prior period</span>
           </div>
         </div>
@@ -280,7 +283,7 @@ export default function AdminReportsView() {
           >
             <span
               style={{
-                fontSize: '0.8125rem',
+                fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
@@ -306,10 +309,12 @@ export default function AdminReportsView() {
           </div>
           <div
             style={{
-              fontSize: '2.125rem',
+              fontSize: 'var(--font-h2, 40px)',
               fontWeight: 800,
               color: 'var(--text-main)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              fontVariantNumeric: 'tabular-nums',
             }}
           >
             {loading ? '...' : data.orderCount.toLocaleString()}
@@ -320,15 +325,15 @@ export default function AdminReportsView() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              fontSize: '0.75rem',
+              fontSize: 'var(--font-small, 14px)',
               fontWeight: 700,
               color: '#2563eb',
               backgroundColor: 'rgba(37, 99, 235, 0.08)',
-              padding: '2px 8px',
+              padding: '3px 10px',
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            <ArrowUpRight size={12} />
+            <ArrowUpRight size={14} />
             <span>+8.4% order volume</span>
           </div>
         </div>
@@ -345,7 +350,7 @@ export default function AdminReportsView() {
           >
             <span
               style={{
-                fontSize: '0.8125rem',
+                fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
@@ -371,10 +376,12 @@ export default function AdminReportsView() {
           </div>
           <div
             style={{
-              fontSize: '2.125rem',
+              fontSize: 'var(--font-h2, 40px)',
               fontWeight: 800,
               color: 'var(--text-main)',
               letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              fontVariantNumeric: 'tabular-nums',
             }}
           >
             {loading ? '...' : formatPHP(data.averageOrderValue)}
@@ -385,7 +392,7 @@ export default function AdminReportsView() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              fontSize: '0.75rem',
+              fontSize: 'var(--font-small, 14px)',
               fontWeight: 600,
               color: 'var(--text-muted)',
             }}

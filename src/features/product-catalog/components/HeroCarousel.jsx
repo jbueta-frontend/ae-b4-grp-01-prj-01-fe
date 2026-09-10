@@ -1,127 +1,92 @@
 import { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Star } from 'lucide-react';
 
 export const HERO_SLIDES = [
   {
-    id: 'slide-wooden',
-    tag: 'Hot Deal of This Week',
-    tagColor: 'var(--accent)',
-    headline: ['Architect Beechwood', 'Block Set'],
+    id: 'slide-rally-truck',
+    tag: 'All-Terrain Adventure Series',
+    headline: ['Off-Road Desert', 'Rally Truck'],
     description:
-      'Zero microplastics, zero screens. 50 precision-milled architectural shapes carved from sustainable German beechwood with organic beeswax seals.',
-    priceText: 'From',
-    price: '₱48.00',
-    cutoutImage: '/hero-wooden-blocks.png',
-    secondaryBadge: {
-      name: 'Sensory Fox Plush',
-      price: '₱34.00',
-      image: '/hero-plush-fox.png',
-      targetIndex: 2,
-    },
+      'Rugged rally buggy engineered with working 4x4 spring suspension, heavy-duty all-terrain tread tires, and full cockpit roll cage.',
+    cutoutImage: '/products/desert_rally_truck.jpg',
     rating: '4.9',
-    reviewCount: '142+ Reviews',
-    category: 'Wooden',
-    ambientGlow: 'rgba(200, 90, 50, 0.12)',
+    reviewCount: '184+ Reviews',
+    category: 'Building Sets',
   },
   {
-    id: 'slide-stem',
-    tag: 'Award-Winning Robotics',
-    tagColor: '#2563EB',
-    headline: ['Modular STEM', 'Robotics Explorer'],
+    id: 'slide-zen-pagoda',
+    tag: 'Architectural Heritage Masterpiece',
+    headline: ['Japanese Zen', 'Garden Pagoda'],
     description:
-      'Magnetic click-and-run gear motors with analog sensor modules. Teaches kinetic movement and circuit logic through analog, screen-free tactile exploration.',
-    priceText: 'From',
-    price: '₱85.00',
-    cutoutImage: '/hero-stem-robotics.png',
-    secondaryBadge: {
-      name: 'Nordic Balance Board',
-      price: '₱72.00',
-      image: '/hero-balance-board.png',
-      targetIndex: 3,
-    },
-    rating: '4.8',
-    reviewCount: '96+ Reviews',
-    category: 'STEM',
-    ambientGlow: 'rgba(37, 99, 235, 0.10)',
-  },
-  {
-    id: 'slide-plush',
-    tag: 'Organic Newborn Heirloom',
-    tagColor: '#B45309',
-    headline: ['Sensory Fox', 'Organic Linen Plush'],
-    description:
-      'Stitched from raw unbleached European flax linen with hypoallergenic cornfiber fill. Gently weighted with soothing natural lavender blossom pouches.',
-    priceText: 'From',
-    price: '₱34.00',
-    cutoutImage: '/hero-plush-fox.png',
-    secondaryBadge: {
-      name: 'Architect Beechwood',
-      price: '₱48.00',
-      image: '/hero-wooden-blocks.png',
-      targetIndex: 0,
-    },
+      'Tranquil architectural model featuring blossoming cherry trees, traditional stone lanterns, arched bridges, and a tiered timber pagoda.',
+    cutoutImage: '/products/zen_garden_pagoda.jpg',
     rating: '5.0',
-    reviewCount: '68+ Reviews',
-    category: 'Plush',
-    ambientGlow: 'rgba(180, 83, 9, 0.12)',
+    reviewCount: '210+ Reviews',
+    category: 'Building Sets',
   },
   {
-    id: 'slide-balance',
-    tag: 'Montessori Classic',
-    tagColor: '#059669',
-    headline: ['Curved Nordic', 'Birch Balance Board'],
+    id: 'slide-cargo-freight',
+    tag: 'Maritime Engineering Classic',
+    headline: ['Ocean Harbor', 'Cargo Freight'],
     description:
-      'Multi-layer Baltic Birch curved rocker board. Functions as an arch bridge, slide, balancing rocker, or quiet reading lounger. Supports up to 220 lbs.',
-    priceText: 'From',
-    price: '₱72.00',
-    cutoutImage: '/hero-balance-board.png',
-    secondaryBadge: {
-      name: 'Modular STEM Rover',
-      price: '₱85.00',
-      image: '/hero-stem-robotics.png',
-      targetIndex: 1,
-    },
+      'Realistically detailed modular container vessel featuring a working 360-degree crane hoist, dockside forklift, and interchangeable shipping crates.',
+    cutoutImage: '/products/ocean_cargo_ship.jpg',
     rating: '4.9',
-    reviewCount: '110+ Reviews',
-    category: 'Wooden',
-    ambientGlow: 'rgba(5, 150, 105, 0.10)',
+    reviewCount: '146+ Reviews',
+    category: 'Building Sets',
   },
 ];
 
 export default function HeroCarousel({ onSelectCategory }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const timerRef = useRef(null);
 
-  const currentSlide = HERO_SLIDES[currentIndex];
+  // Countdown timer state integrated into hero
+  const [timeLeft, setTimeLeft] = useState({
+    days: 16,
+    hours: 10,
+    mins: 56,
+    secs: 54,
+  });
 
-  const goToSlide = (index) => {
-    if (index === currentIndex || isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 450);
-  };
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev.secs > 0) {
+          return { ...prev, secs: prev.secs - 1 };
+        } else if (prev.mins > 0) {
+          return { ...prev, mins: 59, secs: 59 };
+        } else if (prev.hours > 0) {
+          return { ...prev, hours: prev.hours - 1, mins: 59, secs: 59 };
+        } else if (prev.days > 0) {
+          return {
+            ...prev,
+            days: prev.days - 1,
+            hours: 23,
+            mins: 59,
+            secs: 59,
+          };
+        }
+        return prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const nextSlide = () => {
-    goToSlide((currentIndex + 1) % HERO_SLIDES.length);
-  };
-
-  const prevSlide = () => {
-    goToSlide((currentIndex - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
-  };
-
-  // Auto-play timer
+  // Automatic slide rotation without manual user arrows (faster by 3s: 2000ms)
   useEffect(() => {
     if (isPaused) return;
     timerRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 5500);
+    }, 2000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isPaused, currentIndex]);
+
+  const currentSlide = HERO_SLIDES[currentIndex];
 
   const handleShopNow = () => {
     if (onSelectCategory) {
@@ -129,7 +94,10 @@ export default function HeroCarousel({ onSelectCategory }) {
     }
     const productsEl = document.getElementById('products');
     if (productsEl) {
-      productsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const navHeight = 58;
+      const targetY =
+        productsEl.getBoundingClientRect().top + window.pageYOffset - navHeight;
+      window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
   };
 
@@ -141,23 +109,24 @@ export default function HeroCarousel({ onSelectCategory }) {
       style={{
         background:
           'linear-gradient(135deg, #FAF7F5 0%, #F5EDE6 60%, #EFE5DC 100%)',
-        padding: '56px 0 68px',
+        padding: '48px 0 42px',
         borderBottom: '1px solid var(--border-hairline)',
         position: 'relative',
         overflow: 'hidden',
         userSelect: 'none',
       }}
     >
-      {/* Dynamic Ambient Background Glow matching active toy */}
+      {/* Subtle Ambient Background Glow matching brand accent */}
       <div
         style={{
           position: 'absolute',
           top: '-15%',
           right: '8%',
-          width: '560px',
-          height: '560px',
+          width: '520px',
+          height: '520px',
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${currentSlide.ambientGlow} 0%, rgba(250, 247, 245, 0) 70%)`,
+          background:
+            'radial-gradient(circle, rgba(200, 90, 50, 0.10) 0%, rgba(250, 247, 245, 0) 70%)',
           transition: 'background 0.8s ease',
           pointerEvents: 'none',
         }}
@@ -170,33 +139,31 @@ export default function HeroCarousel({ onSelectCategory }) {
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
             gap: '40px',
             alignItems: 'center',
-            minHeight: '440px',
+            minHeight: '420px',
           }}
         >
           {/* ================================================================= */}
-          {/* Left Column: Eyebrow, Dynamic Titles, Subtitle, Shop CTA & Rating */}
+          {/* Left Column: Eyebrow, Dynamic Titles, Don't Miss Countdown & CTA  */}
           {/* ================================================================= */}
           <div
             key={currentSlide.id + '-content'}
-            style={{
-              animation: 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
+            className="hero-smooth-animate"
           >
-            {/* Eyebrow Tag with Circular Dot Badge */}
+            {/* Eyebrow Tag - Branded Terracotta Pill */}
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontSize: '0.8125rem',
+                fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
-                color: currentSlide.tagColor,
-                backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                color: 'var(--accent)',
+                backgroundColor: 'rgba(200, 90, 50, 0.08)',
+                border: '1px solid rgba(200, 90, 50, 0.25)',
                 padding: '5px 14px',
                 borderRadius: 'var(--radius-full)',
-                border: '1px solid var(--border-hairline)',
                 backdropFilter: 'blur(6px)',
-                marginBottom: '18px',
+                marginBottom: '16px',
                 boxShadow: 'var(--shadow-sm)',
               }}
             >
@@ -205,17 +172,17 @@ export default function HeroCarousel({ onSelectCategory }) {
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  backgroundColor: currentSlide.tagColor,
+                  backgroundColor: 'var(--accent)',
                   display: 'inline-block',
                 }}
               />
               <span>{currentSlide.tag}</span>
             </div>
 
-            {/* Headline: 2-Line Bold Title */}
+            {/* Headline: 2-Line Bold Title (H1: 64px) */}
             <h1
               style={{
-                fontSize: 'clamp(2.35rem, 5vw, 3.6rem)',
+                fontSize: 'var(--font-h1-fluid, 64px)',
                 fontWeight: 800,
                 color: 'var(--text-main)',
                 lineHeight: 1.1,
@@ -229,18 +196,208 @@ export default function HeroCarousel({ onSelectCategory }) {
               </span>
             </h1>
 
-            {/* Description */}
+            {/* Description (Body: 18px) */}
             <p
               style={{
-                fontSize: '1.0625rem',
+                fontSize: 'var(--font-body, 18px)',
                 color: 'var(--text-muted)',
-                lineHeight: 1.55,
-                maxWidth: '460px',
-                marginBottom: '32px',
+                lineHeight: 1.6,
+                maxWidth: '480px',
+                marginBottom: '24px',
               }}
             >
               {currentSlide.description}
             </p>
+
+            {/* Integrated "Don't Miss!!" Countdown Timer Container */}
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.75)',
+                border: '1px solid #D4CCC4',
+                borderRadius: 'var(--radius-lg)',
+                padding: '14px 18px',
+                marginBottom: '26px',
+                maxWidth: '420px',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: 'var(--font-small, 14px)',
+                  fontWeight: 800,
+                  color: 'var(--accent)',
+                  marginBottom: '10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--accent)',
+                    display: 'inline-block',
+                  }}
+                />
+                <span>Don't Miss!! Limited Drop Deal</span>
+              </div>
+
+              {/* 4 Countdown Unit Boxes */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #DCD5CF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 800,
+                      color: 'var(--text-main)',
+                      lineHeight: 1,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {timeLeft.days}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      marginTop: '3px',
+                    }}
+                  >
+                    Day
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #DCD5CF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 800,
+                      color: 'var(--text-main)',
+                      lineHeight: 1,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {timeLeft.hours}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      marginTop: '3px',
+                    }}
+                  >
+                    Hrs
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #DCD5CF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 800,
+                      color: 'var(--text-main)',
+                      lineHeight: 1,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {timeLeft.mins}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      marginTop: '3px',
+                    }}
+                  >
+                    Min
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #DCD5CF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 800,
+                      color: 'var(--accent)',
+                      lineHeight: 1,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {timeLeft.secs}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--text-muted)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      marginTop: '3px',
+                    }}
+                  >
+                    Sec
+                  </span>
+                </div>
+              </div>
+            </div>
 
             {/* Action Row: Shop Now CTA Button + Review Social Proof Cluster */}
             <div
@@ -257,7 +414,7 @@ export default function HeroCarousel({ onSelectCategory }) {
                 style={{
                   padding: '14px 28px',
                   borderRadius: 'var(--radius-full)',
-                  fontSize: '0.9375rem',
+                  fontSize: '1rem',
                   fontWeight: 700,
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -326,7 +483,7 @@ export default function HeroCarousel({ onSelectCategory }) {
                   </div>
                   <span
                     style={{
-                      fontSize: '0.75rem',
+                      fontSize: 'var(--font-small, 14px)',
                       fontWeight: 700,
                       color: 'var(--text-main)',
                     }}
@@ -339,8 +496,7 @@ export default function HeroCarousel({ onSelectCategory }) {
           </div>
 
           {/* ================================================================= */}
-          {/* Right Column: Transparent Floating Product (Toy) Display Only     */}
-          {/* (No square box, pure toy cutout with soft natural drop shadow)    */}
+          {/* Right Column: Prominently Scaled Hero Product Showcase            */}
           {/* ================================================================= */}
           <div
             style={{
@@ -348,38 +504,41 @@ export default function HeroCarousel({ onSelectCategory }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              minHeight: '380px',
+              minHeight: '440px',
             }}
           >
-            {/* Pure Product Cutout Image (Transparent background, floating) */}
+            {/* Prominent Scaled Toy Showcase Image */}
             <div
               key={currentSlide.id + '-image'}
+              className="hero-smooth-animate"
               style={{
                 position: 'relative',
                 width: '100%',
-                maxWidth: '480px',
-                height: '380px',
+                maxWidth: '560px',
+                height: '440px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                animation: 'fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               <img
                 src={currentSlide.cutoutImage}
                 alt={currentSlide.headline.join(' ')}
                 style={{
-                  maxHeight: '360px',
-                  maxWidth: '92%',
-                  objectFit: 'contain',
-                  filter:
-                    'drop-shadow(0 25px 35px rgba(0, 0, 0, 0.16)) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.08))',
-                  transition: 'transform 0.4s ease',
+                  width: '100%',
+                  height: '100%',
+                  maxHeight: '430px',
+                  objectFit: 'cover',
+                  borderRadius: '28px',
+                  border: '1px solid rgba(255, 255, 255, 0.85)',
+                  boxShadow:
+                    '0 24px 50px rgba(0, 0, 0, 0.14), 0 6px 18px rgba(0, 0, 0, 0.06)',
+                  transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                   cursor: 'pointer',
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.transform =
-                    'scale(1.04) translateY(-4px)')
+                    'scale(1.025) translateY(-3px)')
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.transform = 'scale(1) translateY(0)')
@@ -387,279 +546,40 @@ export default function HeroCarousel({ onSelectCategory }) {
                 onClick={handleShopNow}
               />
             </div>
-
-            {/* Floating Circular Price Tag Badge (Matching reference eTrade "$48.00" circle) */}
-            <div
-              key={currentSlide.id + '-price'}
-              style={{
-                position: 'absolute',
-                top: '12px',
-                right: '16px',
-                zIndex: 4,
-                width: '82px',
-                height: '82px',
-                borderRadius: '50%',
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.12)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid var(--border-hairline)',
-                animation: 'pulse 3s infinite ease-in-out',
-                cursor: 'pointer',
-              }}
-              onClick={handleShopNow}
-            >
-              <span
-                style={{
-                  fontSize: '0.6875rem',
-                  color: 'var(--text-muted)',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  lineHeight: 1,
-                }}
-              >
-                {currentSlide.priceText}
-              </span>
-              <span
-                style={{
-                  fontSize: '1.1875rem',
-                  fontWeight: 800,
-                  color: 'var(--accent)',
-                  lineHeight: 1.2,
-                }}
-              >
-                {currentSlide.price}
-              </span>
-            </div>
-
-            {/* Secondary Floating Accessory Preview Badge (Clickable to switch slide) */}
-            <div
-              onClick={() => goToSlide(currentSlide.secondaryBadge.targetIndex)}
-              style={{
-                position: 'absolute',
-                bottom: '-10px',
-                right: '10px',
-                zIndex: 4,
-                backgroundColor: '#FFFFFF',
-                borderRadius: 'var(--radius-lg)',
-                padding: '8px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                boxShadow: '0 12px 28px rgba(0, 0, 0, 0.12)',
-                border: '1px solid var(--border-hairline)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow =
-                  '0 14px 32px rgba(0, 0, 0, 0.16)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow =
-                  '0 12px 28px rgba(0, 0, 0, 0.12)';
-              }}
-              title="Click to view next featured heirloom"
-            >
-              <img
-                src={currentSlide.secondaryBadge.image}
-                alt={currentSlide.secondaryBadge.name}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-                }}
-              />
-              <div>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    color: 'var(--text-main)',
-                  }}
-                >
-                  {currentSlide.secondaryBadge.name}
-                </span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    color: 'var(--accent)',
-                  }}
-                >
-                  {currentSlide.secondaryBadge.price} →
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* ================================================================= */}
-        {/* Bottom Interactive Navigation: Arrows, Dash Indicators, & Previews */}
+        {/* Minimized Automatic Pagination Indicator (No Arrows, No Thumbnails)*/}
         {/* ================================================================= */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: '36px',
-            paddingTop: '20px',
-            borderTop: '1px solid rgba(24, 24, 27, 0.06)',
-            flexWrap: 'wrap',
-            gap: '16px',
+            justifyContent: 'center',
+            gap: '8px',
+            marginTop: '28px',
           }}
+          aria-label="Carousel slide indicator"
         >
-          {/* Prev / Next Arrow Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={prevSlide}
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                border: '1px solid var(--border-hairline)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--text-main)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: 'var(--shadow-sm)',
-                transition: 'all var(--transition-fast)',
-              }}
-              aria-label="Previous featured toy"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              <ChevronLeft size={18} />
-            </button>
-
-            <button
-              onClick={nextSlide}
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                border: '1px solid var(--border-hairline)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--text-main)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: 'var(--shadow-sm)',
-                transition: 'all var(--transition-fast)',
-              }}
-              aria-label="Next featured toy"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
-          {/* Dash Indicator Pills (Matching Reference layout) */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            {HERO_SLIDES.map((slide, idx) => {
-              const isActive = idx === currentIndex;
-              return (
-                <button
-                  key={slide.id}
-                  onClick={() => goToSlide(idx)}
-                  style={{
-                    width: isActive ? '34px' : '10px',
-                    height: '5px',
-                    borderRadius: 'var(--radius-full)',
-                    backgroundColor: isActive
-                      ? 'var(--accent)'
-                      : 'rgba(24, 24, 27, 0.2)',
-                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                    cursor: 'pointer',
-                    padding: 0,
-                  }}
-                  aria-label={`Go to slide ${idx + 1}: ${slide.headline.join(' ')}`}
-                />
-              );
-            })}
-          </div>
-
-          {/* Interactive Mini-Thumbnail Bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-            }}
-          >
-            {HERO_SLIDES.map((slide, idx) => {
-              const isActive = idx === currentIndex;
-              return (
-                <button
-                  key={slide.id}
-                  onClick={() => goToSlide(idx)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '4px 10px 4px 6px',
-                    borderRadius: 'var(--radius-full)',
-                    backgroundColor: isActive ? '#FFFFFF' : 'transparent',
-                    border: isActive
-                      ? '1px solid var(--accent)'
-                      : '1px solid transparent',
-                    boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
-                    cursor: 'pointer',
-                    transition: 'all var(--transition-fast)',
-                  }}
-                  title={slide.headline.join(' ')}
-                >
-                  <img
-                    src={slide.cutoutImage}
-                    alt={slide.headline.join(' ')}
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      objectFit: 'contain',
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: isActive ? 700 : 500,
-                      color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                    }}
-                  >
-                    {slide.headline[0].split(' ')[0]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {HERO_SLIDES.map((slide, idx) => {
+            const isActive = idx === currentIndex;
+            return (
+              <div
+                key={slide.id}
+                style={{
+                  width: isActive ? '28px' : '8px',
+                  height: '6px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: isActive
+                    ? 'var(--accent)'
+                    : 'rgba(24, 24, 27, 0.18)',
+                  transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                title={`Slide ${idx + 1}`}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
