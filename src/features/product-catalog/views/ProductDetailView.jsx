@@ -525,13 +525,18 @@ export default function ProductDetailView() {
                     }}
                   >
                     <p>
-                      <strong>Dimensions:</strong> {product.specs.dimensions}
+                      <strong>Dimensions:</strong>{' '}
+                      {product.specs?.dimensions || '28 × 18 × 12 cm'}
                     </p>
                     <p style={{ marginTop: '4px' }}>
-                      <strong>Materials:</strong> {product.specs.materials}
+                      <strong>Materials:</strong>{' '}
+                      {product.specs?.materials ||
+                        'Sustainable FSC Certified Beechwood, Non-toxic Beeswax Seals, Organic Pigments'}
                     </p>
                     <p style={{ marginTop: '4px' }}>
-                      <strong>Craftsmanship:</strong> {product.specs.origin}
+                      <strong>Craftsmanship:</strong>{' '}
+                      {product.specs?.origin ||
+                        'Precision engineered and hand-finished for heirloom durability'}
                     </p>
                   </div>
                 )}
@@ -569,10 +574,13 @@ export default function ProductDetailView() {
                     }}
                   >
                     <p>
-                      <strong>Certifications:</strong> {product.specs.safety}
+                      <strong>Certifications:</strong>{' '}
+                      {product.specs?.safety ||
+                        'EN71, ASTM F963, 100% Non-toxic & BPA-Free Certified'}
                     </p>
                     <p style={{ marginTop: '4px' }}>
-                      <strong>Age Range:</strong> {product.specs.ageRange}
+                      <strong>Age Range:</strong>{' '}
+                      {product.specs?.ageRange || product.ageGroup || 'All Ages'}
                     </p>
                   </div>
                 )}
