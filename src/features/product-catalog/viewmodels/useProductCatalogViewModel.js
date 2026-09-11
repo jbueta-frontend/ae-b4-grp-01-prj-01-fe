@@ -1,7 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../../services/api';
-import { CATEGORIES, mapApiProduct } from '../models/productModel';
+import { getCategories } from '../../../services/productService';
+import {
+  CATEGORIES,
+  DATABASE_CATEGORIES,
+  mapApiProduct,
+} from '../models/productModel';
 import { useCart } from '../../../context/CartContext';
 
 export const AGE_OPTIONS = [
@@ -26,6 +31,8 @@ export function useProductCatalogViewModel() {
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get('cat') || 'All Toys'
   );
+  const [categories, setCategories] = useState(CATEGORIES);
+  const [categoryItems, setCategoryItems] = useState(DATABASE_CATEGORIES);
   const [selectedAge, setSelectedAge] = useState('All Ages');
   const [selectedPrice, setSelectedPrice] = useState('all');
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -36,6 +43,19 @@ export function useProductCatalogViewModel() {
   const [error, setError] = useState(null);
 
   const { addToCart } = useCart();
+
+  const fetchCategoryData = useCallback(async () => {
+    try {
+      const data = await getCategories();
+      if (Array.isArray(data) && data.length > 0) {
+        setCategoryItems(data);
+        const dynamicList = ['All Toys', ...data.map((c) => c.name)];
+        setCategories(dynamicList);
+      }
+    } catch (err) {
+      console.warn('Failed to load categories:', err);
+    }
+  }, []);
 
   const fetchCatalog = useCallback(async () => {
     setLoading(true);
@@ -86,7 +106,8 @@ export function useProductCatalogViewModel() {
 
   useEffect(() => {
     fetchCatalog();
-  }, [fetchCatalog]);
+    fetchCategoryData();
+  }, [fetchCatalog, fetchCategoryData]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -203,7 +224,8 @@ export function useProductCatalogViewModel() {
   };
 
   return {
-    categories: CATEGORIES,
+    categories,
+    categoryItems,
     selectedCategory,
     setSelectedCategory: handleSetCategory,
     ageOptions: AGE_OPTIONS,

@@ -3,12 +3,85 @@
  * Hardcoded mockups removed. Products are sourced dynamically from the backend API.
  */
 
+export const DB_CATEGORY_MAP = {
+  'c1000000-0000-0000-0000-000000000001': 'Action Figures',
+  'c1000000-0000-0000-0000-000000000002': 'Building Sets',
+  'c1000000-0000-0000-0000-000000000003': 'Board Games & Puzzles',
+  'c1000000-0000-0000-0000-000000000004': 'Plush Toys',
+  'c1000000-0000-0000-0000-000000000005': 'Outdoor & Sports',
+  'c1000000-0000-0000-0000-000000000006': 'STEM & Educational',
+};
+
+export const DATABASE_CATEGORIES = [
+  {
+    id: 'c1000000-0000-0000-0000-000000000001',
+    categoryId: 'c1000000-0000-0000-0000-000000000001',
+    name: 'Action Figures',
+    slug: 'action-figures',
+    description: 'Superheroes, anime figures, and adventure collectibles',
+    thumbnail: '/products/cyber_mech_figure.jpg',
+    categoryKey: 'Action Figures',
+    sortOrder: 1,
+  },
+  {
+    id: 'c1000000-0000-0000-0000-000000000002',
+    categoryId: 'c1000000-0000-0000-0000-000000000002',
+    name: 'Building Sets',
+    slug: 'building-sets',
+    description: 'LEGO sets, modular bricks, and creative architectural kits',
+    thumbnail: '/products/zen_garden_pagoda.jpg',
+    categoryKey: 'Building Sets',
+    sortOrder: 2,
+  },
+  {
+    id: 'c1000000-0000-0000-0000-000000000003',
+    categoryId: 'c1000000-0000-0000-0000-000000000003',
+    name: 'Board Games & Puzzles',
+    slug: 'board-games-puzzles',
+    description: 'Family board games, card games, and jigsaw challenges',
+    thumbnail: '/products/mystic_board_game.jpg',
+    categoryKey: 'Board Games & Puzzles',
+    sortOrder: 3,
+  },
+  {
+    id: 'c1000000-0000-0000-0000-000000000004',
+    categoryId: 'c1000000-0000-0000-0000-000000000004',
+    name: 'Plush Toys',
+    slug: 'plush-toys',
+    description: 'Soft teddy bears, cute animal plushes, and bedtime friends',
+    thumbnail: '/products/cuddle_bear_plush.jpg',
+    categoryKey: 'Plush Toys',
+    sortOrder: 4,
+  },
+  {
+    id: 'c1000000-0000-0000-0000-000000000005',
+    categoryId: 'c1000000-0000-0000-0000-000000000005',
+    name: 'Outdoor & Sports',
+    slug: 'outdoor-sports',
+    description: 'Ride-on cars, scooters, balls, and backyard water toys',
+    thumbnail: '/products/desert_rally_truck.jpg',
+    categoryKey: 'Outdoor & Sports',
+    sortOrder: 5,
+  },
+  {
+    id: 'c1000000-0000-0000-0000-000000000006',
+    categoryId: 'c1000000-0000-0000-0000-000000000006',
+    name: 'STEM & Educational',
+    slug: 'stem-educational',
+    description: 'Robotics, science discovery kits, and coding games',
+    thumbnail: '/products/solar_rover_stem.jpg',
+    categoryKey: 'STEM & Educational',
+    sortOrder: 6,
+  },
+];
+
 export const CATEGORIES = [
   'All Toys',
-  'Building Sets',
   'Action Figures',
-  'Plush Toys',
+  'Building Sets',
   'Board Games & Puzzles',
+  'Plush Toys',
+  'Outdoor & Sports',
   'STEM & Educational',
 ];
 
@@ -33,7 +106,7 @@ export const GENERATED_PRODUCT_IMAGES = {
   'TOY-BLD-001': '/products/galaxy_explorer_starship.jpg',
 };
 
-const CATEGORY_FALLBACK_IMAGES = {
+export const CATEGORY_FALLBACK_IMAGES = {
   'Action Figures': '/products/cyber_mech_figure.jpg',
   'Building Sets': '/products/zen_garden_pagoda.jpg',
   'Board Games & Puzzles': '/products/mystic_board_game.jpg',
@@ -93,7 +166,11 @@ function getGeneratedImageForProduct(p) {
     return '/products/galaxy_explorer_starship.jpg';
   }
 
-  const cat = p.category?.name || p.categoryName || (typeof p.category === 'string' ? p.category : '');
+  const cat =
+    p.category?.name ||
+    p.categoryName ||
+    DB_CATEGORY_MAP[p.categoryId] ||
+    (typeof p.category === 'string' ? p.category : '');
   return CATEGORY_FALLBACK_IMAGES[cat] || null;
 }
 
@@ -103,6 +180,7 @@ export function mapApiProduct(p) {
   const category =
     p.category?.name ||
     p.categoryName ||
+    DB_CATEGORY_MAP[p.categoryId] ||
     (typeof p.category === 'string' ? p.category : 'General');
 
   // Prioritize high-quality generated product photos matching the product
@@ -214,6 +292,7 @@ export function mapApiProduct(p) {
     status: p.status || 'ACTIVE',
     rating: p.rating || 4.9,
     reviewCount: p.reviewCount || reviews.length,
-    tag: p.compareAtPrice && p.compareAtPrice > p.price ? 'Sale' : 'Featured',
+    tag: p.compareAtPrice && p.compareAtPrice > p.price ? 'On Sale' : 'Featured',
+    isOnSale: Boolean(p.compareAtPrice && p.compareAtPrice > p.price),
   };
 }

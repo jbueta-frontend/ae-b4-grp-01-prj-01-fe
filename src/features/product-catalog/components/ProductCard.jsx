@@ -7,6 +7,12 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
     product.variants?.[0]?.id || null
   );
 
+  const isOnSale =
+    product.isOnSale ||
+    product.tag === 'Sale' ||
+    product.tag === 'On Sale' ||
+    (product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price));
+
   return (
     <div
       style={{
@@ -35,7 +41,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         e.currentTarget.style.borderColor = '#D4CCC4';
       }}
     >
-      {/* 1. Top Badges: Discount Badge (matching reference blue/accent pill) */}
+      {/* 1. Top Badges: On Sale (Red) / Discount / Stock alert */}
       <div
         style={{
           position: 'absolute',
@@ -49,12 +55,31 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
           pointerEvents: 'none',
         }}
       >
-        {product.discount ? (
+        {isOnSale ? (
+          <span
+            style={{
+              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+              color: '#FFFFFF',
+              fontSize: '11px',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            On Sale
+          </span>
+        ) : product.discount ? (
           <span
             style={{
               background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
               color: '#FFFFFF',
-              fontSize: '12px',
+              fontSize: '11px',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
@@ -70,7 +95,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
             style={{
               backgroundColor: 'var(--accent)',
               color: '#FFFFFF',
-              fontSize: '12px',
+              fontSize: '11px',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
