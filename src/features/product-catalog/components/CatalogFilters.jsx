@@ -91,6 +91,46 @@ export default function CatalogFilters({
         )}
       </div>
 
+      {/* In Stock Toggle (Top of filter container) */}
+      <div
+        style={{
+          paddingBottom: '16px',
+          borderBottom: '1px solid #EBE5DF',
+          marginBottom: '20px',
+        }}
+      >
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: 'var(--text-main)',
+            }}
+          >
+            In Stock Only
+          </span>
+          <input
+            type="checkbox"
+            checked={inStockOnly}
+            onChange={(e) => onToggleInStock(e.target.checked)}
+            style={{
+              width: '18px',
+              height: '18px',
+              accentColor: 'var(--accent)',
+              cursor: 'pointer',
+            }}
+          />
+        </label>
+      </div>
+
       {/* 1. Category Filter */}
       <div style={{ marginBottom: '24px' }}>
         <h4
@@ -235,45 +275,6 @@ export default function CatalogFilters({
             );
           })}
         </div>
-      </div>
-
-      {/* 4. In Stock Toggle */}
-      <div
-        style={{
-          paddingTop: '16px',
-          borderTop: '1px solid #EBE5DF',
-        }}
-      >
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer',
-            userSelect: 'none',
-          }}
-        >
-          <span
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: 'var(--text-main)',
-            }}
-          >
-            In Stock Only
-          </span>
-          <input
-            type="checkbox"
-            checked={inStockOnly}
-            onChange={(e) => onToggleInStock(e.target.checked)}
-            style={{
-              width: '18px',
-              height: '18px',
-              accentColor: 'var(--accent)',
-              cursor: 'pointer',
-            }}
-          />
-        </label>
       </div>
     </aside>
   );
