@@ -7,7 +7,34 @@ import {
   DATABASE_CATEGORIES,
   mapApiProduct,
 } from '../models/productModel';
+import { SEED_PRODUCTS } from '../../admin-inventory/data/seedCatalog';
 import { useCart } from '../../../context/CartContext';
+
+const seedOrderMap = new Map();
+SEED_PRODUCTS.forEach((p, idx) => {
+  if (p.sku) seedOrderMap.set(p.sku.toUpperCase(), idx);
+  if (p.name) seedOrderMap.set(p.name.toLowerCase().trim(), idx);
+  if (p.slug) seedOrderMap.set(p.slug.toLowerCase().trim(), idx);
+});
+
+const sortCatalogProducts = (productList) => {
+  return [...productList].sort((a, b) => {
+    const orderA =
+      a.sku && seedOrderMap.has(a.sku.toUpperCase())
+        ? seedOrderMap.get(a.sku.toUpperCase())
+        : a.name && seedOrderMap.has(a.name.toLowerCase().trim())
+        ? seedOrderMap.get(a.name.toLowerCase().trim())
+        : 9999;
+    const orderB =
+      b.sku && seedOrderMap.has(b.sku.toUpperCase())
+        ? seedOrderMap.get(b.sku.toUpperCase())
+        : b.name && seedOrderMap.has(b.name.toLowerCase().trim())
+        ? seedOrderMap.get(b.name.toLowerCase().trim())
+        : 9999;
+    if (orderA !== orderB) return orderA - orderB;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+};
 
 export const AGE_OPTIONS = [
   'All Ages',
@@ -83,7 +110,7 @@ export function useProductCatalogViewModel() {
         } catch {}
       }
 
-      setProducts(combined);
+      setProducts(sortCatalogProducts(combined));
     } catch (err) {
       // Fallback to cached products if API fails
       const cached = localStorage.getItem('fiddlemania_seeded_products');
@@ -91,7 +118,7 @@ export function useProductCatalogViewModel() {
         try {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setProducts(parsed.map(mapApiProduct).filter(Boolean));
+            setProducts(sortCatalogProducts(parsed.map(mapApiProduct).filter(Boolean)));
             setLoading(false);
             return;
           }
