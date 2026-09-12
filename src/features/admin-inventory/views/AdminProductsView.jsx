@@ -251,6 +251,7 @@ export default function AdminProductsView() {
                   <th style={{ padding: '14px 20px' }}>SKU</th>
                   <th style={{ padding: '14px 20px' }}>Product</th>
                   <th style={{ padding: '14px 20px' }}>Price</th>
+                  <th style={{ padding: '14px 20px' }}>Stock</th>
                   <th style={{ padding: '14px 20px' }}>Ages</th>
                   <th style={{ padding: '14px 20px' }}>Status</th>
                   <th style={{ padding: '14px 20px', textAlign: 'right' }}>
@@ -292,26 +293,58 @@ export default function AdminProductsView() {
                         {item.sku || '—'}
                       </td>
 
-                      {/* Name & Brand */}
+                      {/* Name, Thumbnail & Brand */}
                       <td style={{ padding: '16px 20px' }}>
                         <div
                           style={{
-                            fontWeight: 700,
-                            fontSize: '1rem',
-                            color: 'var(--text-main)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
                           }}
                         >
-                          {item.name}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 'var(--font-small, 14px)',
-                            color: 'var(--text-muted)',
-                            marginTop: '2px',
-                          }}
-                        >
-                          {item.brand || 'FiddleMania'}{' '}
-                          {item.category ? `• ${item.category}` : ''}
+                          <img
+                            src={
+                              item.imageUrl ||
+                              (Array.isArray(item.images) &&
+                                item.images[0]?.imageUrl) ||
+                              '/products/zen_garden_pagoda.jpg'
+                            }
+                            alt={item.name}
+                            style={{
+                              width: '42px',
+                              height: '42px',
+                              borderRadius: '6px',
+                              objectFit: 'cover',
+                              border: '1px solid var(--border-hairline)',
+                              flexShrink: 0,
+                              backgroundColor: '#f1f5f9',
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                '/products/zen_garden_pagoda.jpg';
+                            }}
+                          />
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: '0.9375rem',
+                                color: 'var(--text-main)',
+                              }}
+                            >
+                              {item.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 'var(--font-small, 14px)',
+                                color: 'var(--text-muted)',
+                                marginTop: '2px',
+                              }}
+                            >
+                              {item.brand || 'FiddleMania'}{' '}
+                              {item.category ? `• ${item.category}` : ''}
+                            </div>
+                          </div>
                         </div>
                       </td>
 
@@ -338,6 +371,83 @@ export default function AdminProductsView() {
                             {formatPHP(item.compareAtPrice)}
                           </div>
                         )}
+                      </td>
+
+                      {/* Stock Quantity */}
+                      <td style={{ padding: '16px 20px', whiteSpace: 'nowrap' }}>
+                        {(() => {
+                          const qty =
+                            item.inventory?.stockQuantity ??
+                            item.stockQuantity ??
+                            0;
+                          const isOut = qty <= 0;
+                          const isLow = !isOut && qty <= 5;
+                          return (
+                            <div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    display: 'inline-block',
+                                    width: '8px',
+                                    height: '8px',
+                                    borderRadius: '50%',
+                                    backgroundColor: isOut
+                                      ? '#ef4444'
+                                      : isLow
+                                        ? '#f59e0b'
+                                        : '#10b981',
+                                  }}
+                                />
+                                <span
+                                  style={{
+                                    fontWeight: 700,
+                                    fontSize: '0.875rem',
+                                    color: isOut
+                                      ? '#dc2626'
+                                      : isLow
+                                        ? '#d97706'
+                                        : 'var(--text-main)',
+                                  }}
+                                >
+                                  {qty} {qty === 1 ? 'unit' : 'units'}
+                                </span>
+                              </div>
+                              {isOut ? (
+                                <span
+                                  style={{
+                                    display: 'block',
+                                    marginTop: '2px',
+                                    fontSize: '0.6875rem',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    color: '#dc2626',
+                                  }}
+                                >
+                                  Out of Stock
+                                </span>
+                              ) : isLow ? (
+                                <span
+                                  style={{
+                                    display: 'block',
+                                    marginTop: '2px',
+                                    fontSize: '0.6875rem',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    color: '#d97706',
+                                  }}
+                                >
+                                  Low Stock (≤5)
+                                </span>
+                              ) : null}
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Ages */}

@@ -26,6 +26,8 @@ export const DEFAULT_PRODUCT_FORM = {
   description: '',
   price: '',
   compareAtPrice: '',
+  stockQuantity: '50',
+  imageUrl: '',
   ageMin: '1',
   ageMax: '8',
   brand: 'FiddleMania',
@@ -33,7 +35,50 @@ export const DEFAULT_PRODUCT_FORM = {
   status: 'ACTIVE',
 };
 
-export function validateProductForm(form) {
+export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif'];
+
+export const ALLOWED_IMAGE_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/svg+xml',
+  'image/avif',
+];
+
+export function validateImageFile(file) {
+  if (!file) {
+    return { isValid: false, error: 'No file selected.' };
+  }
+
+  const fileName = file.name || '';
+  const fileExt = fileName.includes('.')
+    ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+    : '';
+  const fileType = (file.type || '').toLowerCase();
+
+  const isExtValid = ALLOWED_IMAGE_EXTENSIONS.includes(fileExt);
+  const isMimeValid = fileType.startsWith('image/') || ALLOWED_IMAGE_MIMES.includes(fileType);
+
+  if (!isExtValid || !isMimeValid) {
+    return {
+      isValid: false,
+      error: `Invalid file format "${fileName}". Only image files (JPEG, PNG, WebP, GIF, SVG, AVIF) are accepted.`,
+    };
+  }
+
+  // 10MB limit
+  if (file.size > 10 * 1024 * 1024) {
+    return {
+      isValid: false,
+      error: `File "${fileName}" exceeds the 10MB limit (${(file.size / (1024 * 1024)).toFixed(1)}MB). Please choose a smaller image.`,
+    };
+  }
+
+  return { isValid: true, error: null };
+}
+
+export function validateProductForm(form, isEditing = false) {
   const errors = {};
 
   if (!form.name || !form.name.trim()) {
@@ -47,6 +92,16 @@ export function validateProductForm(form) {
   const priceNum = Number(form.price);
   if (form.price === '' || isNaN(priceNum) || priceNum <= 0) {
     errors.price = 'Valid positive price in PHP is required';
+  }
+
+  // Stock Quantity validation (required when creating new products, non-negative integer)
+  if (form.stockQuantity !== '' && form.stockQuantity !== undefined && form.stockQuantity !== null) {
+    const qty = Number(form.stockQuantity);
+    if (isNaN(qty) || !Number.isInteger(qty) || qty < 0) {
+      errors.stockQuantity = 'Quantity must be a non-negative whole number (0 or greater)';
+    }
+  } else if (!isEditing) {
+    errors.stockQuantity = 'Initial stock quantity is required';
   }
 
   if (form.compareAtPrice !== '' && form.compareAtPrice !== undefined) {
