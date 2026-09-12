@@ -122,6 +122,32 @@ export function useAdminReportsViewModel() {
     loadCatalog();
   }, []);
 
+  // Correlate and enrich lowStockAlerts with catalog products metadata (name, SKU, image)
+  useEffect(() => {
+    if (catalogProducts.length > 0 && data.lowStockAlerts.length > 0) {
+      setData((prev) => {
+        let changed = false;
+        const enriched = prev.lowStockAlerts.map((alert) => {
+          const id = alert.productId || alert.id || alert.product_id;
+          const matched = catalogProducts.find((p) => (p.productId || p.id) === id);
+          if (!matched) return alert;
+          changed = true;
+          return {
+            ...alert,
+            ...matched,
+            productId: id,
+            name: matched.name || alert.name || 'Toy Product',
+            sku: matched.sku || alert.sku || 'N/A',
+            heroImage: matched.heroImage || alert.heroImage,
+            stockQuantity: Number(alert.stockQuantity ?? alert.stock ?? matched.stockQuantity ?? 0),
+            lowStockThreshold: Number(alert.lowStockThreshold ?? matched.lowStockThreshold ?? 5),
+          };
+        });
+        return changed ? { ...prev, lowStockAlerts: enriched } : prev;
+      });
+    }
+  }, [catalogProducts]);
+
   useEffect(() => {
     fetchReports(fromDate, toDate);
   }, [fetchReports, fromDate, toDate]);
