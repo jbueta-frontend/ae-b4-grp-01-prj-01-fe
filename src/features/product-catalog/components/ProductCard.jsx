@@ -9,6 +9,23 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
     product.tag === 'On Sale' ||
     (product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price));
 
+  const inv = product.inventory || {};
+  const lowStockThreshold = Number(inv.lowStockThreshold ?? product.lowStockThreshold ?? 5);
+  const availableStock = Number(
+    product.stockCount ??
+    (inv.stockQuantity !== undefined
+      ? Math.max(0, (inv.stockQuantity ?? 0) - (inv.reservedQuantity ?? 0))
+      : (product.availableQuantity ?? 0))
+  );
+
+  const isOutOfStock = Boolean(
+    product.isOutOfStock ||
+    !product.inStock ||
+    availableStock <= 0
+  );
+
+  const isLowStock = !isOutOfStock && availableStock > 0 && availableStock <= lowStockThreshold;
+
   return (
     <div
       style={{
@@ -37,7 +54,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         e.currentTarget.style.borderColor = '#D4CCC4';
       }}
     >
-      {/* 1. Top Badges: On Sale (Red) / Discount / Stock alert */}
+      {/* 1. Top Badges: Left: On Sale / Discount / Tag | Right: Out of Stock / Low Stock */}
       <div
         style={{
           position: 'absolute',
@@ -106,7 +123,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
           <span />
         )}
 
-        {product.stockCount <= 0 ? (
+        {isOutOfStock ? (
           <span
             style={{
               backgroundColor: '#64748B',
@@ -117,21 +134,24 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
               borderRadius: 'var(--radius-full)',
               letterSpacing: '0.03em',
               textTransform: 'uppercase',
+              boxShadow: '0 2px 6px rgba(100, 116, 139, 0.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
             }}
           >
             Out of Stock
           </span>
-        ) : product.stockCount <= 10 ? (
+        ) : isLowStock ? (
           <span
             style={{
-              background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)',
+              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
               color: '#FFFFFF',
               fontSize: '11px',
               fontWeight: 800,
               padding: '4px 10px',
               borderRadius: 'var(--radius-full)',
               letterSpacing: '0.02em',
-              boxShadow: '0 2px 10px rgba(220, 38, 38, 0.4)',
+              boxShadow: '0 2px 10px rgba(217, 119, 6, 0.35)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
               display: 'inline-flex',
               alignItems: 'center',
@@ -147,7 +167,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
                 display: 'inline-block',
               }}
             />
-            <span>Only {product.stockCount} left!</span>
+            <span>Low Stock ({availableStock} left)</span>
           </span>
         ) : null}
       </div>

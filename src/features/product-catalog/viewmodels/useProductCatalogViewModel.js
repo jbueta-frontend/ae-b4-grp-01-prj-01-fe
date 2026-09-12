@@ -88,31 +88,13 @@ export function useProductCatalogViewModel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get('/products');
+      const res = await api.get('/products?limit=100');
       const list = Array.isArray(res) ? res : res?.products || res?.data || [];
       const normalized = list.map(mapApiProduct).filter(Boolean);
 
-      // Merge with seeded products if present
-      const cached = localStorage.getItem('fiddlemania_seeded_products');
-      let combined = [...normalized];
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed)) {
-            const existingIds = new Set(combined.map((p) => p.id));
-            parsed.forEach((raw) => {
-              const mapped = mapApiProduct(raw);
-              if (mapped && !existingIds.has(mapped.id)) {
-                combined.push(mapped);
-              }
-            });
-          }
-        } catch {}
-      }
-
-      setProducts(sortCatalogProducts(combined));
+      setProducts(sortCatalogProducts(normalized));
     } catch (err) {
-      // Fallback to cached products if API fails
+      // Fallback to cached products only if API fails
       const cached = localStorage.getItem('fiddlemania_seeded_products');
       if (cached) {
         try {
@@ -160,8 +142,13 @@ export function useProductCatalogViewModel() {
         matchPrice = product.price > 70;
       }
 
-      // 4. In-Stock Filter
-      const matchStock = !inStockOnly || product.inStock;
+      // 4. In-Stock Filter: Strictly check that the product is actually in stock with available units > 0
+      const isProductInStock =
+        product.inStock &&
+        !product.isOutOfStock &&
+        (product.stockCount == null || product.stockCount > 0);
+
+      const matchStock = !inStockOnly || isProductInStock;
 
       // 5. Search Query Filter
       const matchSearch =

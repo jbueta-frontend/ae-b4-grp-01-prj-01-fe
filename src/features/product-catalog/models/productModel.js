@@ -259,6 +259,20 @@ export function mapApiProduct(p) {
           },
         ];
 
+  const inv = p.inventory || {};
+  const stockQuantity = Number(inv.stockQuantity ?? p.stockQuantity ?? p.quantity ?? 0);
+  const reservedQuantity = Number(inv.reservedQuantity ?? p.reservedQuantity ?? 0);
+  const lowStockThreshold = Number(inv.lowStockThreshold ?? p.lowStockThreshold ?? 5);
+
+  // ERD calculation: Available Stock = Stock Quantity - Reserved Quantity
+  const availableStock = p.availableQuantity !== undefined
+    ? Number(p.availableQuantity)
+    : Math.max(0, stockQuantity - reservedQuantity);
+
+  const isOutOfStock = availableStock <= 0 || p.inStock === false || p.isOutOfStock === true;
+  const isLowStock = !isOutOfStock && availableStock <= lowStockThreshold;
+  const inStock = !isOutOfStock && availableStock > 0;
+
   return {
     id,
     productId: id,
@@ -280,26 +294,17 @@ export function mapApiProduct(p) {
     reviews,
     shortDescription: p.description || p.shortDescription || '',
     description: p.description || p.shortDescription || '',
-    inventory: p.inventory || {
-      stockQuantity: p.stockQuantity ?? (p.stockCount ?? 10),
-      reservedQuantity: p.reservedQuantity ?? 0,
-      lowStockThreshold: p.lowStockThreshold ?? 5,
+    inventory: {
+      stockQuantity,
+      reservedQuantity,
+      lowStockThreshold,
     },
-    inStock: p.inStock !== undefined
-      ? Boolean(p.inStock)
-      : p.inventory
-        ? (p.inventory.stockQuantity - (p.inventory.reservedQuantity || 0)) > 0
-        : (p.stockCount != null ? p.stockCount > 0 : true),
-    stockCount: p.availableQuantity !== undefined
-      ? p.availableQuantity
-      : p.inventory
-        ? Math.max(0, p.inventory.stockQuantity - (p.inventory.reservedQuantity || 0))
-        : (p.stockCount ?? 10),
-    isOutOfStock: p.isOutOfStock !== undefined
-      ? Boolean(p.isOutOfStock)
-      : p.inventory
-        ? (p.inventory.stockQuantity - (p.inventory.reservedQuantity || 0)) <= 0
-        : false,
+    inStock,
+    stockCount: availableStock,
+    availableQuantity: availableStock,
+    isOutOfStock,
+    isLowStock,
+    lowStockThreshold,
     status: p.status || 'ACTIVE',
     rating: p.rating || 4.9,
     reviewCount: p.reviewCount || reviews.length,
