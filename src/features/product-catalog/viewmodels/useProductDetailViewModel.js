@@ -107,6 +107,17 @@ export function useProductDetailViewModel() {
     )
   );
 
+  const inv = product?.inventory || {};
+  const lowStockThreshold = Number(inv.lowStockThreshold ?? product?.lowStockThreshold ?? 5);
+  const availableStock = Number(
+    product?.stockCount ??
+    (inv.stockQuantity !== undefined
+      ? Math.max(0, (inv.stockQuantity ?? 0) - (inv.reservedQuantity ?? 0))
+      : (product?.availableQuantity ?? 0))
+  );
+
+  const isLowStock = !isOutOfStock && availableStock > 0 && availableStock <= lowStockThreshold;
+
   const incrementQty = () => {
     setQuantity((q) => {
       if (product?.stockCount != null && product.stockCount > 0) {
@@ -205,6 +216,9 @@ export function useProductDetailViewModel() {
     loading,
     error,
     isOutOfStock,
+    isLowStock,
+    availableStock,
+    lowStockThreshold,
     activeImage: activeImage || product?.heroImage,
     setActiveImage,
     quantity,

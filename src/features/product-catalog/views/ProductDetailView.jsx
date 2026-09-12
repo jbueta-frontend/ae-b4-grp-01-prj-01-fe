@@ -22,6 +22,8 @@ export default function ProductDetailView() {
     loading,
     error,
     isOutOfStock,
+    isLowStock,
+    availableStock,
     activeImage,
     setActiveImage,
     quantity,
@@ -401,9 +403,17 @@ export default function ProductDetailView() {
               <span
                 style={{
                   fontSize: 'var(--font-small, 14px)',
-                  color: isOutOfStock ? '#DC2626' : 'var(--success)',
+                  color: isOutOfStock
+                    ? '#DC2626'
+                    : isLowStock
+                    ? '#D97706'
+                    : 'var(--success)',
                   fontWeight: 800,
-                  backgroundColor: isOutOfStock ? '#FEE2E2' : 'var(--success-bg)',
+                  backgroundColor: isOutOfStock
+                    ? '#FEE2E2'
+                    : isLowStock
+                    ? '#FEF3C7'
+                    : 'var(--success-bg)',
                   padding: '4px 10px',
                   borderRadius: 'var(--radius-sm)',
                   letterSpacing: '0.02em',
@@ -411,6 +421,8 @@ export default function ProductDetailView() {
               >
                 {isOutOfStock
                   ? 'Out of Stock'
+                  : isLowStock
+                  ? `Low Stock (Only ${product.stockCount} left!)`
                   : `In Stock (${product.stockCount} ready to ship)`}
               </span>
             </div>
@@ -551,11 +563,17 @@ export default function ProductDetailView() {
                 style={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color: isOutOfStock ? '#DC2626' : 'var(--text-muted)',
+                  color: isOutOfStock
+                    ? '#DC2626'
+                    : isLowStock
+                    ? '#D97706'
+                    : 'var(--text-muted)',
                 }}
               >
                 {isOutOfStock
                   ? '0 pieces available'
+                  : isLowStock
+                  ? `${product.stockCount} pieces available (Low Stock)`
                   : `${product.stockCount} pieces available`}
               </span>
             </div>
