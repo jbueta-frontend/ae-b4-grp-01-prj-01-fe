@@ -14,14 +14,17 @@ import CustomerGuard from './shared/components/CustomerGuard';
 // Feature Views
 import ProductCatalogView from './features/product-catalog/views/ProductCatalogView';
 import ProductDetailView from './features/product-catalog/views/ProductDetailView';
+import ProductReviewSubmissionView from './features/product-catalog/views/ProductReviewSubmissionView';
 import CartView from './features/cart/views/CartView';
 import CheckoutView from './features/checkout/views/CheckoutView';
 import OrderConfirmationView from './features/order-history/views/OrderConfirmationView';
 import OrderHistoryView from './features/order-history/views/OrderHistoryView';
+import OrderReceiptView from './features/order-history/views/OrderReceiptView';
 import ShipmentTrackingView from './features/shipment-tracking/views/ShipmentTrackingView';
 import LoginView from './features/auth/views/LoginView';
 import RegisterView from './features/auth/views/RegisterView';
 import VerifyEmailView from './features/auth/views/VerifyEmailView';
+import ResetPasswordView from './features/auth/views/ResetPasswordView';
 import ProfileView from './features/profile/views/ProfileView';
 import SupportView from './features/support/views/SupportView';
 
@@ -30,6 +33,7 @@ import AdminReportsView from './features/admin-reports/views/AdminReportsView';
 import AdminProductsView from './features/admin-inventory/views/AdminProductsView';
 import AdminOrdersListView from './features/admin-fulfillment/views/AdminOrdersListView';
 import AdminOrderDetailView from './features/admin-fulfillment/views/AdminOrderDetailView';
+import AdminReviewsView from './features/admin-reviews/views/AdminReviewsView';
 
 function App() {
   return (
@@ -57,6 +61,14 @@ function App() {
                     path="/products/:idOrSlug"
                     element={<ProductDetailView />}
                   />
+                  <Route
+                    path="/products/:idOrSlug/reviews"
+                    element={<ProductReviewSubmissionView />}
+                  />
+                  <Route
+                    path="/products/:productId/reviews"
+                    element={<ProductReviewSubmissionView />}
+                  />
 
                   {/* 2. Cart & Bag */}
                   <Route path="/cart" element={<CartView />} />
@@ -75,11 +87,14 @@ function App() {
                     element={<OrderConfirmationView />}
                   />
                   <Route
+                    path="/orders/:orderId/receipt"
+                    element={<OrderReceiptView />}
+                  />
+                  <Route
                     path="/track/:trackingNumber"
                     element={<ShipmentTrackingView />}
                   />
                   <Route path="/track" element={<ShipmentTrackingView />} />
-
 
                   {/* 5. Account Authentication */}
                   <Route
@@ -88,10 +103,10 @@ function App() {
                   />
                   <Route path="/register" element={<RegisterView />} />
                   <Route path="/verify-email" element={<VerifyEmailView />} />
+                  <Route path="/resetPassword" element={<ResetPasswordView />} />
+                  <Route path="/reset-password" element={<ResetPasswordView />} />
                   <Route path="/profile" element={<ProfileView />} />
                   <Route path="/addresses" element={<ProfileView />} />
-
-
 
                   {/* 6. Support & FAQ */}
                   <Route path="/support" element={<SupportView />} />
@@ -111,6 +126,7 @@ function App() {
                       path="orders/:orderId"
                       element={<AdminOrderDetailView />}
                     />
+                    <Route path="reviews" element={<AdminReviewsView />} />
                   </Route>
                 </Route>
 

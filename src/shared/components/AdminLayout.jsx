@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, Package, Truck, LogOut, ShieldCheck, Activity } from 'lucide-react';
+import { BarChart3, Package, Truck, LogOut, ShieldCheck, Activity, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
 
@@ -17,6 +17,7 @@ export default function AdminLayout() {
     { label: 'Reports & Overview', path: '/admin/reports', icon: BarChart3 },
     { label: 'Product Catalog', path: '/admin/inventory', icon: Package },
     { label: 'Orders & Dispatch', path: '/admin/orders', icon: Truck },
+    { label: 'Review Moderation', path: '/admin/reviews', icon: MessageSquare },
   ];
 
   // Helper for top breadcrumb title

@@ -10,6 +10,7 @@ import {
   ExternalLink,
   AlertCircle,
   ShoppingBag,
+  Printer,
 } from 'lucide-react';
 import { getCustomerOrderById } from '../../../services/orderService';
 import { getEffectiveOrderStatus } from '../../../services/orderSync';
@@ -476,6 +477,14 @@ export default function OrderConfirmationView() {
               <ArrowRight size={18} />
             </button>
           )}
+          <Link
+            to={`/orders/${order.orderNumber || order.orderId}/receipt`}
+            className="btn btn-outline"
+            style={{ padding: '14px 24px', gap: '8px' }}
+          >
+            <Printer size={16} />
+            <span>Print Invoice Receipt</span>
+          </Link>
           <Link
             to="/orders"
             className="btn btn-outline"

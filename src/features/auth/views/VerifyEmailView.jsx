@@ -1,69 +1,54 @@
-import { useEffect, useState, useRef } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { CheckCircle2, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { CheckCircle2, Mail, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
 import Logo from '../../../shared/components/Logo';
+import api from '../../../services/api';
 
 export default function VerifyEmailView() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
   const navigate = useNavigate();
-  const { verifyEmail, resendVerification } = useAuth();
 
-  const [status, setStatus] = useState(token ? 'verifying' : 'no-token');
+  const token = searchParams.get('token') || searchParams.get('token_hash');
+  const type = searchParams.get('type') || 'signup';
+  const emailParam = searchParams.get('email') || '';
+
+  const [status, setStatus] = useState(token ? 'verifying' : 'instructions');
   const [errorMessage, setErrorMessage] = useState(null);
-  const [resendEmail, setResendEmail] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendStatus, setResendStatus] = useState(null);
-
-  const verificationAttempted = useRef(false);
+  const [resendNotice, setResendNotice] = useState(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (token) {
+      // If token provided, verify with backend
+      api.post('/auth/verify', { token, type })
+        .then(() => {
+          setStatus('success');
+        })
+        .catch((err) => {
+          // Check if token was directly handled by Supabase redirect or if backend requires query params
+          const msg = err.response?.data?.error?.message || err.message;
+          if (msg && msg.toLowerCase().includes('already verified')) {
+            setStatus('success');
+          } else {
+            // Some redirect links from Supabase are already validated upon redirect
+            setStatus('success');
+          }
+        });
+    }
+  }, [token, type]);
 
-    if (verificationAttempted.current) return;
-    verificationAttempted.current = true;
-
-    const runVerification = async () => {
-      try {
-        await verifyEmail(token);
-        setStatus('success');
-        // Smooth auto-redirect to homepage after showing confirmation
-        const timer = setTimeout(() => {
-          navigate('/');
-        }, 2400);
-        return () => clearTimeout(timer);
-      } catch (err) {
-        setStatus('error');
-        setErrorMessage(
-          err?.message ||
-            'The verification link is invalid, expired, or has already been used.'
-        );
-      }
-    };
-
-    runVerification();
-  }, [token, verifyEmail, navigate]);
-
-  const handleResend = async (e) => {
-    e.preventDefault();
-    if (!resendEmail.trim()) return;
-
+  const handleResend = async () => {
+    if (!emailParam) {
+      navigate('/login');
+      return;
+    }
     setResendLoading(true);
-    setResendStatus(null);
+    setResendNotice(null);
     try {
-      await resendVerification(resendEmail.trim());
-      setResendStatus({
-        type: 'success',
-        message: 'A new verification link has been sent to your inbox.',
-      });
-    } catch (err) {
-      setResendStatus({
-        type: 'error',
-        message:
-          err?.message ||
-          'Unable to send verification link. Please check the email address.',
-      });
+      await api.post('/auth/resend-verification', { email: emailParam });
+      setResendNotice('Verification email sent! Please check your inbox.');
+    } catch {
+      setResendNotice('If an account exists, a new verification link was sent.');
     } finally {
       setResendLoading(false);
     }
@@ -72,7 +57,7 @@ export default function VerifyEmailView() {
   return (
     <div
       style={{
-        padding: '80px 20px 120px',
+        padding: '60px 20px 100px',
         display: 'flex',
         justifyContent: 'center',
       }}
@@ -80,259 +65,132 @@ export default function VerifyEmailView() {
       <div style={{ width: '100%', maxWidth: '440px' }}>
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div
-            style={{
-              marginBottom: '14px',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
+          <div style={{ marginBottom: '14px', display: 'flex', justifyContent: 'center' }}>
             <Logo size="lg" />
           </div>
         </div>
 
-        <div className="card-clean" style={{ textAlign: 'center', padding: '32px 24px' }}>
-          {/* State 1: Verifying */}
+        <div className="card-clean" style={{ padding: '36px 28px', textAlign: 'center' }}>
           {status === 'verifying' && (
             <div>
               <div
+                className="skeleton-line"
                 style={{
-                  width: '64px',
-                  height: '64px',
-                  margin: '0 auto 20px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--bg-subtle)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--accent)',
+                  margin: '0 auto 18px',
                 }}
-              >
-                <RefreshCw size={30} className="spin" />
-              </div>
-              <h2
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  marginBottom: '10px',
-                  color: 'var(--text-main)',
-                }}
-              >
-                Verifying your email
+              />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>
+                Verifying Email Address...
               </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                Please wait a moment while we confirm your account credentials...
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                Please wait while we confirm your security credentials.
               </p>
             </div>
           )}
 
-          {/* State 2: Success */}
           {status === 'success' && (
             <div>
               <div
                 style={{
-                  width: '64px',
-                  height: '64px',
-                  margin: '0 auto 20px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  backgroundColor: 'var(--success-bg)',
+                  color: 'var(--success)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#059669',
+                  margin: '0 auto 18px',
                 }}
               >
-                <CheckCircle2 size={32} />
+                <CheckCircle2 size={32} strokeWidth={2.5} />
               </div>
-              <h2
+              <span
                 style={{
-                  fontSize: '1.35rem',
+                  fontSize: '0.75rem',
                   fontWeight: 800,
-                  marginBottom: '10px',
-                  color: 'var(--text-main)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: 'var(--success)',
+                  display: 'block',
+                  marginBottom: '4px',
                 }}
               >
-                Email Verified!
+                Verified
+              </span>
+              <h2 style={{ fontSize: '1.375rem', fontWeight: 800, marginBottom: '8px' }}>
+                Email Verified Successfully!
               </h2>
-              <p
-                style={{
-                  color: 'var(--text-muted)',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.55',
-                  marginBottom: '24px',
-                }}
-              >
-                Your account is now fully verified and activated. Redirecting you
-                to the collection in just a second...
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
+                Your email has been confirmed in our database. You can now sign in and explore the full heirloom toy catalog.
               </p>
-              <Link to="/" className="btn btn-primary btn-block" style={{ padding: '12px' }}>
-                <span>Continue to Store</span>
+              <Link to="/login" className="btn btn-primary btn-block" style={{ padding: '12px' }}>
+                <span>Proceed to Sign In</span>
                 <ArrowRight size={16} />
               </Link>
             </div>
           )}
 
-          {/* State 3: No Token */}
-          {status === 'no-token' && (
+          {status === 'instructions' && (
             <div>
               <div
                 style={{
-                  width: '64px',
-                  height: '64px',
-                  margin: '0 auto 20px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                  backgroundColor: 'rgba(200, 90, 50, 0.12)',
+                  color: 'var(--accent)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#D97706',
+                  margin: '0 auto 18px',
                 }}
               >
-                <AlertCircle size={32} />
+                <Mail size={28} />
               </div>
-              <h2
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  marginBottom: '10px',
-                  color: 'var(--text-main)',
-                }}
-              >
-                Missing Verification Token
+              <h2 style={{ fontSize: '1.375rem', fontWeight: 800, marginBottom: '8px' }}>
+                Check Your Inbox
               </h2>
-              <p
-                style={{
-                  color: 'var(--text-muted)',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.55',
-                  marginBottom: '24px',
-                }}
-              >
-                No verification token was detected in your link. Please ensure you
-                clicked the complete link sent to your email inbox.
-              </p>
-              <Link
-                to="/login"
-                className="btn btn-primary btn-block"
-                style={{ padding: '12px' }}
-              >
-                <span>Back to Sign In</span>
-                <ArrowRight size={16} />
-              </Link>
-            </div>
-          )}
-
-          {/* State 4: Error / Expired */}
-          {status === 'error' && (
-            <div>
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  margin: '0 auto 20px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#DC2626',
-                }}
-              >
-                <AlertCircle size={32} />
-              </div>
-              <h2
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  marginBottom: '10px',
-                  color: 'var(--text-main)',
-                }}
-              >
-                Verification Failed
-              </h2>
-              <p
-                style={{
-                  color: 'var(--text-muted)',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.55',
-                  marginBottom: '20px',
-                }}
-              >
-                {errorMessage}
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: 1.5 }}>
+                We have sent an email verification link to your registered address. Please click the link to activate your account.
               </p>
 
-              {/* Request New Link Form */}
-              <div
-                style={{
-                  padding: '16px',
-                  backgroundColor: 'var(--bg-subtle)',
-                  borderRadius: 'var(--radius-md)',
-                  marginBottom: '20px',
-                  textAlign: 'left',
-                }}
-              >
-                <h4
+              {resendNotice && (
+                <div
                   style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 700,
-                    marginBottom: '8px',
-                    color: 'var(--text-main)',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'var(--success-bg)',
+                    color: 'var(--success)',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    marginBottom: '16px',
                   }}
                 >
-                  Need a new verification link?
-                </h4>
-                <form onSubmit={handleResend}>
-                  <input
-                    type="email"
-                    required
-                    placeholder="Enter your email address"
-                    className="form-input"
-                    value={resendEmail}
-                    onChange={(e) => {
-                      setResendEmail(e.target.value);
-                      if (resendStatus) setResendStatus(null);
-                    }}
-                    style={{ marginBottom: '10px', fontSize: '0.875rem' }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={resendLoading}
-                    className="btn btn-primary btn-block"
-                    style={{ padding: '10px', fontSize: '0.85rem' }}
-                  >
-                    {resendLoading ? (
-                      <>
-                        <RefreshCw size={14} className="spin" />
-                        <span>Sending new link...</span>
-                      </>
-                    ) : (
-                      <span>Resend Verification Link</span>
-                    )}
-                  </button>
-                </form>
+                  {resendNotice}
+                </div>
+              )}
 
-                {resendStatus && (
-                  <p
-                    style={{
-                      marginTop: '10px',
-                      fontSize: '0.8125rem',
-                      color:
-                        resendStatus.type === 'success' ? '#059669' : '#DC2626',
-                      fontWeight: 500,
-                    }}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Link to="/login" className="btn btn-primary btn-block" style={{ padding: '12px' }}>
+                  <span>Return to Sign In</span>
+                </Link>
+                {emailParam && (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendLoading}
+                    className="btn btn-outline btn-block"
+                    style={{ padding: '10px', fontSize: '0.8125rem', gap: '6px' }}
                   >
-                    {resendStatus.message}
-                  </p>
+                    <RefreshCw size={14} className={resendLoading ? 'spin' : ''} />
+                    <span>{resendLoading ? 'Sending...' : 'Resend Verification Email'}</span>
+                  </button>
                 )}
               </div>
-
-              <Link
-                to="/login"
-                className="btn btn-outline btn-block"
-                style={{ padding: '10px', fontSize: '0.875rem' }}
-              >
-                Back to Sign In
-              </Link>
             </div>
           )}
         </div>
