@@ -52,20 +52,44 @@ export function useCheckoutViewModel() {
     };
   }, [items]);
 
-  // Keep Name & Email synced when user profile resolves
+  // Pre-fill shipping address from saved profile address (user.address sub-object)
+  // or from the localStorage fallback key written by /profile on save.
+  // This runs whenever user changes (e.g. after profile save syncs into AuthContext).
   useEffect(() => {
-    if (user) {
-      setShippingAddress((prev) => ({
-        ...prev,
-        fullName: prev.fullName || user.name || user.fullName || '',
-        email: prev.email || user.email || '',
-        addressLine1: prev.addressLine1 || user.addressLine1 || user.address || '',
-        city: prev.city || user.city || '',
-        stateProvince: prev.stateProvince || user.stateProvince || user.state || '',
-        postalCode: prev.postalCode || user.postalCode || user.zip || '',
-        country: prev.country || user.country || 'Philippines',
-      }));
-    }
+    if (!user) return;
+
+    // Priority 1: user.address sub-object (set by profile's handleSaveAddress via updateProfile)
+    const profileAddr = user.address || null;
+
+    // Priority 2: localStorage key written directly by profile page
+    let localAddr = null;
+    try {
+      const raw = localStorage.getItem('fiddlemania_user_address');
+      if (raw) localAddr = JSON.parse(raw);
+    } catch {}
+
+    // Merge: profile address wins over localStorage; both win over blank initial state.
+    const resolvedAddr = profileAddr || localAddr || {};
+
+    setShippingAddress((prev) => ({
+      ...prev,
+      // Identity fields always from user object
+      fullName:
+        resolvedAddr.recipientName ||
+        resolvedAddr.fullName ||
+        user.name ||
+        user.fullName ||
+        prev.fullName ||
+        '',
+      email: user.email || prev.email || '',
+      // Address fields from saved profile address (always override blank defaults)
+      addressLine1: resolvedAddr.addressLine1 || prev.addressLine1 || '',
+      addressLine2: resolvedAddr.addressLine2 || prev.addressLine2 || '',
+      city: resolvedAddr.city || prev.city || '',
+      stateProvince: resolvedAddr.stateProvince || prev.stateProvince || '',
+      postalCode: resolvedAddr.postalCode || prev.postalCode || '',
+      country: resolvedAddr.country || prev.country || 'Philippines',
+    }));
   }, [user]);
 
   // Delivery is standardized as Carbon-Neutral Free Delivery (Step 2 Delivery Method removed)

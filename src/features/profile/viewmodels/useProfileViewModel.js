@@ -207,6 +207,8 @@ export function useProfileViewModel() {
     try {
       await api.patch('/users/address', addressDraft).catch(() => {});
       setAddressData(addressDraft);
+      // Sync address into AuthContext so checkout and other pages pick it up immediately
+      updateProfile({ address: addressDraft });
       try {
         localStorage.setItem('fiddlemania_user_address', JSON.stringify(addressDraft));
       } catch {}
