@@ -3,6 +3,7 @@ import { DATE_PRESETS } from '../models/reportsModel';
 import { formatPHP } from '../../../shared/utils/currency';
 import RevenueAreaChart from '../components/RevenueAreaChart';
 import OrderBreakdownMeters from '../components/OrderBreakdownMeters';
+import RestockModal from '../components/RestockModal';
 import {
   TrendingUp,
   ShoppingCart,
@@ -11,7 +12,9 @@ import {
   ArrowUpRight,
   AlertTriangle,
   Box,
+  Boxes,
   CheckCircle2,
+  X,
 } from 'lucide-react';
 
 export default function AdminReportsView() {
@@ -22,6 +25,16 @@ export default function AdminReportsView() {
     data,
     loading,
     error,
+    catalogProducts,
+    isRestockModalOpen,
+    selectedRestockProduct,
+    isRestocking,
+    restockFeedback,
+    clearRestockFeedback,
+    openRestockModal,
+    closeRestockModal,
+    handleRestockProduct,
+    handleBatchRestock,
     selectPreset,
     handleCustomDateChange,
     refresh,
@@ -67,21 +80,83 @@ export default function AdminReportsView() {
           </p>
         </div>
 
-        <button
-          onClick={refresh}
-          disabled={loading}
-          className="btn btn-outline btn-sm"
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => openRestockModal(null)}
+            className="btn btn-primary btn-sm"
+            style={{
+              backgroundColor: '#059669',
+              borderColor: '#059669',
+              color: '#ffffff',
+              gap: '6px',
+              boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
+            }}
+            title="Restock warehouse product quantities"
+          >
+            <Boxes size={16} />
+            <span>Restock Inventory</span>
+          </button>
+
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="btn btn-outline btn-sm"
+            style={{
+              backgroundColor: '#ffffff',
+              borderColor: 'var(--admin-card-border)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              gap: '6px',
+            }}
+          >
+            <span>↻</span>
+            <span>{loading ? 'Refreshing...' : 'Refresh Metrics'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Restock Operation Feedback Banner */}
+      {restockFeedback && (
+        <div
           style={{
-            backgroundColor: '#ffffff',
-            borderColor: 'var(--admin-card-border)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-            gap: '6px',
+            backgroundColor:
+              restockFeedback.type === 'success'
+                ? 'rgba(5, 150, 105, 0.1)'
+                : 'rgba(239, 68, 68, 0.1)',
+            border: `1px solid ${
+              restockFeedback.type === 'success'
+                ? 'rgba(5, 150, 105, 0.3)'
+                : 'rgba(239, 68, 68, 0.3)'
+            }`,
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 18px',
+            color: restockFeedback.type === 'success' ? '#059669' : '#dc2626',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.875rem',
+            fontWeight: 600,
           }}
         >
-          <span>↻</span>
-          <span>{loading ? 'Refreshing...' : 'Refresh Metrics'}</span>
-        </button>
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {restockFeedback.type === 'success' ? (
+              <CheckCircle2 size={18} />
+            ) : (
+              <AlertTriangle size={18} />
+            )}
+            <span>{restockFeedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={clearRestockFeedback}
+            className="btn btn-ghost btn-xs"
+            style={{ color: 'inherit', padding: '4px' }}
+            aria-label="Dismiss message"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* 2. Date Filtering Console */}
       <div
@@ -451,14 +526,38 @@ export default function AdminReportsView() {
           <div
             style={{
               marginTop: '10px',
-              fontSize: '0.8125rem',
-              fontWeight: 700,
-              color: data.lowStockAlerts?.length > 0 ? '#dc2626' : '#16a34a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            {data.lowStockAlerts?.length > 0
-              ? 'Replenishment action required'
-              : 'Warehouse stock levels healthy'}
+            <span
+              style={{
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                color: data.lowStockAlerts?.length > 0 ? '#dc2626' : '#16a34a',
+              }}
+            >
+              {data.lowStockAlerts?.length > 0
+                ? 'Replenishment action required'
+                : 'Warehouse stock levels healthy'}
+            </span>
+            <button
+              type="button"
+              onClick={() => openRestockModal(data.lowStockAlerts?.[0] || null)}
+              className="btn btn-ghost btn-xs"
+              style={{
+                color: '#059669',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                cursor: 'pointer',
+              }}
+              title="Open restock dialog"
+            >
+              + Restock
+            </button>
           </div>
         </div>
       </div>
@@ -479,32 +578,60 @@ export default function AdminReportsView() {
               alignItems: 'center',
               justifyContent: 'space-between',
               marginBottom: '16px',
+              flexWrap: 'wrap',
+              gap: '10px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertTriangle size={20} color="#dc2626" />
-              <h3 style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#dc2626' }}>
+              <h3 style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#dc2626', margin: 0 }}>
                 Warehouse Low-Stock Priority Alerts ({data.lowStockAlerts.length})
               </h3>
             </div>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#dc2626',
-                backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                padding: '4px 10px',
-                borderRadius: 'var(--radius-sm)',
-              }}
-            >
-              Action Required
-            </span>
+
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => handleBatchRestock(50)}
+                disabled={isRestocking}
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderColor: '#059669',
+                  color: '#059669',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  padding: '5px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  cursor: isRestocking ? 'not-allowed' : 'pointer',
+                }}
+                title="Replenish all low-stock toys with 50 units"
+              >
+                <Boxes size={14} />
+                <span>Restock All (+50)</span>
+              </button>
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: '#dc2626',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                Action Required
+              </span>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
             {data.lowStockAlerts.map((item, idx) => (
               <div
-                key={item.productId || idx}
+                key={item.productId || item.id || idx}
                 style={{
                   padding: '12px 16px',
                   backgroundColor: '#FFFFFF',
@@ -513,29 +640,61 @@ export default function AdminReportsView() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: '12px',
                 }}
               >
-                <div>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                <div style={{ minWidth: 0 }}>
+                  <h4
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 700,
+                      color: 'var(--text-main)',
+                      margin: '0 0 2px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {item.name || item.productName || 'Toy Product'}
                   </h4>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    SKU: {item.sku || 'N/A'} • Threshold: {item.lowStockThreshold || 5} units
+                    SKU: {item.sku || 'N/A'} • Threshold: {item.lowStockThreshold || item.inventory?.lowStockThreshold || 5} units
                   </span>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                   <span
                     style={{
                       fontSize: '0.875rem',
                       fontWeight: 800,
                       color: '#dc2626',
                       backgroundColor: 'rgba(220, 38, 38, 0.08)',
-                      padding: '2px 8px',
+                      padding: '4px 8px',
                       borderRadius: 'var(--radius-sm)',
                     }}
                   >
                     {item.stockQuantity ?? item.stock ?? 0} left
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => openRestockModal(item)}
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      backgroundColor: '#059669',
+                      borderColor: '#059669',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      padding: '5px 12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      boxShadow: '0 1px 4px rgba(5, 150, 105, 0.25)',
+                    }}
+                    title={`Restock ${item.name || item.productName || 'product'}`}
+                  >
+                    <Boxes size={13} />
+                    <span>Restock</span>
+                  </button>
                 </div>
               </div>
             ))}
@@ -844,6 +1003,17 @@ export default function AdminReportsView() {
           </div>
         )}
       </div>
+
+      {/* Interactive Restock Modal */}
+      <RestockModal
+        isOpen={isRestockModalOpen}
+        onClose={closeRestockModal}
+        product={selectedRestockProduct}
+        availableProducts={catalogProducts.length > 0 ? catalogProducts : data.lowStockAlerts}
+        onRestock={handleRestockProduct}
+        isRestocking={isRestocking}
+      />
     </div>
   );
 }
+
