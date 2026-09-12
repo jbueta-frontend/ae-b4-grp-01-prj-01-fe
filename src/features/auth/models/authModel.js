@@ -1,3 +1,6 @@
+// Requires format: something@domain.tld (at least one dot after @)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export const validateAuthForm = ({
   email,
   password,
@@ -16,8 +19,8 @@ export const validateAuthForm = ({
       errors.confirmPassword = 'Passwords do not match.';
     }
   }
-  if (!email || !email.includes('@')) {
-    errors.email = 'Please enter a valid email address.';
+  if (!email || !EMAIL_REGEX.test(email.trim())) {
+    errors.email = 'Please enter a valid email address (e.g. name@example.com).';
   }
   if (!password || password.length < 6) {
     errors.password = 'Password must be at least 6 characters.';
@@ -30,8 +33,8 @@ export const validateAuthForm = ({
 
 export const validateForgotPasswordForm = ({ email }) => {
   const errors = {};
-  if (!email || !email.includes('@')) {
-    errors.email = 'Please enter a valid registered email address.';
+  if (!email || !EMAIL_REGEX.test(email.trim())) {
+    errors.email = 'Please enter a valid email address (e.g. name@example.com).';
   }
   return {
     isValid: Object.keys(errors).length === 0,
