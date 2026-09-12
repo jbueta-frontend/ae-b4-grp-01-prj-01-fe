@@ -1,63 +1,29 @@
 import { useRef } from 'react';
 import { ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { DATABASE_CATEGORIES } from '../models/productModel';
 
-export const BROWSE_CATEGORIES = [
-  {
-    id: 'wooden',
-    name: 'Wooden Toys',
-    categoryKey: 'Wooden',
-    thumbnail:
-      'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'stem',
-    name: 'STEM & Logic',
-    categoryKey: 'STEM',
-    thumbnail:
-      'https://images.unsplash.com/photo-1535378620166-273708d44e4c?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'plush',
-    name: 'Sensory Plush',
-    categoryKey: 'Plush',
-    thumbnail:
-      'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'early-years',
-    name: 'Ages 0–3',
-    categoryKey: 'Ages 0–3',
-    thumbnail:
-      'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'balance',
-    name: 'Balance Boards',
-    categoryKey: 'Wooden',
-    thumbnail:
-      'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'magnetic',
-    name: 'Magnetic Tiles',
-    categoryKey: 'STEM',
-    thumbnail:
-      'https://images.unsplash.com/photo-1581557991964-125469da3b8a?auto=format&fit=crop&w=400&q=80',
-  },
-  {
-    id: 'kinetics',
-    name: 'Marble Runs',
-    categoryKey: 'STEM',
-    thumbnail:
-      'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80',
-  },
-];
+export const BROWSE_CATEGORIES = DATABASE_CATEGORIES;
+
+const CATEGORY_IMAGE_MAP = {
+  'Action Figures': '/products/cyber_mech_figure.jpg',
+  'Building Sets': '/products/zen_garden_pagoda.jpg',
+  'Board Games & Puzzles': '/products/mystic_board_game.jpg',
+  'Plush Toys': '/products/cuddle_bear_plush.jpg',
+  'Outdoor & Sports': '/products/desert_rally_truck.jpg',
+  'STEM & Educational': '/products/solar_rover_stem.jpg',
+};
 
 export default function CategoryShowcase({
-  selectedCategory,
+  categoryItems = DATABASE_CATEGORIES,
+  selectedCategory = 'All Toys',
   onSelectCategory,
 }) {
   const scrollRef = useRef(null);
+
+  const displayCategories =
+    Array.isArray(categoryItems) && categoryItems.length > 0
+      ? categoryItems
+      : DATABASE_CATEGORIES;
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -66,8 +32,10 @@ export default function CategoryShowcase({
     }
   };
 
-  const handleCategorySelect = (categoryKey) => {
-    onSelectCategory(categoryKey);
+  const handleCategorySelect = (categoryName) => {
+    if (onSelectCategory) {
+      onSelectCategory(categoryName);
+    }
     const target = document.getElementById('products');
     if (target) {
       const navHeight = 58;
@@ -76,6 +44,9 @@ export default function CategoryShowcase({
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
   };
+
+  const isAllToysSelected =
+    !selectedCategory || selectedCategory === 'All Toys';
 
   return (
     <section
@@ -87,7 +58,7 @@ export default function CategoryShowcase({
       }}
     >
       <div className="container">
-        {/* Section Header with Eyebrow, Title and Navigation Arrows (Reference layout) */}
+        {/* Section Header with Eyebrow, Title and Navigation Arrows */}
         <div
           style={{
             display: 'flex',
@@ -135,7 +106,7 @@ export default function CategoryShowcase({
             </h2>
           </div>
 
-          {/* Top-Right Navigation Arrows (Reference layout) */}
+          {/* Top-Right Navigation Arrows */}
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
             <button
               onClick={() => scroll('left')}
@@ -197,7 +168,7 @@ export default function CategoryShowcase({
           </div>
         </div>
 
-        {/* Horizontal Category Cards Strip (Reference format: uniform rounded cards with icon/thumbnail and label) */}
+        {/* Horizontal Category Cards Strip */}
         <div
           ref={scrollRef}
           style={{
@@ -215,14 +186,12 @@ export default function CategoryShowcase({
             style={{
               flex: '0 0 145px',
               height: '145px',
-              backgroundColor:
-                selectedCategory === 'All Toys'
-                  ? 'var(--accent-light)'
-                  : '#FFFFFF',
-              border:
-                selectedCategory === 'All Toys'
-                  ? '2px solid var(--accent)'
-                  : '1px solid #D4CCC4',
+              backgroundColor: isAllToysSelected
+                ? 'var(--accent-light)'
+                : '#FFFFFF',
+              border: isAllToysSelected
+                ? '2px solid var(--accent)'
+                : '1px solid #D4CCC4',
               borderRadius: 'var(--radius-lg)',
               display: 'flex',
               flexDirection: 'column',
@@ -231,25 +200,26 @@ export default function CategoryShowcase({
               gap: '12px',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow:
-                selectedCategory === 'All Toys'
-                  ? '0 8px 20px rgba(200, 90, 50, 0.18)'
-                  : '0 4px 12px rgba(0, 0, 0, 0.05)',
+              boxShadow: isAllToysSelected
+                ? '0 8px 20px rgba(200, 90, 50, 0.18)'
+                : '0 4px 12px rgba(0, 0, 0, 0.05)',
               padding: '12px',
               textAlign: 'center',
             }}
             onMouseEnter={(e) => {
-              if (selectedCategory !== 'All Toys') {
+              if (!isAllToysSelected) {
                 e.currentTarget.style.transform = 'translateY(-3px)';
                 e.currentTarget.style.borderColor = 'var(--accent)';
-                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.08)';
+                e.currentTarget.style.boxShadow =
+                  '0 8px 20px rgba(0, 0, 0, 0.08)';
               }
             }}
             onMouseLeave={(e) => {
-              if (selectedCategory !== 'All Toys') {
+              if (!isAllToysSelected) {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.borderColor = '#D4CCC4';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.boxShadow =
+                  '0 4px 12px rgba(0, 0, 0, 0.05)';
               }
             }}
           >
@@ -262,10 +232,9 @@ export default function CategoryShowcase({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color:
-                  selectedCategory === 'All Toys'
-                    ? 'var(--accent)'
-                    : 'var(--text-main)',
+                color: isAllToysSelected
+                  ? 'var(--accent)'
+                  : 'var(--text-main)',
               }}
             >
               <Layers size={24} />
@@ -274,25 +243,29 @@ export default function CategoryShowcase({
               style={{
                 fontSize: 'var(--font-small, 14px)',
                 fontWeight: 700,
-                color:
-                  selectedCategory === 'All Toys'
-                    ? 'var(--accent)'
-                    : 'var(--text-main)',
+                color: isAllToysSelected
+                  ? 'var(--accent)'
+                  : 'var(--text-main)',
               }}
             >
               All Toys
             </span>
           </div>
 
-          {/* Individual Category Cards */}
-          {BROWSE_CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat.categoryKey;
+          {/* Database Category Cards */}
+          {displayCategories.map((cat) => {
+            const catName = cat.name || cat.categoryKey;
+            const isSelected =
+              selectedCategory?.toLowerCase() === catName?.toLowerCase();
+            const imgSrc =
+              CATEGORY_IMAGE_MAP[catName] || cat.thumbnail || cat.imageUrl;
+
             return (
               <div
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.categoryKey)}
+                key={cat.id || cat.categoryId || catName}
+                onClick={() => handleCategorySelect(catName)}
                 style={{
-                  flex: '0 0 145px',
+                  flex: '0 0 155px',
                   height: '145px',
                   backgroundColor: isSelected
                     ? 'var(--accent-light)'
@@ -318,14 +291,16 @@ export default function CategoryShowcase({
                   if (!isSelected) {
                     e.currentTarget.style.transform = 'translateY(-3px)';
                     e.currentTarget.style.borderColor = 'var(--accent)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.08)';
+                    e.currentTarget.style.boxShadow =
+                      '0 8px 20px rgba(0, 0, 0, 0.08)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.borderColor = '#D4CCC4';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.05)';
+                    e.currentTarget.style.boxShadow =
+                      '0 4px 12px rgba(0, 0, 0, 0.05)';
                   }
                 }}
               >
@@ -336,31 +311,40 @@ export default function CategoryShowcase({
                     borderRadius: 'var(--radius-md)',
                     overflow: 'hidden',
                     backgroundColor: 'var(--bg-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   <img
-                    src={cat.thumbnail}
-                    alt={cat.name}
+                    src={imgSrc}
+                    alt={catName}
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        CATEGORY_IMAGE_MAP[catName] ||
+                        '/products/zen_garden_pagoda.jpg';
                     }}
                     loading="lazy"
                   />
                 </div>
                 <span
                   style={{
-                    fontSize: 'var(--font-small, 14px)',
+                    fontSize: 'var(--font-small, 13px)',
                     fontWeight: 700,
                     color: isSelected ? 'var(--accent)' : 'var(--text-main)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    maxWidth: '120px',
+                    maxWidth: '135px',
                   }}
+                  title={catName}
                 >
-                  {cat.name}
+                  {catName}
                 </span>
               </div>
             );

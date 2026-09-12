@@ -22,6 +22,7 @@ export default function ProductCatalogView() {
   const location = useLocation();
   const {
     categories,
+    categoryItems,
     selectedCategory,
     setSelectedCategory,
     ageOptions,
@@ -95,6 +96,7 @@ export default function ProductCatalogView() {
       {/* 2. BROWSE BY CATEGORY (Id: #categories) - Immediately Following Hero      */}
       {/* ========================================================================= */}
       <CategoryShowcase
+        categoryItems={categoryItems}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
