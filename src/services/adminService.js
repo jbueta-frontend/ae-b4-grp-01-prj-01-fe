@@ -180,31 +180,3 @@ export async function fulfillAdminOrder(orderId, trackingData = {}) {
     return updateAdminOrderStatus(orderId, 'SHIPPED');
   }
 }
-
-/**
- * Admin Review Moderation
- * GET /admin/reviews
- * PATCH /admin/reviews/:reviewId/status
- */
-export async function getAdminReviews(params = {}) {
-  try {
-    const res = await api.get('/admin/reviews', { params });
-    return Array.isArray(res) ? res : res?.reviews || res?.data || [];
-  } catch (err) {
-    return [];
-  }
-}
-
-export async function updateAdminReviewStatus(reviewId, status) {
-  try {
-    const res = await api.patch(`/admin/reviews/${reviewId}/status`, { status });
-    return res;
-  } catch (err) {
-    try {
-      const fallback = await api.put(`/admin/reviews/${reviewId}/status`, { status });
-      return fallback;
-    } catch {
-      return { success: true, reviewId, status };
-    }
-  }
-}

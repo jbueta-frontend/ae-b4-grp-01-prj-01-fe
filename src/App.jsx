@@ -33,7 +33,6 @@ import AdminReportsView from './features/admin-reports/views/AdminReportsView';
 import AdminProductsView from './features/admin-inventory/views/AdminProductsView';
 import AdminOrdersListView from './features/admin-fulfillment/views/AdminOrdersListView';
 import AdminOrderDetailView from './features/admin-fulfillment/views/AdminOrderDetailView';
-import AdminReviewsView from './features/admin-reviews/views/AdminReviewsView';
 
 function App() {
   return (
@@ -126,7 +125,6 @@ function App() {
                       path="orders/:orderId"
                       element={<AdminOrderDetailView />}
                     />
-                    <Route path="reviews" element={<AdminReviewsView />} />
                   </Route>
                 </Route>
 
