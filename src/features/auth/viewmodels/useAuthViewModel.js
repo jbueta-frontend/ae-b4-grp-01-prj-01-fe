@@ -93,9 +93,10 @@ export function useAuthViewModel(defaultTab = 'login') {
     setForgotLoading(true);
 
     try {
-      const res = await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
-      const msg = res?.data?.message || res?.message || 'If an account exists with this email address, a password reset link has been sent.';
-      setForgotMessage(msg);
+      await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
+      setForgotMessage(
+        `A password reset link has been sent to ${forgotEmail.trim()}. Please check your inbox and click the link to create a new password.`
+      );
     } catch (err) {
       setForgotError(
         err.response?.data?.error?.message ||
@@ -140,9 +141,40 @@ export function useAuthViewModel(defaultTab = 'login') {
           navigate('/admin/reports', { replace: true });
           return;
         }
+        // After registration, redirect to verify-email instructions page
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
+        return;
       }
       navigate(redirectPath);
     } catch (err) {
+      // Detect unverified email: backend may return 403 or a message containing 'verif'
+      const status = err?.response?.status || err?.status;
+      const backendMsg = (
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.message ||
+        ''
+      ).toLowerCase();
+      const backendCode = (
+        err?.response?.data?.error?.code ||
+        err?.error?.code ||
+        ''
+      ).toLowerCase();
+
+      const isUnverified =
+        status === 403 ||
+        backendCode.includes('unverified') ||
+        backendCode.includes('verify') ||
+        backendMsg.includes('verify') ||
+        backendMsg.includes('verified') ||
+        backendMsg.includes('email confirmation') ||
+        backendMsg.includes('not verified');
+
+      if (isUnverified && tab === 'login') {
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
       setApiError(getAuthErrorMessage(err, tab));
     } finally {
       setLoading(false);

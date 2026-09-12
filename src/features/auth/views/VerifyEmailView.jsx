@@ -48,7 +48,7 @@ export default function VerifyEmailView() {
       await api.post('/auth/resend-verification', { email: emailParam });
       setResendNotice('Verification email sent! Please check your inbox.');
     } catch {
-      setResendNotice('If an account exists, a new verification link was sent.');
+      setResendNotice('Unable to resend the verification email. Please try again or contact support.');
     } finally {
       setResendLoading(false);
     }

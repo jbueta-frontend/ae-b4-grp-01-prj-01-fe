@@ -7,7 +7,8 @@ import api from '../../../services/api';
 export default function ResetPasswordView() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get('token') || '';
+  // Accept both ?token= and ?token_hash= (Supabase-style links)
+  const token = searchParams.get('token') || searchParams.get('token_hash') || '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,11 +23,11 @@ export default function ResetPasswordView() {
     setError(null);
 
     if (!token) {
-      setError('Password reset token is missing. Please request a new reset link.');
+      setError('Password reset token is missing. Please request a new reset link from the login page.');
       return;
     }
-    if (password.length < 6) {
-      setError('New password must be at least 6 characters long.');
+    if (password.length < 8) {
+      setError('New password must be at least 8 characters long.');
       return;
     }
     if (password !== confirmPassword) {
@@ -46,7 +47,7 @@ export default function ResetPasswordView() {
         err.response?.data?.error?.message ||
         err.response?.data?.message ||
         err.message ||
-        'Failed to reset password. The link may have expired.'
+        'Failed to reset password. The link may have expired — please request a new one.'
       );
     } finally {
       setLoading(false);
@@ -72,7 +73,36 @@ export default function ResetPasswordView() {
         </div>
 
         <div className="card-clean" style={{ padding: '32px 28px' }}>
-          {success ? (
+          {/* No token in URL — link is invalid or expired */}
+          {!token && !success ? (
+            <div style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                  color: '#DC2626',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 18px',
+                }}
+              >
+                <AlertCircle size={32} strokeWidth={2} />
+              </div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>
+                Invalid or Expired Link
+              </h2>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
+                This password reset link is missing or has already expired. Please request a new one from the login page.
+              </p>
+              <Link to="/login" className="btn btn-primary btn-block" style={{ padding: '12px' }}>
+                <span>Go to Login</span>
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : success ? (
             <div style={{ textAlign: 'center' }}>
               <div
                 style={{
