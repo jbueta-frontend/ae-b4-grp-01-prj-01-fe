@@ -13,6 +13,7 @@ import {
   X,
   Send,
   ShoppingBag,
+  Printer,
 } from 'lucide-react';
 import { useCart } from '../../../context/CartContext';
 import { getCustomerOrders, cancelOrder } from '../../../services/orderService';
@@ -691,6 +692,24 @@ export default function OrderHistoryView() {
                         <span>Cancel Order</span>
                       </button>
                     )}
+
+                    {/* Receipt & Details buttons */}
+                    <Link
+                      to={`/orders/${currentOrderId}/receipt`}
+                      className="btn btn-outline btn-sm"
+                      style={{ gap: '6px', fontSize: '0.8125rem' }}
+                    >
+                      <Printer size={14} />
+                      <span>Receipt</span>
+                    </Link>
+
+                    <Link
+                      to={`/orders/${currentOrderId}`}
+                      className="btn btn-outline btn-sm"
+                      style={{ gap: '6px', fontSize: '0.8125rem' }}
+                    >
+                      <span>Details</span>
+                    </Link>
 
                     {/* Track Package button */}
                     <button

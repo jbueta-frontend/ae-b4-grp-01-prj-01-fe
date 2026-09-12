@@ -82,14 +82,25 @@ export default function AdminOrderDetailView() {
           <span>Back to Orders List</span>
         </Link>
 
-        <button
-          onClick={refresh}
-          disabled={loading}
-          className="btn btn-outline btn-sm"
-        >
-          <span>↻</span>
-          <span>Refresh</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Link
+            to={`/orders/${order.orderNumber || order.orderId}/receipt`}
+            target="_blank"
+            className="btn btn-outline btn-sm"
+            style={{ gap: '6px' }}
+          >
+            <span>📄</span>
+            <span>View Printable Receipt</span>
+          </Link>
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="btn btn-outline btn-sm"
+          >
+            <span>↻</span>
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Feedback Toast */}

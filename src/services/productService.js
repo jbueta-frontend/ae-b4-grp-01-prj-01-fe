@@ -41,3 +41,5 @@ export async function getProductById(idOrSlug) {
   const res = await api.get(`/products/${idOrSlug}`);
   return res?.product || res?.data || res;
 }
+
+export const getProductBySlug = getProductById;

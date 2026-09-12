@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useProductDetailViewModel } from '../viewmodels/useProductDetailViewModel';
 import {
   Star,
@@ -931,15 +932,24 @@ export default function ProductDetailView() {
                           Verified Customer Feedback
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowReviewForm((prev) => !prev)}
-                        className="btn btn-outline btn-sm"
-                        style={{ fontSize: '0.8125rem', padding: '5px 12px', gap: '5px' }}
-                      >
-                        <MessageSquare size={13} />
-                        <span>{showReviewForm ? 'Cancel' : 'Write a Review'}</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Link
+                          to={`/products/${product.id || product.slug}/reviews`}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.8125rem', padding: '5px 12px', gap: '5px', textDecoration: 'none' }}
+                        >
+                          <MessageSquare size={13} />
+                          <span>Review Page</span>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setShowReviewForm((prev) => !prev)}
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.8125rem', padding: '5px 12px', gap: '5px' }}
+                        >
+                          <span>{showReviewForm ? 'Cancel' : 'Quick Review'}</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Review Feedback Banner */}

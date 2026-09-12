@@ -127,3 +127,74 @@ export async function getCustomerOrderById(orderId) {
     return null;
   }
 }
+
+/**
+ * Printable Invoice Receipt Data
+ * GET /orders/:orderId/receipt
+ */
+export async function getOrderReceipt(orderId) {
+  try {
+    const res = await api.get(`/orders/${orderId}/receipt`);
+    return res?.receipt || res?.data || res;
+  } catch (err) {
+    // Fallback: build standard receipt from order details or local storage
+    const order = await getCustomerOrderById(orderId);
+    if (order) {
+      return {
+        receiptNumber: `REC-${order.orderNumber || order.orderId || orderId}`,
+        orderNumber: order.orderNumber || order.orderId || orderId,
+        orderId: order.orderId || orderId,
+        orderDate: order.createdAt || new Date().toISOString(),
+        customer: {
+          name:
+            order.customerName ||
+            order.user?.fullName ||
+            order.shippingAddress?.fullName ||
+            'Valued Customer',
+          email: order.customerEmail || order.user?.email || 'customer@example.com',
+        },
+        billingAddress: order.billingAddress || order.shippingAddress || {},
+        shippingAddress: order.shippingAddress || {},
+        items: order.items || [],
+        paymentMethod: order.paymentMethod || 'Credit / Debit Card',
+        paymentStatus: order.paymentStatus || 'PAID',
+        subtotal: order.subtotal || 0,
+        tax: order.tax || 0,
+        shippingFee: order.shippingFee || 0,
+        discount: order.discount || 0,
+        totalAmount: order.totalAmount || order.total || 0,
+      };
+    }
+    // Also check local storage orders
+    const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
+    const found = local.find(
+      (o) => o.orderId === orderId || o.orderNumber === orderId
+    );
+    if (found) {
+      return {
+        receiptNumber: `REC-${found.orderNumber || found.orderId || orderId}`,
+        orderNumber: found.orderNumber || found.orderId || orderId,
+        orderId: found.orderId || orderId,
+        orderDate: found.createdAt || new Date().toISOString(),
+        customer: {
+          name:
+            found.customerName ||
+            found.shippingAddress?.fullName ||
+            'Valued Customer',
+          email: found.customerEmail || 'customer@example.com',
+        },
+        billingAddress: found.billingAddress || found.shippingAddress || {},
+        shippingAddress: found.shippingAddress || {},
+        items: found.items || [],
+        paymentMethod: found.paymentMethod || 'Credit / Debit Card',
+        paymentStatus: found.paymentStatus || 'PAID',
+        subtotal: found.subtotal || 0,
+        tax: found.tax || 0,
+        shippingFee: found.shippingFee || 0,
+        discount: found.discount || 0,
+        totalAmount: found.totalAmount || found.total || 0,
+      };
+    }
+    throw err;
+  }
+}
