@@ -280,8 +280,26 @@ export function mapApiProduct(p) {
     reviews,
     shortDescription: p.description || p.shortDescription || '',
     description: p.description || p.shortDescription || '',
-    inStock: p.inventory ? p.inventory.stockQuantity > 0 : (p.inStock ?? true),
-    stockCount: p.inventory ? p.inventory.stockQuantity : (p.stockCount ?? 10),
+    inventory: p.inventory || {
+      stockQuantity: p.stockQuantity ?? (p.stockCount ?? 10),
+      reservedQuantity: p.reservedQuantity ?? 0,
+      lowStockThreshold: p.lowStockThreshold ?? 5,
+    },
+    inStock: p.inStock !== undefined
+      ? Boolean(p.inStock)
+      : p.inventory
+        ? (p.inventory.stockQuantity - (p.inventory.reservedQuantity || 0)) > 0
+        : (p.stockCount != null ? p.stockCount > 0 : true),
+    stockCount: p.availableQuantity !== undefined
+      ? p.availableQuantity
+      : p.inventory
+        ? Math.max(0, p.inventory.stockQuantity - (p.inventory.reservedQuantity || 0))
+        : (p.stockCount ?? 10),
+    isOutOfStock: p.isOutOfStock !== undefined
+      ? Boolean(p.isOutOfStock)
+      : p.inventory
+        ? (p.inventory.stockQuantity - (p.inventory.reservedQuantity || 0)) <= 0
+        : false,
     status: p.status || 'ACTIVE',
     rating: p.rating || 4.9,
     reviewCount: p.reviewCount || reviews.length,
