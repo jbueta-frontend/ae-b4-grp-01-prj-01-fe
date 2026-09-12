@@ -879,7 +879,7 @@ export default function OrderHistoryView() {
           </div>
         </div>
       )}
-      {/* Cancel Order Confirmation Modal (Branded System Modal) */}
+      {/* Cancel Order Confirmation Modal (Branded High-UX System Modal) */}
       {cancelModalOrder && (
         <div
           role="dialog"
@@ -892,8 +892,8 @@ export default function OrderHistoryView() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            backdropFilter: 'blur(4px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(5px)',
             padding: '20px',
           }}
           onClick={() => !cancellingId && setCancelModalOrder(null)}
@@ -902,131 +902,293 @@ export default function OrderHistoryView() {
             style={{
               backgroundColor: 'var(--bg-surface, #ffffff)',
               borderRadius: 'var(--radius-lg, 16px)',
-              maxWidth: '460px',
+              maxWidth: '520px',
               width: '100%',
               padding: '28px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              border: '1px solid var(--border)',
+              boxShadow:
+                '0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.1)',
+              border: '1.5px solid var(--border)',
               position: 'relative',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Top Icon & Close Button */}
+            {/* 1. Unified Header: Integrated Icon + Title + Close Button */}
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '16px',
+                alignItems: 'center',
+                paddingBottom: '18px',
+                borderBottom: '1px solid var(--border-hairline, #e5e7eb)',
+                marginBottom: '20px',
               }}
             >
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#dc2626',
-                }}
-              >
-                <AlertTriangle size={24} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '12px',
+                    backgroundColor: '#FEF2F2',
+                    border: '1.5px solid #FCA5A5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#DC2626',
+                    flexShrink: 0,
+                    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.12)',
+                  }}
+                >
+                  <AlertTriangle size={24} strokeWidth={2.2} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3
+                      id="cancel-modal-title"
+                      style={{
+                        fontSize: '1.25rem',
+                        fontWeight: 800,
+                        color: 'var(--text-main)',
+                        letterSpacing: '-0.02em',
+                        margin: 0,
+                      }}
+                    >
+                      Cancel Order
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-full, 9999px)',
+                        backgroundColor: '#FEE2E2',
+                        color: '#991B1B',
+                        border: '1px solid #FCA5A5',
+                      }}
+                    >
+                      Irreversible
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: 'var(--text-muted)',
+                      margin: '3px 0 0',
+                    }}
+                  >
+                    Please review the affected items and stock before cancelling.
+                  </p>
+                </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setCancelModalOrder(null)}
                 disabled={Boolean(cancellingId)}
                 className="btn btn-ghost btn-xs"
                 style={{
-                  padding: '6px',
+                  padding: '8px',
+                  borderRadius: 'var(--radius-md, 8px)',
                   color: 'var(--text-muted)',
                   cursor: cancellingId ? 'not-allowed' : 'pointer',
                 }}
+                aria-label="Close dialog"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Content */}
-            <h3
-              id="cancel-modal-title"
-              style={{
-                fontSize: '1.25rem',
-                fontWeight: 800,
-                color: 'var(--text-main)',
-                letterSpacing: '-0.02em',
-                marginBottom: '8px',
-              }}
-            >
-              Cancel Order Confirmation
-            </h3>
-            <p
-              style={{
-                fontSize: '0.875rem',
-                color: 'var(--text-muted)',
-                lineHeight: 1.5,
-                marginBottom: '18px',
-              }}
-            >
-              Are you sure you want to cancel this order? This action cannot be undone. All reserved items will be released back to warehouse stock in accordance with inventory policies.
-            </p>
-
-            {/* Order Details Snippet */}
+            {/* 2. Clearly Visible Order Details Container */}
             <div
               style={{
-                padding: '12px 16px',
-                borderRadius: 'var(--radius-md, 8px)',
-                backgroundColor: 'var(--bg-subtle, #f9fafb)',
-                border: '1px solid var(--border-hairline, #e5e7eb)',
-                marginBottom: '24px',
-                fontSize: '0.8125rem',
+                backgroundColor: 'var(--bg-subtle, #F8F6F2)',
+                border: '1.5px solid #E2D9CE',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '18px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
               }}
             >
+              {/* Order Meta Header Row */}
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  marginBottom: '6px',
+                  alignItems: 'center',
+                  paddingBottom: '12px',
+                  borderBottom: '1px solid #E8E1D7',
+                  marginBottom: '14px',
                 }}
               >
-                <span style={{ color: 'var(--text-muted)' }}>Order ID:</span>
-                <strong style={{ color: 'var(--accent)' }}>
-                  #{cancelModalOrder.orderId || cancelModalOrder.orderNumber}
-                </strong>
+                <div>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      color: 'var(--text-muted)',
+                      letterSpacing: '0.03em',
+                    }}
+                  >
+                    Order Reference
+                  </span>
+                  <div
+                    style={{
+                      fontSize: '0.95rem',
+                      fontWeight: 800,
+                      color: 'var(--accent)',
+                      marginTop: '2px',
+                    }}
+                  >
+                    #{cancelModalOrder.orderId || cancelModalOrder.orderNumber}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      color: 'var(--text-muted)',
+                      letterSpacing: '0.03em',
+                    }}
+                  >
+                    Total Amount
+                  </span>
+                  <div
+                    style={{
+                      fontSize: '1.125rem',
+                      fontWeight: 800,
+                      color: 'var(--text-main)',
+                      letterSpacing: '-0.01em',
+                      marginTop: '1px',
+                    }}
+                  >
+                    ₱{(Number(cancelModalOrder.totalAmount || cancelModalOrder.total) || 0).toFixed(2)}
+                  </div>
+                </div>
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: '6px',
-                }}
-              >
-                <span style={{ color: 'var(--text-muted)' }}>Total Amount:</span>
-                <strong style={{ fontWeight: 800 }}>
-                  ₱{(Number(cancelModalOrder.totalAmount || cancelModalOrder.total) || 0).toFixed(2)}
-                </strong>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span style={{ color: 'var(--text-muted)' }}>Items Count:</span>
-                <span>
-                  {cancelModalOrder.items?.length || 0} item
-                  {(cancelModalOrder.items?.length || 0) > 1 ? 's' : ''}
-                </span>
+
+              {/* Items List Preview */}
+              {Array.isArray(cancelModalOrder.items) && cancelModalOrder.items.length > 0 ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxHeight: '160px',
+                    overflowY: 'auto',
+                    paddingRight: '4px',
+                  }}
+                >
+                  {cancelModalOrder.items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '12px',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #EBE5DC',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img
+                          src={item.image || '/products/zen_garden_pagoda.jpg'}
+                          alt={item.name}
+                          style={{
+                            width: '38px',
+                            height: '38px',
+                            borderRadius: '6px',
+                            objectFit: 'cover',
+                            border: '1px solid #E5DFD7',
+                          }}
+                        />
+                        <div>
+                          <div
+                            style={{
+                              fontSize: '0.8125rem',
+                              fontWeight: 700,
+                              color: 'var(--text-main)',
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {item.name}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '0.75rem',
+                              color: 'var(--text-muted)',
+                              marginTop: '2px',
+                            }}
+                          >
+                            Quantity: <strong>{item.quantity || 1}</strong>
+                            {item.variant ? ` • ${item.variant}` : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 700,
+                          color: 'var(--text-main)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        ₱{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    fontSize: '0.8125rem',
+                    color: 'var(--text-muted)',
+                    textAlign: 'center',
+                    padding: '8px 0',
+                  }}
+                >
+                  Order includes {cancelModalOrder.items?.length || 1} items
+                </div>
+              )}
+            </div>
+
+            {/* 3. Inventory Advisory Callout */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'flex-start',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                backgroundColor: '#FFFBEB',
+                border: '1px solid #FCD34D',
+                color: '#92400E',
+                fontSize: '0.8125rem',
+                lineHeight: 1.45,
+                marginBottom: '24px',
+              }}
+            >
+              <RotateCcw size={16} style={{ color: '#D97706', marginTop: '2px', flexShrink: 0 }} />
+              <div>
+                <strong>Inventory Restocking:</strong> Cancelling this order will immediately release all reserved units back to available warehouse inventory.
               </div>
             </div>
 
-            {/* Actions */}
+            {/* 4. Action Buttons */}
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'flex-end',
+                alignItems: 'center',
                 gap: '12px',
               }}
             >
@@ -1036,37 +1198,42 @@ export default function OrderHistoryView() {
                 onClick={() => setCancelModalOrder(null)}
                 className="btn btn-outline btn-sm"
                 style={{
-                  padding: '10px 18px',
-                  fontWeight: 600,
+                  padding: '10px 20px',
+                  fontWeight: 700,
                   fontSize: '0.875rem',
+                  border: '1.5px solid var(--border)',
+                  backgroundColor: 'var(--bg-surface, #ffffff)',
+                  color: 'var(--text-main)',
                 }}
               >
                 Keep Order
               </button>
+
               <button
                 type="button"
                 disabled={Boolean(cancellingId)}
                 onClick={confirmCancelOrder}
                 className="btn btn-sm"
                 style={{
-                  padding: '10px 20px',
+                  padding: '10px 22px',
                   fontWeight: 700,
                   fontSize: '0.875rem',
-                  backgroundColor: '#dc2626',
+                  backgroundColor: '#DC2626',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: 'var(--radius-md, 8px)',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '8px',
                   cursor: cancellingId ? 'not-allowed' : 'pointer',
                   opacity: cancellingId ? 0.7 : 1,
-                  boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)',
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.28)',
+                  transition: 'all var(--transition-fast)',
                 }}
               >
-                <XCircle size={15} />
+                <XCircle size={16} />
                 <span>
-                  {cancellingId ? 'Cancelling...' : 'Yes, Cancel Order'}
+                  {cancellingId ? 'Cancelling Order...' : 'Yes, Cancel Order'}
                 </span>
               </button>
             </div>
