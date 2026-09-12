@@ -58,14 +58,40 @@ export function useAdminProductsViewModel() {
         } catch {}
       }
 
-      // Normalize and attach authentic toy images for products
+      // Normalize and attach authentic toy images & stock quantity for products
       combined = combined.map((item) => {
+        const customImage =
+          item.imageUrl ||
+          (Array.isArray(item.images) && item.images[0]?.imageUrl);
         const mapped = mapApiProduct(item);
-        const resolvedImage = mapped?.heroImage || '/products/zen_garden_pagoda.jpg';
+        const resolvedImage =
+          customImage &&
+          (customImage.startsWith('data:image') ||
+            customImage.startsWith('blob:') ||
+            customImage.startsWith('http') ||
+            customImage.startsWith('/products/'))
+            ? customImage
+            : mapped?.heroImage || '/products/zen_garden_pagoda.jpg';
+        const qty =
+          item.inventory?.stockQuantity ?? item.stockQuantity ?? 50;
+
         return {
           ...item,
           imageUrl: resolvedImage,
-          images: [{ imageUrl: resolvedImage, altText: item.name, isThumbnail: true, displayOrder: 1 }],
+          images: [
+            {
+              imageUrl: resolvedImage,
+              altText: item.name,
+              isThumbnail: true,
+              displayOrder: 1,
+            },
+          ],
+          stockQuantity: qty,
+          inventory: {
+            stockQuantity: qty,
+            reservedQuantity: item.inventory?.reservedQuantity || 0,
+            lowStockThreshold: item.inventory?.lowStockThreshold || 5,
+          },
         };
       });
 
@@ -102,30 +128,93 @@ export function useAdminProductsViewModel() {
   const handleCreateProduct = async (formData) => {
     setIsSubmitting(true);
     setError(null);
+    const prodId = `prod-${Date.now()}`;
+    const initialQty = Number(formData.stockQuantity ?? 50);
+    const resolvedImage = formData.imageUrl || '/products/zen_garden_pagoda.jpg';
+
+    const productPayload = {
+      ...formData,
+      productId: prodId,
+      id: prodId,
+      imageUrl: resolvedImage,
+      images: [
+        {
+          imageUrl: resolvedImage,
+          altText: formData.name,
+          isThumbnail: true,
+          displayOrder: 1,
+        },
+      ],
+      stockQuantity: initialQty,
+      inventory: {
+        stockQuantity: initialQty,
+        reservedQuantity: 0,
+        lowStockThreshold: 5,
+      },
+    };
+
     try {
-      const res = await api.post('/admin/products', formData);
-      const newProduct = res?.product || res || {
-        ...formData,
-        productId: `prod-${Date.now()}`,
-        id: `prod-${Date.now()}`,
+      const res = await api.post('/admin/products', productPayload);
+      const created = res?.product || res?.data || res || productPayload;
+      const finalId = created?.productId || created?.id || prodId;
+
+      if (formData.imageUrl) {
+        try {
+          await api.post(`/admin/products/${finalId}/images`, {
+            imageUrl: formData.imageUrl,
+            altText: formData.name,
+            isThumbnail: true,
+            displayOrder: 1,
+          });
+        } catch {}
+      }
+
+      try {
+        await api.put(`/admin/products/${finalId}/inventory`, {
+          stockQuantity: initialQty,
+          lowStockThreshold: 5,
+        });
+      } catch {}
+
+      const newProduct = {
+        ...productPayload,
+        ...created,
+        productId: finalId,
+        id: finalId,
+        imageUrl: resolvedImage,
+        stockQuantity: initialQty,
+        inventory: {
+          stockQuantity: initialQty,
+          reservedQuantity: 0,
+          lowStockThreshold: 5,
+        },
       };
+
       setProducts((prev) => [newProduct, ...prev]);
+
+      // Cache locally in fiddlemania_seeded_products so it persists
+      const cached = localStorage.getItem('fiddlemania_seeded_products');
+      const list = cached ? JSON.parse(cached) : [];
+      list.unshift(newProduct);
+      localStorage.setItem('fiddlemania_seeded_products', JSON.stringify(list));
+
       setFeedback({
         type: 'success',
-        message: `Successfully created "${formData.name}"`,
+        message: `Successfully created "${formData.name}" with ${initialQty} units in stock!`,
       });
       closeModal();
     } catch (err) {
-      // If backend errored, still add locally for seamless demo if network or mocks
-      const fallbackProduct = {
-        ...formData,
-        productId: `prod-${Date.now()}`,
-        id: `prod-${Date.now()}`,
-      };
-      setProducts((prev) => [fallbackProduct, ...prev]);
+      // Fallback local creation
+      setProducts((prev) => [productPayload, ...prev]);
+
+      const cached = localStorage.getItem('fiddlemania_seeded_products');
+      const list = cached ? JSON.parse(cached) : [];
+      list.unshift(productPayload);
+      localStorage.setItem('fiddlemania_seeded_products', JSON.stringify(list));
+
       setFeedback({
         type: 'success',
-        message: `Product "${formData.name}" added to catalog.`,
+        message: `Product "${formData.name}" added to catalog with ${initialQty} units in stock.`,
       });
       closeModal();
     } finally {
@@ -215,16 +304,57 @@ export function useAdminProductsViewModel() {
   const handleUpdateProduct = async (id, formData) => {
     setIsSubmitting(true);
     setError(null);
+    const updatedQty =
+      formData.stockQuantity !== undefined
+        ? Number(formData.stockQuantity)
+        : undefined;
+
     try {
       await api.put(`/admin/products/${id}`, formData);
+      if (updatedQty !== undefined) {
+        try {
+          await api.put(`/admin/products/${id}/inventory`, {
+            stockQuantity: updatedQty,
+          });
+        } catch {}
+      }
     } catch {
       // Handled gracefully
     } finally {
       // Update in state
       setProducts((prev) =>
-        prev.map((item) =>
-          item.productId === id || item.id === id ? { ...item, ...formData } : item
-        )
+        prev.map((item) => {
+          if (item.productId === id || item.id === id) {
+            const resolvedImg = formData.imageUrl || item.imageUrl;
+            const newQty =
+              updatedQty !== undefined
+                ? updatedQty
+                : item.stockQuantity ??
+                  item.inventory?.stockQuantity ??
+                  50;
+            return {
+              ...item,
+              ...formData,
+              imageUrl: resolvedImg,
+              images: resolvedImg
+                ? [
+                    {
+                      imageUrl: resolvedImg,
+                      altText: formData.name || item.name,
+                      isThumbnail: true,
+                      displayOrder: 1,
+                    },
+                  ]
+                : item.images,
+              stockQuantity: newQty,
+              inventory: {
+                ...(item.inventory || {}),
+                stockQuantity: newQty,
+              },
+            };
+          }
+          return item;
+        })
       );
 
       // Update in local cache if present
@@ -232,10 +362,30 @@ export function useAdminProductsViewModel() {
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          const updated = parsed.map((item) =>
-            item.productId === id || item.id === id ? { ...item, ...formData } : item
+          const updated = parsed.map((item) => {
+            if (item.productId === id || item.id === id) {
+              const resolvedImg = formData.imageUrl || item.imageUrl;
+              const newQty =
+                updatedQty !== undefined
+                  ? updatedQty
+                  : item.stockQuantity ?? 50;
+              return {
+                ...item,
+                ...formData,
+                imageUrl: resolvedImg,
+                stockQuantity: newQty,
+                inventory: {
+                  ...(item.inventory || {}),
+                  stockQuantity: newQty,
+                },
+              };
+            }
+            return item;
+          });
+          localStorage.setItem(
+            'fiddlemania_seeded_products',
+            JSON.stringify(updated)
           );
-          localStorage.setItem('fiddlemania_seeded_products', JSON.stringify(updated));
         } catch {}
       }
 

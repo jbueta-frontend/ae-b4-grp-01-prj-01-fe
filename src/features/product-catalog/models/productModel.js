@@ -183,17 +183,28 @@ export function mapApiProduct(p) {
     DB_CATEGORY_MAP[p.categoryId] ||
     (typeof p.category === 'string' ? p.category : 'General');
 
-  // Prioritize high-quality generated product photos matching the product
-  let heroImage = getGeneratedImageForProduct(p);
+  // Prioritize custom uploaded image (data URL, blob, http URL, or local product path)
+  let heroImage = null;
+  const customImg =
+    p.imageUrl || (Array.isArray(p.images) && p.images[0]?.imageUrl);
 
-  // If not matched, use explicit valid local product path if supplied
-  if (!heroImage && p.imageUrl && p.imageUrl.startsWith('/products/')) {
-    heroImage = p.imageUrl;
+  if (
+    customImg &&
+    (customImg.startsWith('data:image/') ||
+      customImg.startsWith('blob:') ||
+      customImg.startsWith('http://') ||
+      customImg.startsWith('https://') ||
+      customImg.startsWith('/products/'))
+  ) {
+    heroImage = customImg;
+  } else {
+    heroImage = getGeneratedImageForProduct(p);
   }
 
-  // Fallback to category generated photo
+  // Fallback to category photo
   if (!heroImage) {
-    heroImage = CATEGORY_FALLBACK_IMAGES[category] || '/products/zen_garden_pagoda.jpg';
+    heroImage =
+      CATEGORY_FALLBACK_IMAGES[category] || '/products/zen_garden_pagoda.jpg';
   }
 
   const gallery =
