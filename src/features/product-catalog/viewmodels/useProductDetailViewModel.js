@@ -99,7 +99,12 @@ export function useProductDetailViewModel() {
   }, [fetchProduct]);
 
   const isOutOfStock = Boolean(
-    product && (!product.inStock || (product.stockCount != null && product.stockCount <= 0))
+    product && (
+      product.isOutOfStock ||
+      !product.inStock ||
+      (product.stockCount != null && product.stockCount <= 0) ||
+      (product.inventory && (product.inventory.stockQuantity - (product.inventory.reservedQuantity || 0)) <= 0)
+    )
   );
 
   const incrementQty = () => {
