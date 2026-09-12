@@ -78,11 +78,7 @@ export function useProductDetailViewModel() {
         const normalized = mapApiProduct(raw);
         setProduct(normalized);
         setActiveImage(normalized.gallery?.[0] || normalized.heroImage);
-        if (normalized.stockCount <= 0) {
-          setQuantity(0);
-        } else {
-          setQuantity(1);
-        }
+        setQuantity(1);
 
         // Fetch live reviews for this product
         const realProdId = normalized.productId || normalized.id || raw.productId || raw.id;
@@ -102,6 +98,10 @@ export function useProductDetailViewModel() {
     fetchProduct();
   }, [fetchProduct]);
 
+  const isOutOfStock = Boolean(
+    product && (!product.inStock || (product.stockCount != null && product.stockCount <= 0))
+  );
+
   const incrementQty = () => {
     setQuantity((q) => {
       if (product?.stockCount != null && product.stockCount > 0) {
@@ -112,10 +112,7 @@ export function useProductDetailViewModel() {
   };
 
   const decrementQty = () => {
-    setQuantity((q) => {
-      if (product?.stockCount <= 0) return 0;
-      return q > 1 ? q - 1 : 1;
-    });
+    setQuantity((q) => (q > 1 ? q - 1 : 1));
   };
 
   const toggleAccordion = (sectionKey) => {
@@ -123,7 +120,8 @@ export function useProductDetailViewModel() {
   };
 
   const handleAddToCart = () => {
-    if (!product || product.stockCount <= 0) return false;
+    if (!product) return false;
+    // Allow users to add out of stock items to cart for future restocked purchases
     addToCart(product, quantity);
     setAddedNotice(true);
     setTimeout(() => {
@@ -133,7 +131,8 @@ export function useProductDetailViewModel() {
   };
 
   const handleBuyNow = () => {
-    if (!product || product.stockCount <= 0) return false;
+    // Block direct checkout if product is out of stock
+    if (!product || isOutOfStock) return false;
     addToCart(product, quantity);
     navigate('/checkout');
     return true;
@@ -200,6 +199,7 @@ export function useProductDetailViewModel() {
     product,
     loading,
     error,
+    isOutOfStock,
     activeImage: activeImage || product?.heroImage,
     setActiveImage,
     quantity,

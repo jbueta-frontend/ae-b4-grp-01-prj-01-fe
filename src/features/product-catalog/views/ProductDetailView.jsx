@@ -13,6 +13,7 @@ import {
   Send,
   ShoppingCart,
   Package,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function ProductDetailView() {
@@ -20,6 +21,7 @@ export default function ProductDetailView() {
     product,
     loading,
     error,
+    isOutOfStock,
     activeImage,
     setActiveImage,
     quantity,
@@ -399,15 +401,17 @@ export default function ProductDetailView() {
               <span
                 style={{
                   fontSize: 'var(--font-small, 14px)',
-                  color: 'var(--success)',
+                  color: isOutOfStock ? '#DC2626' : 'var(--success)',
                   fontWeight: 800,
-                  backgroundColor: 'var(--success-bg)',
+                  backgroundColor: isOutOfStock ? '#FEE2E2' : 'var(--success-bg)',
                   padding: '4px 10px',
                   borderRadius: 'var(--radius-sm)',
                   letterSpacing: '0.02em',
                 }}
               >
-                In Stock ({product.stockCount} ready to ship)
+                {isOutOfStock
+                  ? 'Out of Stock'
+                  : `In Stock (${product.stockCount} ready to ship)`}
               </span>
             </div>
 
@@ -460,7 +464,7 @@ export default function ProductDetailView() {
                 <button
                   type="button"
                   onClick={decrementQty}
-                  disabled={quantity <= 1 || product.stockCount <= 0}
+                  disabled={quantity <= 1}
                   style={{
                     width: '40px',
                     height: '100%',
@@ -469,21 +473,15 @@ export default function ProductDetailView() {
                     justifyContent: 'center',
                     fontSize: '1.2rem',
                     fontWeight: 600,
-                    color:
-                      quantity <= 1 || product.stockCount <= 0
-                        ? 'var(--text-disabled)'
-                        : 'var(--text-main)',
-                    cursor:
-                      quantity <= 1 || product.stockCount <= 0
-                        ? 'not-allowed'
-                        : 'pointer',
+                    color: quantity <= 1 ? 'var(--text-disabled)' : 'var(--text-main)',
+                    cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
                     backgroundColor: 'transparent',
                     border: 'none',
                     borderRight: '1px solid var(--border-hairline)',
                     transition: 'background-color var(--transition-fast)',
                   }}
                   onMouseEnter={(e) => {
-                    if (quantity > 1 && product.stockCount > 0) {
+                    if (quantity > 1) {
                       e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
                     }
                   }}
@@ -507,15 +505,12 @@ export default function ProductDetailView() {
                     color: 'var(--text-main)',
                   }}
                 >
-                  {product.stockCount <= 0 ? 0 : quantity}
+                  {quantity}
                 </div>
                 <button
                   type="button"
                   onClick={incrementQty}
-                  disabled={
-                    product.stockCount <= 0 ||
-                    (product.stockCount > 0 && quantity >= product.stockCount)
-                  }
+                  disabled={product.stockCount > 0 && quantity >= product.stockCount}
                   style={{
                     width: '40px',
                     height: '100%',
@@ -525,13 +520,11 @@ export default function ProductDetailView() {
                     fontSize: '1.2rem',
                     fontWeight: 600,
                     color:
-                      product.stockCount <= 0 ||
-                      (product.stockCount > 0 && quantity >= product.stockCount)
+                      product.stockCount > 0 && quantity >= product.stockCount
                         ? 'var(--text-disabled)'
                         : 'var(--text-main)',
                     cursor:
-                      product.stockCount <= 0 ||
-                      (product.stockCount > 0 && quantity >= product.stockCount)
+                      product.stockCount > 0 && quantity >= product.stockCount
                         ? 'not-allowed'
                         : 'pointer',
                     backgroundColor: 'transparent',
@@ -540,7 +533,7 @@ export default function ProductDetailView() {
                     transition: 'background-color var(--transition-fast)',
                   }}
                   onMouseEnter={(e) => {
-                    if (product.stockCount > 0 && quantity < product.stockCount) {
+                    if (!product.stockCount || quantity < product.stockCount) {
                       e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
                     }
                   }}
@@ -558,34 +551,55 @@ export default function ProductDetailView() {
                 style={{
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  color:
-                    product.stockCount > 0
-                      ? 'var(--text-muted)'
-                      : 'var(--danger, #DC2626)',
+                  color: isOutOfStock ? '#DC2626' : 'var(--text-muted)',
                 }}
               >
-                {product.stockCount > 0
-                  ? `${product.stockCount} pieces available`
-                  : '0 pieces available (Out of stock)'}
+                {isOutOfStock
+                  ? '0 pieces available (Out of stock)'
+                  : `${product.stockCount} pieces available`}
               </span>
             </div>
 
+            {/* Out of Stock Alert Message Banner */}
+            {isOutOfStock && (
+              <div
+                role="alert"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: '#FEF2F2',
+                  border: '1px solid #FCA5A5',
+                  color: '#991B1B',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  lineHeight: 1.45,
+                  marginBottom: '18px',
+                }}
+              >
+                <AlertCircle size={20} style={{ flexShrink: 0, color: '#DC2626' }} />
+                <span>
+                  <strong>Out of Stock:</strong> This product is currently out of stock and cannot be checked out immediately. You can still add it to your cart for future restocked purchases.
+                </span>
+              </div>
+            )}
 
             {/* 3. Action Buttons Row: [ Add To Cart ] [ Buy Now ] */}
             <div
               style={{
                 display: 'flex',
                 gap: '14px',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 marginBottom: '32px',
                 flexWrap: 'wrap',
               }}
             >
-              {/* Add To Cart button (Outline / subtle tint with ShoppingCart icon) */}
+              {/* Add To Cart button (Always Available and Enabled even if out of stock!) */}
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={product.stockCount <= 0}
                 style={{
                   flex: 1,
                   minWidth: '160px',
@@ -602,21 +616,17 @@ export default function ProductDetailView() {
                   border: '1.5px solid var(--accent)',
                   backgroundColor: 'rgba(188, 90, 69, 0.07)',
                   color: 'var(--accent)',
-                  cursor: product.stockCount <= 0 ? 'not-allowed' : 'pointer',
-                  opacity: product.stockCount <= 0 ? 0.5 : 1,
+                  cursor: 'pointer',
+                  opacity: 1,
                   transition: 'all var(--transition-fast)',
                 }}
                 onMouseEnter={(e) => {
-                  if (product.stockCount > 0) {
-                    e.currentTarget.style.backgroundColor =
-                      'rgba(188, 90, 69, 0.14)';
-                  }
+                  e.currentTarget.style.backgroundColor =
+                    'rgba(188, 90, 69, 0.14)';
                 }}
                 onMouseLeave={(e) => {
-                  if (product.stockCount > 0) {
-                    e.currentTarget.style.backgroundColor =
-                      'rgba(188, 90, 69, 0.07)';
-                  }
+                  e.currentTarget.style.backgroundColor =
+                    'rgba(188, 90, 69, 0.07)';
                 }}
               >
                 {addedNotice ? (
@@ -632,40 +642,58 @@ export default function ProductDetailView() {
                 )}
               </button>
 
-              {/* Buy Now button (Primary brand solid terracotta button - proceeds to /checkout) */}
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={product.stockCount <= 0}
-                className="btn btn-primary"
-                style={{
-                  flex: 1,
-                  minWidth: '160px',
-                  height: '50px',
-                  padding: '0 24px',
-                  fontSize: '1rem',
-                  fontWeight: 700,
-                  letterSpacing: '-0.01em',
-                  borderRadius: 'var(--radius-md)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  backgroundColor: 'var(--accent)',
-                  color: '#ffffff',
-                  border: 'none',
-                  cursor: product.stockCount <= 0 ? 'not-allowed' : 'pointer',
-                  opacity: product.stockCount <= 0 ? 0.5 : 1,
-                  boxShadow: '0 2px 8px rgba(188, 90, 69, 0.25)',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                {product.stockCount <= 0 ? (
-                  <span>Out of Stock</span>
-                ) : (
-                  <span>Buy Now</span>
+              {/* Buy Now button (Disabled if product is out of stock, with status alert) */}
+              <div style={{ flex: 1, minWidth: '160px' }}>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={isOutOfStock}
+                  className="btn btn-primary"
+                  title={
+                    isOutOfStock
+                      ? 'This product is currently out of stock and cannot be checked out.'
+                      : 'Buy Now'
+                  }
+                  style={{
+                    width: '100%',
+                    height: '50px',
+                    padding: '0 24px',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    letterSpacing: '-0.01em',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    backgroundColor: isOutOfStock ? '#E5E0D8' : 'var(--accent)',
+                    color: isOutOfStock ? '#8C857B' : '#ffffff',
+                    border: isOutOfStock ? '1px solid #D4CCC4' : 'none',
+                    cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                    opacity: isOutOfStock ? 0.7 : 1,
+                    boxShadow: isOutOfStock
+                      ? 'none'
+                      : '0 2px 8px rgba(188, 90, 69, 0.25)',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                >
+                  <span>{isOutOfStock ? 'Out of Stock' : 'Buy Now'}</span>
+                </button>
+                {isOutOfStock && (
+                  <span
+                    style={{
+                      display: 'block',
+                      textAlign: 'center',
+                      fontSize: '0.75rem',
+                      color: '#DC2626',
+                      fontWeight: 600,
+                      marginTop: '6px',
+                    }}
+                  >
+                    Cannot checkout out of stock item
+                  </span>
                 )}
-              </button>
+              </div>
             </div>
 
             {/* Quick Guarantees */}
