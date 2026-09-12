@@ -27,6 +27,13 @@ export function AuthProvider({ children }) {
         try {
           const res = await api.get('/auth/me');
           const userData = res.user || res;
+          // Merge locally-cached address if backend didn't return one
+          if (!userData.address) {
+            try {
+              const raw = localStorage.getItem('fiddlemania_user_address');
+              if (raw) userData.address = JSON.parse(raw);
+            } catch {}
+          }
           setUser(userData);
           localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
         } catch {
