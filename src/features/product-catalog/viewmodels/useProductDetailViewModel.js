@@ -17,7 +17,6 @@ export function useProductDetailViewModel() {
   const [error, setError] = useState(null);
 
   const [activeImage, setActiveImage] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
   const [openAccordion, setOpenAccordion] = useState('dimensions');
@@ -42,7 +41,6 @@ export function useProductDetailViewModel() {
   }, []);
 
   const fetchProduct = useCallback(async () => {
-    if (!idOrSlug) return;
     setLoading(true);
     setError(null);
     try {
@@ -51,10 +49,17 @@ export function useProductDetailViewModel() {
         const res = await api.get(`/products/${idOrSlug}`);
         raw = res?.product || res;
       } catch {
-        // Fallback search across list
-        const res = await api.get('/products');
-        const list = Array.isArray(res) ? res : res?.products || res?.data || [];
-        raw = list.find((p) => p.slug === idOrSlug || p.productId === idOrSlug || p.id === idOrSlug);
+        // Continue to fallback
+      }
+
+      if (!raw) {
+        try {
+          const res = await api.get('/products');
+          const list = Array.isArray(res) ? res : res?.products || res?.data || [];
+          raw = list.find((p) => p.slug === idOrSlug || p.productId === idOrSlug || p.id === idOrSlug);
+        } catch {
+          // Continue to local storage fallback
+        }
       }
 
       if (!raw) {
@@ -73,7 +78,11 @@ export function useProductDetailViewModel() {
         const normalized = mapApiProduct(raw);
         setProduct(normalized);
         setActiveImage(normalized.gallery?.[0] || normalized.heroImage);
-        setSelectedVariant(normalized.variants?.[0] || null);
+        if (normalized.stockCount <= 0) {
+          setQuantity(0);
+        } else {
+          setQuantity(1);
+        }
 
         // Fetch live reviews for this product
         const realProdId = normalized.productId || normalized.id || raw.productId || raw.id;
@@ -93,20 +102,41 @@ export function useProductDetailViewModel() {
     fetchProduct();
   }, [fetchProduct]);
 
-  const incrementQty = () => setQuantity((q) => q + 1);
-  const decrementQty = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
+  const incrementQty = () => {
+    setQuantity((q) => {
+      if (product?.stockCount != null && product.stockCount > 0) {
+        return Math.min(product.stockCount, q + 1);
+      }
+      return q + 1;
+    });
+  };
+
+  const decrementQty = () => {
+    setQuantity((q) => {
+      if (product?.stockCount <= 0) return 0;
+      return q > 1 ? q - 1 : 1;
+    });
+  };
 
   const toggleAccordion = (sectionKey) => {
     setOpenAccordion((prev) => (prev === sectionKey ? null : sectionKey));
   };
 
   const handleAddToCart = () => {
-    if (!product) return;
-    addToCart(product, quantity, selectedVariant?.name);
+    if (!product || product.stockCount <= 0) return false;
+    addToCart(product, quantity);
     setAddedNotice(true);
     setTimeout(() => {
       setAddedNotice(false);
     }, 1800);
+    return true;
+  };
+
+  const handleBuyNow = () => {
+    if (!product || product.stockCount <= 0) return false;
+    addToCart(product, quantity);
+    navigate('/checkout');
+    return true;
   };
 
   // Submit Verified Review
@@ -172,14 +202,13 @@ export function useProductDetailViewModel() {
     error,
     activeImage: activeImage || product?.heroImage,
     setActiveImage,
-    selectedVariant: selectedVariant || product?.variants?.[0],
-    setSelectedVariant,
     quantity,
     incrementQty,
     decrementQty,
     openAccordion,
     toggleAccordion,
     handleAddToCart,
+    handleBuyNow,
     addedNotice,
     goBack: () => navigate(-1),
     // Reviews

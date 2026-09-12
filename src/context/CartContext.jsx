@@ -4,19 +4,7 @@ const CartContext = createContext(null);
 
 const STORAGE_KEY = 'fiddlemania_cart';
 
-const INITIAL_CART = [
-  {
-    id: 'prod-01',
-    name: 'Architect Beechwood Block Set',
-    slug: 'architect-beechwood-block-set',
-    price: 48.0,
-    originalPrice: 58.0,
-    image:
-      'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80',
-    variant: 'Natural Beech',
-    quantity: 1,
-  },
-];
+const INITIAL_CART = [];
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
@@ -59,8 +47,7 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (product, quantity = 1, variant = null) => {
-    const selectedVariant =
-      variant || (product.variants?.[0]?.name ?? 'Standard');
+    const selectedVariant = variant || null;
 
     const addedItem = {
       id: product.id,
@@ -75,7 +62,7 @@ export function CartProvider({ children }) {
 
     setItems((prev) => {
       const existingIdx = prev.findIndex(
-        (item) => item.id === product.id && item.variant === selectedVariant
+        (item) => item.id === product.id && (!selectedVariant || item.variant === selectedVariant)
       );
       if (existingIdx > -1) {
         const next = [...prev];
