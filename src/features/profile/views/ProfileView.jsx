@@ -107,11 +107,10 @@ export default function ProfileView() {
                   ? 'rgba(22, 163, 74, 0.1)'
                   : 'rgba(220, 38, 38, 0.1)',
               color: vm.notification.type === 'success' ? '#16A34A' : '#DC2626',
-              border: `1px solid ${
-                vm.notification.type === 'success'
-                  ? 'rgba(22, 163, 74, 0.25)'
-                  : 'rgba(220, 38, 38, 0.25)'
-              }`,
+              border: `1px solid ${vm.notification.type === 'success'
+                ? 'rgba(22, 163, 74, 0.25)'
+                : 'rgba(220, 38, 38, 0.25)'
+                }`,
               fontWeight: 600,
               fontSize: '0.875rem',
             }}
@@ -896,7 +895,7 @@ export default function ProfileView() {
 
                   {/* Postal Code (Integer numbers only) */}
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Postal Code (Numbers Only)</label>
+                    <label className="form-label">Postal Code</label>
                     <input
                       type="text"
                       inputMode="numeric"
