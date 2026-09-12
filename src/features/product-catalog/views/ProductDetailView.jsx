@@ -555,7 +555,7 @@ export default function ProductDetailView() {
                 }}
               >
                 {isOutOfStock
-                  ? '0 pieces available (Out of stock)'
+                  ? '0 pieces available'
                   : `${product.stockCount} pieces available`}
               </span>
             </div>
@@ -685,12 +685,12 @@ export default function ProductDetailView() {
                       display: 'block',
                       textAlign: 'center',
                       fontSize: '0.75rem',
-                      color: '#DC2626',
+                      color: 'var(--text-muted, #78716c)',
                       fontWeight: 600,
                       marginTop: '6px',
                     }}
                   >
-                    Cannot checkout out of stock item
+                    Available for purchase upon restocking.
                   </span>
                 )}
               </div>
