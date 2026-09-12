@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../../context/CartContext';
 import { trackShipmentPublic, getShipmentByOrderId } from '../../../services/shipmentService';
+import { getEffectiveOrderStatus } from '../../../services/orderSync';
 
 export default function ShipmentTrackingView() {
   const { trackingNumber: routeTrackingNumber } = useParams();
@@ -50,15 +51,17 @@ export default function ShipmentTrackingView() {
       }
 
       if (data) {
-        setShipmentData(data);
+        const effectiveStatus = getEffectiveOrderStatus(data);
+        setShipmentData({ ...data, status: effectiveStatus });
       } else if (stateOrder) {
-        // Synthesize display from state order
+        // Synthesize display from state order with effective status
+        const effectiveStatus = getEffectiveOrderStatus(stateOrder);
         setShipmentData({
           trackingNumber: trkNum,
           orderId: stateOrder.orderId || stateOrder.orderNumber,
           carrier: stateOrder.carrier || 'FEDEX',
           service: 'Priority Carbon-Neutral Express',
-          status: stateOrder.status || 'In Transit',
+          status: effectiveStatus,
           estimatedDelivery: stateOrder.estimatedDelivery || 'Estimated 2–3 business days',
           origin: 'Central Fulfillment Depot',
           destination: stateOrder.shippingAddress?.city
@@ -122,6 +125,26 @@ export default function ShipmentTrackingView() {
       fetchTracking(stateOrder.trackingNumber);
     }
   }, [routeTrackingNumber]);
+
+  // Live order status synchronization listener
+  useEffect(() => {
+    const handleOrderUpdate = (e) => {
+      const { orderId, status } = e.detail || {};
+      if (
+        status &&
+        (orderId === shipmentData?.orderId ||
+          orderId === stateOrder?.orderId ||
+          orderId === activeTrackingNumber)
+      ) {
+        setShipmentData((prev) => (prev ? { ...prev, status: status.toUpperCase() } : prev));
+      }
+    };
+
+    window.addEventListener('fiddlemania_order_updated', handleOrderUpdate);
+    return () => {
+      window.removeEventListener('fiddlemania_order_updated', handleOrderUpdate);
+    };
+  }, [shipmentData?.orderId, stateOrder?.orderId, activeTrackingNumber]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

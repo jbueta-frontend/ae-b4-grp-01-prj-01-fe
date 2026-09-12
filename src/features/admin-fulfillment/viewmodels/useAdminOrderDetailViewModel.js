@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { getAdminOrderDetail, updateAdminOrderStatus } from '../../../services/adminService';
 import { getCustomerOrderById, cancelOrder } from '../../../services/orderService';
+import { syncOrderStatus, getEffectiveOrderStatus } from '../../../services/orderSync';
 
 export function useAdminOrderDetailViewModel() {
   const { orderId } = useParams();
@@ -30,13 +31,15 @@ export function useAdminOrderDetailViewModel() {
       }
 
       if (data) {
-        setOrder(data);
+        const effectiveStatus = getEffectiveOrderStatus(data);
+        setOrder({ ...data, status: effectiveStatus });
       } else {
         // Look in local storage for order
         const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
         const found = local.find((o) => o.orderId === orderId || o.orderNumber === orderId);
         if (found) {
-          setOrder(found);
+          const effectiveStatus = getEffectiveOrderStatus(found);
+          setOrder({ ...found, status: effectiveStatus });
         } else {
           setError(`Order "${orderId}" not found in database.`);
           setOrder(null);
@@ -56,21 +59,23 @@ export function useAdminOrderDetailViewModel() {
 
   const updateOrderStatus = async (newStatus) => {
     if (!orderId) return;
+    const normalized = (newStatus || 'PENDING').toUpperCase();
     setIsUpdating(true);
     setFeedback(null);
     try {
-      if (newStatus === 'CANCELLED') {
+      if (normalized === 'CANCELLED') {
         // 3. Order Cancellation: PUT /orders/:orderId/cancel
         await cancelOrder(orderId);
       } else {
-        await updateAdminOrderStatus(orderId, newStatus);
+        await updateAdminOrderStatus(orderId, normalized);
       }
-      setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
-      setFeedback(`Order status updated to ${newStatus}`);
     } catch {
-      setOrder((prev) => (prev ? { ...prev, status: newStatus } : prev));
-      setFeedback(`Order status set to ${newStatus}`);
+      // Backend error fallback
     } finally {
+      // Ensure local state, localStorage, and event broadcasts are synchronized
+      syncOrderStatus(orderId, normalized);
+      setOrder((prev) => (prev ? { ...prev, status: normalized } : prev));
+      setFeedback(`Order status updated to ${normalized}`);
       setIsUpdating(false);
     }
   };

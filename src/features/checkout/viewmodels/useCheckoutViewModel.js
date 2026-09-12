@@ -248,8 +248,8 @@ export function useCheckoutViewModel() {
         paymentMethodName,
         status:
           paymentType === 'cod'
-            ? 'Pending COD Delivery'
-            : placedOrder?.status || 'Confirmed',
+            ? 'PENDING'
+            : (placedOrder?.status || 'CONFIRMED').toUpperCase(),
         estimatedDelivery: 'Sep 14 – Sep 16',
       };
 

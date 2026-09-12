@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getAdminOrders } from '../../../services/adminService';
+import { getAdminOrders, updateAdminOrderStatus } from '../../../services/adminService';
 import { getCustomerOrders } from '../../../services/orderService';
+import { applyOrderStatusOverrides } from '../../../services/orderSync';
 
 export function useAdminOrdersViewModel() {
   const [orders, setOrders] = useState([]);
@@ -52,8 +53,9 @@ export function useAdminOrdersViewModel() {
         }
       }
 
-      // If there are no orders in the database, present honest empty state
-      setOrders(list);
+      // Apply any status overrides strictly conforming to the ERD
+      const synced = applyOrderStatusOverrides(list);
+      setOrders(synced);
       setTotalCount(total);
     } catch (err) {
       setError(err?.message || 'Failed to retrieve fulfillment orders');
@@ -67,6 +69,48 @@ export function useAdminOrdersViewModel() {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  // Live order status synchronization listener
+  useEffect(() => {
+    const handleOrderUpdate = (e) => {
+      const { orderId, status } = e.detail || {};
+      if (orderId && status) {
+        setOrders((prev) =>
+          prev.map((ord) => {
+            const isMatch =
+              ord.orderId === orderId ||
+              ord.orderNumber === orderId ||
+              ord.id === orderId;
+            return isMatch ? { ...ord, status: status.toUpperCase() } : ord;
+          })
+        );
+      }
+    };
+
+    window.addEventListener('fiddlemania_order_updated', handleOrderUpdate);
+    window.addEventListener('storage', fetchOrders);
+    return () => {
+      window.removeEventListener('fiddlemania_order_updated', handleOrderUpdate);
+      window.removeEventListener('storage', fetchOrders);
+    };
+  }, [fetchOrders]);
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    const normalized = (newStatus || 'PENDING').toUpperCase();
+    // Update local state immediately
+    setOrders((prev) =>
+      prev.map((ord) => {
+        const isMatch =
+          ord.orderId === orderId ||
+          ord.orderNumber === orderId ||
+          ord.id === orderId;
+        return isMatch ? { ...ord, status: normalized } : ord;
+      })
+    );
+
+    // Sync across localStorage, event bus, and backend
+    await updateAdminOrderStatus(orderId, normalized);
+  };
 
   const filteredOrders = useMemo(() => {
     return orders.filter((ord) => {
@@ -108,6 +152,7 @@ export function useAdminOrdersViewModel() {
     setSearchQuery,
     loading,
     error,
+    updateOrderStatus,
     goToPage: (p) => setPage(Math.min(Math.max(1, p), totalPages)),
     nextPage: () => setPage((p) => Math.min(p + 1, totalPages)),
     prevPage: () => setPage((p) => Math.max(p - 1, 1)),

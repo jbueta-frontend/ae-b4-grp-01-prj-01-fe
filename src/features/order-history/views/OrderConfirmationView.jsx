@@ -10,6 +10,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { getCustomerOrderById } from '../../../services/orderService';
+import { getEffectiveOrderStatus } from '../../../services/orderSync';
 
 export default function OrderConfirmationView() {
   const { orderId } = useParams();
@@ -17,22 +18,56 @@ export default function OrderConfirmationView() {
   const navigate = useNavigate();
 
   const [order, setOrder] = useState(() => {
-    if (location.state?.order) return location.state.order;
-    try {
-      const local = JSON.parse(localStorage.getItem('fiddlemania_orders') || '[]');
-      const found = local.find((o) => o.orderId === orderId || o.orderNumber === orderId);
-      if (found) return found;
-    } catch {}
+    let initial = null;
+    if (location.state?.order) {
+      initial = location.state.order;
+    } else {
+      try {
+        const local = JSON.parse(
+          localStorage.getItem('fiddlemania_orders') || '[]'
+        );
+        initial = local.find(
+          (o) => o.orderId === orderId || o.orderNumber === orderId
+        );
+      } catch {}
+    }
+    if (initial) {
+      const effective = getEffectiveOrderStatus(initial);
+      return { ...initial, status: effective };
+    }
     return null;
   });
 
   useEffect(() => {
-    if (!order && orderId) {
-      getCustomerOrderById(orderId).then((res) => {
-        if (res) setOrder(res);
-      }).catch(() => {});
+    if (orderId) {
+      getCustomerOrderById(orderId)
+        .then((res) => {
+          if (res) {
+            const effective = getEffectiveOrderStatus(res);
+            setOrder({ ...res, status: effective });
+          }
+        })
+        .catch(() => {});
     }
-  }, [order, orderId]);
+  }, [orderId]);
+
+  // Live order status synchronization listener
+  useEffect(() => {
+    const handleOrderUpdate = (e) => {
+      const { orderId: updatedId, status } = e.detail || {};
+      const match =
+        updatedId === orderId ||
+        (order && (updatedId === order.orderId || updatedId === order.orderNumber));
+      if (match && status) {
+        setOrder((prev) => (prev ? { ...prev, status: status.toUpperCase() } : prev));
+      }
+    };
+
+    window.addEventListener('fiddlemania_order_updated', handleOrderUpdate);
+    return () => {
+      window.removeEventListener('fiddlemania_order_updated', handleOrderUpdate);
+    };
+  }, [orderId, order]);
 
   const currentOrder = order || {
     orderId: orderId || 'ORD-82410',
