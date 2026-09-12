@@ -103,6 +103,33 @@ export function CartProvider({ children }) {
     );
   };
 
+  const undoAddToCart = (addedItem) => {
+    const target = addedItem || toast?.item;
+    if (!target) {
+      hideToast();
+      return;
+    }
+    setItems((prev) => {
+      const existingIdx = prev.findIndex(
+        (it) => it.id === target.id && (!target.variant || it.variant === target.variant)
+      );
+      if (existingIdx === -1) return prev;
+      const currentQty = prev[existingIdx].quantity;
+      const qtyToRemove = target.quantity || 1;
+      const nextQty = currentQty - qtyToRemove;
+      if (nextQty <= 0) {
+        return prev.filter((_, idx) => idx !== existingIdx);
+      }
+      const next = [...prev];
+      next[existingIdx] = {
+        ...next[existingIdx],
+        quantity: nextQty,
+      };
+      return next;
+    });
+    hideToast();
+  };
+
   const clearCart = () => {
     setItems([]);
   };
@@ -143,6 +170,7 @@ export function CartProvider({ children }) {
         addToCart,
         updateQuantity,
         removeFromCart,
+        undoAddToCart,
         clearCart,
         justAdded,
         toast,

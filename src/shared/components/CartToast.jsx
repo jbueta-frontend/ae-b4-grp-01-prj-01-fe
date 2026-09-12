@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Check, X, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Check, X, ShoppingBag, ArrowRight, RotateCcw } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 export default function CartToast() {
@@ -7,6 +7,7 @@ export default function CartToast() {
   const toast = cart.toast;
   const hideToast = cart.hideToast || (() => {});
   const openCart = cart.openCart || (() => {});
+  const undoAddToCart = cart.undoAddToCart || (() => {});
 
   const isOpen = Boolean(toast?.isOpen);
   const item = toast?.item;
@@ -27,6 +28,10 @@ export default function CartToast() {
   const handleViewCart = () => {
     hideToast();
     openCart();
+  };
+
+  const handleUndo = () => {
+    undoAddToCart(item);
   };
 
   return (
@@ -209,17 +214,37 @@ export default function CartToast() {
         </button>
 
         <button
-          onClick={hideToast}
+          type="button"
+          onClick={handleUndo}
           className="btn btn-outline btn-sm"
           style={{
             padding: '8px 14px',
             borderRadius: 'var(--radius-md)',
             fontSize: '0.8125rem',
-            fontWeight: 600,
+            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            color: '#DC2626',
+            borderColor: '#FCA5A5',
+            backgroundColor: '#FEF2F2',
             cursor: 'pointer',
+            transition: 'all var(--transition-fast)',
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#FEE2E2';
+            e.currentTarget.style.borderColor = '#EF4444';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#FEF2F2';
+            e.currentTarget.style.borderColor = '#FCA5A5';
+          }}
+          title="Cancel and undo add to cart"
+          aria-label="Cancel / Undo"
         >
-          Continue
+          <RotateCcw size={13} strokeWidth={2.5} />
+          <span>Undo</span>
         </button>
       </div>
 
