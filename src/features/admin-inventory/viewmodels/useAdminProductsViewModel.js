@@ -158,15 +158,39 @@ export function useAdminProductsViewModel() {
       const created = res?.product || res?.data || res || productPayload;
       const finalId = created?.productId || created?.id || prodId;
 
-      if (formData.imageUrl) {
-        try {
-          await api.post(`/admin/products/${finalId}/images`, {
-            imageUrl: formData.imageUrl,
-            altText: formData.name,
-            isThumbnail: true,
-            displayOrder: 1,
-          });
-        } catch {}
+      if (formData.imageUrl || formData.imageFile) {
+        if (formData.imageFile) {
+          try {
+            const imgFormData = new FormData();
+            imgFormData.append('image', formData.imageFile);
+            imgFormData.append('file', formData.imageFile);
+            imgFormData.append('altText', formData.name);
+            imgFormData.append('isThumbnail', 'true');
+            imgFormData.append('displayOrder', '1');
+            await api.post(`/admin/products/${finalId}/images`, imgFormData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+          } catch {
+            // Fallback to sending ERD JSON payload
+            try {
+              await api.post(`/admin/products/${finalId}/images`, {
+                imageUrl: formData.imageUrl,
+                altText: formData.name,
+                isThumbnail: true,
+                displayOrder: 1,
+              });
+            } catch {}
+          }
+        } else if (formData.imageUrl) {
+          try {
+            await api.post(`/admin/products/${finalId}/images`, {
+              imageUrl: formData.imageUrl,
+              altText: formData.name,
+              isThumbnail: true,
+              displayOrder: 1,
+            });
+          } catch {}
+        }
       }
 
       try {
@@ -317,6 +341,39 @@ export function useAdminProductsViewModel() {
             stockQuantity: updatedQty,
           });
         } catch {}
+      }
+      if (formData.imageUrl || formData.imageFile) {
+        if (formData.imageFile) {
+          try {
+            const imgFormData = new FormData();
+            imgFormData.append('image', formData.imageFile);
+            imgFormData.append('file', formData.imageFile);
+            imgFormData.append('altText', formData.name);
+            imgFormData.append('isThumbnail', 'true');
+            imgFormData.append('displayOrder', '1');
+            await api.post(`/admin/products/${id}/images`, imgFormData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+          } catch {
+            try {
+              await api.post(`/admin/products/${id}/images`, {
+                imageUrl: formData.imageUrl,
+                altText: formData.name,
+                isThumbnail: true,
+                displayOrder: 1,
+              });
+            } catch {}
+          }
+        } else if (formData.imageUrl) {
+          try {
+            await api.post(`/admin/products/${id}/images`, {
+              imageUrl: formData.imageUrl,
+              altText: formData.name,
+              isThumbnail: true,
+              displayOrder: 1,
+            });
+          } catch {}
+        }
       }
     } catch {
       // Handled gracefully

@@ -84,6 +84,7 @@ export default function ProductFormModal({
     const reader = new FileReader();
     reader.onload = (e) => {
       handleChange('imageUrl', e.target.result);
+      handleChange('imageFile', file);
     };
     reader.onerror = () => {
       setImageError('Failed to read image file. Please choose another image.');
@@ -118,6 +119,7 @@ export default function ProductFormModal({
 
   const handleRemoveImage = () => {
     handleChange('imageUrl', '');
+    handleChange('imageFile', null);
     setImageError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -144,6 +146,7 @@ export default function ProductFormModal({
         : null,
       stockQuantity: initialQty,
       imageUrl: formData.imageUrl || '',
+      imageFile: formData.imageFile || null,
       images: formData.imageUrl
         ? [
             {
