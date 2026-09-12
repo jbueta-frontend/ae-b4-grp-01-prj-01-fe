@@ -8,8 +8,10 @@ import {
   Boxes,
   CheckCircle2,
   Search,
+  Layers,
 } from 'lucide-react';
 import { mapApiProduct } from '../../product-catalog/models/productModel.js';
+import { formatPHP } from '../../../shared/utils/currency';
 
 export default function RestockModal({
   isOpen,
@@ -26,7 +28,7 @@ export default function RestockModal({
   const [filterTab, setFilterTab] = useState('ALL'); // 'ALL' | 'LOW_STOCK' | 'OUT_OF_STOCK'
   const [validationError, setValidationError] = useState(null);
 
-  // Normalize all products with ERD inventory metrics and images
+  // Normalize all products with ERD inventory metrics and authentic images
   const normalizedProducts = useMemo(() => {
     return (availableProducts || []).map((p) => {
       const mapped = mapApiProduct(p);
@@ -38,15 +40,20 @@ export default function RestockModal({
       const isOutOfStock = availableStock <= 0;
       const isLowStock = !isOutOfStock && availableStock <= lowStockThreshold;
 
-      const fallbackImg = mapped.heroImage || p.imageUrl || p.images?.[0]?.imageUrl || '/products/zen_garden_pagoda.jpg';
+      const fallbackImg =
+        mapped.heroImage ||
+        p.imageUrl ||
+        p.images?.[0]?.imageUrl ||
+        '/products/zen_garden_pagoda.jpg';
 
       return {
         ...p,
         ...mapped,
         productId: p.productId || p.id || mapped.productId,
-        name: p.name || mapped.name || 'Product',
+        name: p.name || mapped.name || 'Toy Product',
         sku: p.sku || mapped.sku || '—',
-        category: p.category || mapped.category || 'Toy',
+        category: p.category || mapped.category || 'Toys',
+        price: Number(p.price || mapped.price || 0),
         heroImage: fallbackImg,
         inventory: {
           stockQuantity,
@@ -90,7 +97,7 @@ export default function RestockModal({
 
   if (!isOpen) return null;
 
-  // Selected product ERD fields
+  // Selected product ERD metrics
   const currentStockQuantity = Number(
     selectedProduct?.inventory?.stockQuantity ??
     selectedProduct?.stockQuantity ??
@@ -116,11 +123,9 @@ export default function RestockModal({
 
   // Filter products list
   const filteredProducts = normalizedProducts.filter((p) => {
-    // Tab filter
     if (filterTab === 'LOW_STOCK' && !p.isLowStock) return false;
     if (filterTab === 'OUT_OF_STOCK' && !p.isOutOfStock) return false;
 
-    // Search query
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     return (
@@ -139,10 +144,7 @@ export default function RestockModal({
   };
 
   const handleStep = (delta) => {
-    setQuantity((prev) => {
-      const next = Math.max(1, (Number(prev) || 0) + delta);
-      return next;
-    });
+    setQuantity((prev) => Math.max(1, (Number(prev) || 0) + delta));
     setValidationError(null);
   };
 
@@ -164,7 +166,7 @@ export default function RestockModal({
     setValidationError(null);
 
     if (!selectedProduct) {
-      setValidationError('Please select a toy product from the list to restock.');
+      setValidationError('Please select a toy product from the list on the left to restock.');
       return;
     }
 
@@ -218,19 +220,19 @@ export default function RestockModal({
         style={{
           backgroundColor: 'var(--bg-surface, #ffffff)',
           borderRadius: 'var(--radius-lg, 16px)',
-          maxWidth: '680px',
+          maxWidth: '1020px',
           width: '100%',
-          padding: '28px 30px',
+          padding: '26px 30px',
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.1)',
           border: '1.5px solid var(--border, #e7e5e4)',
           position: 'relative',
-          maxHeight: '92vh',
+          maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
+        {/* Close Button Top Right */}
         <button
           type="button"
           onClick={onClose}
@@ -244,6 +246,7 @@ export default function RestockModal({
             borderRadius: 'var(--radius-md, 8px)',
             color: 'var(--text-muted)',
             cursor: isRestocking ? 'not-allowed' : 'pointer',
+            zIndex: 2,
           }}
           aria-label="Close dialog"
         >
@@ -251,11 +254,11 @@ export default function RestockModal({
         </button>
 
         {/* Modal Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px', flexShrink: 0 }}>
           <div
             style={{
-              width: '46px',
-              height: '46px',
+              width: '44px',
+              height: '44px',
               borderRadius: '12px',
               backgroundColor: 'rgba(5, 150, 105, 0.12)',
               color: '#059669',
@@ -265,7 +268,7 @@ export default function RestockModal({
               flexShrink: 0,
             }}
           >
-            <Package size={24} />
+            <Package size={22} />
           </div>
           <div>
             <h2
@@ -284,7 +287,7 @@ export default function RestockModal({
               style={{
                 fontSize: '0.8125rem',
                 color: 'var(--text-muted, #78716c)',
-                margin: '3px 0 0',
+                margin: '2px 0 0',
               }}
             >
               Select product with fast imagery visualization and replenish warehouse stock levels.
@@ -292,7 +295,7 @@ export default function RestockModal({
           </div>
         </div>
 
-        {/* Validation / Error Banner */}
+        {/* Validation / Error Alert */}
         {validationError && (
           <div
             style={{
@@ -315,107 +318,123 @@ export default function RestockModal({
           </div>
         )}
 
-        {/* Scrollable Modal Content */}
-        <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
-          {/* 1. VISUAL PRODUCT SELECTION (REPLACING THE DROPDOWN) */}
-          <div style={{ marginBottom: '18px' }}>
+        {/* TWO-COLUMN CONTAINER BODY */}
+        <form
+          id="restock-form"
+          onSubmit={handleSubmit}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gap: '24px',
+            alignItems: 'start',
+            paddingRight: '2px',
+          }}
+        >
+          {/* ==================================================== */}
+          {/* LEFT COLUMN: NAVIGATION, SEARCH, PRODUCT LIST, RESTOCK OPTIONS */}
+          {/* ==================================================== */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* 1. Search Bar */}
+            <div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '6px',
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 700,
+                    color: 'var(--text-main)',
+                  }}
+                >
+                  Select Product to Restock ({filteredProducts.length} items)
+                </label>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Click to select
+                </span>
+              </div>
+
+              <div style={{ position: 'relative', marginBottom: '8px' }}>
+                <Search
+                  size={16}
+                  style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search toy by name, SKU, or category..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="form-input"
+                  style={{
+                    paddingLeft: '36px',
+                    paddingRight: '12px',
+                    paddingTop: '8px',
+                    paddingBottom: '8px',
+                    fontSize: '0.875rem',
+                    width: '100%',
+                  }}
+                />
+              </div>
+
+              {/* 2. Navigation / Filter Tabs */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab('ALL')}
+                  className={`pill ${filterTab === 'ALL' ? 'active' : ''}`}
+                  style={{ fontSize: '0.75rem', padding: '3px 10px', fontWeight: 700 }}
+                >
+                  All Products ({normalizedProducts.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab('LOW_STOCK')}
+                  className={`pill ${filterTab === 'LOW_STOCK' ? 'active' : ''}`}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '3px 10px',
+                    fontWeight: 700,
+                    borderColor: filterTab === 'LOW_STOCK' ? '#d97706' : undefined,
+                    color: filterTab === 'LOW_STOCK' ? '#ffffff' : '#d97706',
+                    backgroundColor: filterTab === 'LOW_STOCK' ? '#d97706' : 'rgba(217, 119, 6, 0.08)',
+                  }}
+                >
+                  ⚠️ Low Stock ({lowStockCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab('OUT_OF_STOCK')}
+                  className={`pill ${filterTab === 'OUT_OF_STOCK' ? 'active' : ''}`}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '3px 10px',
+                    fontWeight: 700,
+                    borderColor: filterTab === 'OUT_OF_STOCK' ? '#dc2626' : undefined,
+                    color: filterTab === 'OUT_OF_STOCK' ? '#ffffff' : '#dc2626',
+                    backgroundColor: filterTab === 'OUT_OF_STOCK' ? '#dc2626' : 'rgba(239, 68, 68, 0.08)',
+                  }}
+                >
+                  🚫 Out of Stock ({outOfStockCount})
+                </button>
+              </div>
+            </div>
+
+            {/* 3. Visual Scrollable Product List with Images */}
             <div
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '8px',
-              }}
-            >
-              <label
-                style={{
-                  fontSize: '0.8125rem',
-                  fontWeight: 700,
-                  color: 'var(--text-main)',
-                }}
-              >
-                Select Product to Restock ({filteredProducts.length} items)
-              </label>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Click a toy to preview and restock
-              </span>
-            </div>
-
-            {/* Search Input */}
-            <div style={{ position: 'relative', marginBottom: '8px' }}>
-              <Search
-                size={16}
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Search by toy name, SKU, or category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="form-input"
-                style={{
-                  paddingLeft: '36px',
-                  paddingRight: '12px',
-                  paddingTop: '8px',
-                  paddingBottom: '8px',
-                  fontSize: '0.875rem',
-                  width: '100%',
-                }}
-              />
-            </div>
-
-            {/* Category / Stock Filter Tabs */}
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => setFilterTab('ALL')}
-                className={`pill ${filterTab === 'ALL' ? 'active' : ''}`}
-                style={{ fontSize: '0.75rem', padding: '3px 10px', fontWeight: 700 }}
-              >
-                All Products ({normalizedProducts.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterTab('LOW_STOCK')}
-                className={`pill ${filterTab === 'LOW_STOCK' ? 'active' : ''}`}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  fontWeight: 700,
-                  borderColor: filterTab === 'LOW_STOCK' ? '#d97706' : undefined,
-                  color: filterTab === 'LOW_STOCK' ? '#ffffff' : '#d97706',
-                  backgroundColor: filterTab === 'LOW_STOCK' ? '#d97706' : 'rgba(217, 119, 6, 0.08)',
-                }}
-              >
-                ⚠️ Low Stock ({lowStockCount})
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterTab('OUT_OF_STOCK')}
-                className={`pill ${filterTab === 'OUT_OF_STOCK' ? 'active' : ''}`}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  fontWeight: 700,
-                  borderColor: filterTab === 'OUT_OF_STOCK' ? '#dc2626' : undefined,
-                  color: filterTab === 'OUT_OF_STOCK' ? '#ffffff' : '#dc2626',
-                  backgroundColor: filterTab === 'OUT_OF_STOCK' ? '#dc2626' : 'rgba(239, 68, 68, 0.08)',
-                }}
-              >
-                🚫 Out of Stock ({outOfStockCount})
-              </button>
-            </div>
-
-            {/* Visual Products List Container with Images */}
-            <div
-              style={{
-                maxHeight: '210px',
+                maxHeight: '190px',
                 overflowY: 'auto',
                 border: '1px solid var(--border, #e7e5e4)',
                 borderRadius: 'var(--radius-md, 10px)',
@@ -455,7 +474,7 @@ export default function RestockModal({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '8px 12px',
+                        padding: '8px 10px',
                         borderRadius: '8px',
                         border: isSelected
                           ? '2px solid #059669'
@@ -465,14 +484,14 @@ export default function RestockModal({
                           : '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
-                        gap: '12px',
+                        gap: '10px',
                       }}
                     >
-                      {/* Product Thumbnail Image */}
+                      {/* Product Thumbnail */}
                       <div
                         style={{
-                          width: '46px',
-                          height: '46px',
+                          width: '42px',
+                          height: '42px',
                           borderRadius: '8px',
                           overflow: 'hidden',
                           flexShrink: 0,
@@ -483,11 +502,7 @@ export default function RestockModal({
                         <img
                           src={p.heroImage || '/products/zen_garden_pagoda.jpg'}
                           alt={p.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = '/products/zen_garden_pagoda.jpg';
@@ -500,7 +515,7 @@ export default function RestockModal({
                         <div
                           style={{
                             fontWeight: isSelected ? 800 : 700,
-                            fontSize: '0.875rem',
+                            fontSize: '0.8125rem',
                             color: 'var(--text-main)',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -514,29 +529,27 @@ export default function RestockModal({
                             fontSize: '0.75rem',
                             color: 'var(--text-muted)',
                             display: 'flex',
-                            gap: '8px',
-                            marginTop: '2px',
+                            gap: '6px',
+                            marginTop: '1px',
                             flexWrap: 'wrap',
                           }}
                         >
                           <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>
-                            SKU: {p.sku || 'N/A'}
+                            {p.sku || 'N/A'}
                           </span>
                           <span>•</span>
                           <span>{p.category}</span>
-                          <span>•</span>
-                          <span>Threshold: {p.lowStockThreshold} units</span>
                         </div>
                       </div>
 
-                      {/* Stock Badge & Selection State */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                      {/* Stock Badge & Radio State */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                         <span
                           style={{
                             fontSize: '0.75rem',
                             fontWeight: 800,
-                            padding: '3px 8px',
-                            borderRadius: '6px',
+                            padding: '2px 7px',
+                            borderRadius: '5px',
                             backgroundColor: p.isOutOfStock
                               ? 'rgba(239, 68, 68, 0.12)'
                               : p.isLowStock
@@ -549,16 +562,14 @@ export default function RestockModal({
                               : '#16a34a',
                           }}
                         >
-                          {p.isOutOfStock
-                            ? '0 available'
-                            : `${p.availableStock} available`}
+                          {p.isOutOfStock ? '0 avail' : `${p.availableStock} avail`}
                         </span>
 
                         {isSelected ? (
                           <div
                             style={{
-                              width: '22px',
-                              height: '22px',
+                              width: '20px',
+                              height: '20px',
                               borderRadius: '50%',
                               backgroundColor: '#059669',
                               color: '#ffffff',
@@ -567,13 +578,13 @@ export default function RestockModal({
                               justifyContent: 'center',
                             }}
                           >
-                            <Check size={14} strokeWidth={3} />
+                            <Check size={13} strokeWidth={3} />
                           </div>
                         ) : (
                           <div
                             style={{
-                              width: '22px',
-                              height: '22px',
+                              width: '20px',
+                              height: '20px',
                               borderRadius: '50%',
                               border: '1.5px solid var(--border-hairline, #d6d3d1)',
                             }}
@@ -585,136 +596,15 @@ export default function RestockModal({
                 })
               )}
             </div>
-          </div>
 
-          {/* 2. SELECTED PRODUCT ERD INVENTORY SPOTLIGHT CARD */}
-          {selectedProduct && (
-            <div
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1.5px solid #059669',
-                borderRadius: 'var(--radius-md, 12px)',
-                padding: '14px 16px',
-                marginBottom: '18px',
-                boxShadow: '0 2px 8px rgba(5, 150, 105, 0.08)',
-              }}
-            >
-              <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                <div
-                  style={{
-                    width: '54px',
-                    height: '54px',
-                    borderRadius: '10px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    border: '1px solid var(--border)',
-                  }}
-                >
-                  <img
-                    src={selectedProduct.heroImage || '/products/zen_garden_pagoda.jpg'}
-                    alt={selectedProduct.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          fontFamily: 'monospace',
-                          color: '#059669',
-                          fontWeight: 700,
-                        }}
-                      >
-                        ACTIVE SELECTION: {selectedProduct.sku}
-                      </span>
-                      <h3
-                        style={{
-                          fontSize: '0.9375rem',
-                          fontWeight: 800,
-                          color: 'var(--text-main)',
-                          margin: '2px 0 0',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {selectedProduct.name}
-                      </h3>
-                    </div>
-
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        fontSize: '0.75rem',
-                        fontWeight: 800,
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        backgroundColor: currentAvailableStock <= 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(217, 119, 6, 0.12)',
-                        color: currentAvailableStock <= 0 ? '#dc2626' : '#d97706',
-                      }}
-                    >
-                      <AlertTriangle size={12} />
-                      {currentAvailableStock <= 0 ? 'Out of Stock' : `${currentAvailableStock} available`}
-                    </span>
-                  </div>
-
-                  {/* ERD Breakdown Grid */}
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(4, 1fr)',
-                      gap: '8px',
-                      marginTop: '10px',
-                      backgroundColor: 'var(--bg-subtle, #fcfbf9)',
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      fontSize: '0.75rem',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div>
-                      <div style={{ color: 'var(--text-muted)' }}>Physical Stock</div>
-                      <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.875rem' }}>
-                        {currentStockQuantity}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: 'var(--text-muted)' }}>Reserved</div>
-                      <div style={{ fontWeight: 800, color: '#d97706', fontSize: '0.875rem' }}>
-                        {currentReservedQuantity}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: 'var(--text-muted)' }}>Net Available</div>
-                      <div style={{ fontWeight: 800, color: currentAvailableStock <= 0 ? '#dc2626' : '#059669', fontSize: '0.875rem' }}>
-                        {currentAvailableStock}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ color: 'var(--text-muted)' }}>Threshold</div>
-                      <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.875rem' }}>
-                        {currentThreshold}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 3. UNITS TO RESTOCK CONTROLS */}
-          <form id="restock-form" onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '18px' }}>
+            {/* 4. Restocking Options (Units to Restock, Stepper, Presets) */}
+            <div>
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '8px',
+                  marginBottom: '6px',
                 }}
               >
                 <label
@@ -727,7 +617,7 @@ export default function RestockModal({
                   Units to Restock (Warehouse Replenishment)
                 </label>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Positive whole number
+                  Min: 1 unit
                 </span>
               </div>
 
@@ -738,7 +628,7 @@ export default function RestockModal({
                   onClick={() => handleStep(-10)}
                   disabled={parsedQuantity <= 10}
                   className="btn btn-outline btn-sm"
-                  style={{ minWidth: '42px', padding: '8px 12px', fontWeight: 700 }}
+                  style={{ minWidth: '40px', padding: '6px 10px', fontWeight: 700 }}
                   title="Subtract 10 units"
                 >
                   -10
@@ -748,7 +638,7 @@ export default function RestockModal({
                   onClick={() => handleStep(-1)}
                   disabled={parsedQuantity <= 1}
                   className="btn btn-outline btn-sm"
-                  style={{ minWidth: '38px', padding: '8px 10px', fontWeight: 700 }}
+                  style={{ minWidth: '36px', padding: '6px 8px', fontWeight: 700 }}
                   title="Subtract 1 unit"
                 >
                   -1
@@ -763,10 +653,10 @@ export default function RestockModal({
                   className="form-input"
                   style={{
                     textAlign: 'center',
-                    fontSize: '1.125rem',
+                    fontSize: '1.0625rem',
                     fontWeight: 800,
                     color: 'var(--text-main)',
-                    padding: '8px 12px',
+                    padding: '6px 10px',
                     flex: 1,
                   }}
                   required
@@ -775,7 +665,7 @@ export default function RestockModal({
                   type="button"
                   onClick={() => handleStep(1)}
                   className="btn btn-outline btn-sm"
-                  style={{ minWidth: '38px', padding: '8px 10px', fontWeight: 700 }}
+                  style={{ minWidth: '36px', padding: '6px 8px', fontWeight: 700 }}
                   title="Add 1 unit"
                 >
                   +1
@@ -784,15 +674,15 @@ export default function RestockModal({
                   type="button"
                   onClick={() => handleStep(10)}
                   className="btn btn-outline btn-sm"
-                  style={{ minWidth: '42px', padding: '8px 12px', fontWeight: 700 }}
+                  style={{ minWidth: '40px', padding: '6px 10px', fontWeight: 700 }}
                   title="Add 10 units"
                 >
                   +10
                 </button>
               </div>
 
-              {/* Preset Pills */}
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {/* Preset Chips */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[10, 25, 50, 100, 250].map((preset) => (
                   <button
                     key={preset}
@@ -801,7 +691,7 @@ export default function RestockModal({
                     className={`pill ${parsedQuantity === preset ? 'active' : ''}`}
                     style={{
                       fontSize: '0.75rem',
-                      padding: '4px 10px',
+                      padding: '3px 9px',
                       fontWeight: 700,
                       cursor: 'pointer',
                     }}
@@ -812,75 +702,8 @@ export default function RestockModal({
               </div>
             </div>
 
-            {/* 4. LIVE ERD STOCK PROJECTION CARD */}
-            <div
-              style={{
-                backgroundColor: willClearAlert ? 'rgba(5, 150, 105, 0.06)' : 'rgba(217, 119, 6, 0.06)',
-                border: `1px solid ${willClearAlert ? 'rgba(5, 150, 105, 0.25)' : 'rgba(217, 119, 6, 0.25)'}`,
-                borderRadius: 'var(--radius-md, 12px)',
-                padding: '12px 16px',
-                marginBottom: '18px',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '8px',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  color: 'var(--text-main)',
-                }}
-              >
-                <span>Current Stock: <strong>{currentStockQuantity}</strong></span>
-                <ArrowRight size={14} color="var(--text-muted)" />
-                <span>Added: <strong style={{ color: '#059669' }}>+{parsedQuantity}</strong></span>
-                <ArrowRight size={14} color="var(--text-muted)" />
-                <span>
-                  Projected Physical: <strong>{projectedStockQuantity} units</strong>
-                </span>
-                <ArrowRight size={14} color="var(--text-muted)" />
-                <span>
-                  Net Available:{' '}
-                  <strong style={{ fontSize: '0.9375rem', color: willClearAlert ? '#059669' : '#d97706' }}>
-                    {projectedAvailableStock} units
-                  </strong>
-                </span>
-              </div>
-
-              <div
-                style={{
-                  marginTop: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  color: willClearAlert ? '#059669' : '#d97706',
-                }}
-              >
-                {willClearAlert ? (
-                  <>
-                    <CheckCircle2 size={14} />
-                    <span>
-                      Clears low-stock alert threshold ({currentThreshold} units). Net available will be {projectedAvailableStock} units.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle size={14} />
-                    <span>
-                      Net available ({projectedAvailableStock} units) will remain at or below threshold ({currentThreshold} units). Consider adding more units.
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* 5. RESTOCK REFERENCE / NOTES */}
-            <div style={{ marginBottom: '18px' }}>
+            {/* 5. Restock Reference / Supplier Notes */}
+            <div>
               <label
                 style={{
                   display: 'block',
@@ -901,10 +724,275 @@ export default function RestockModal({
                 style={{ padding: '8px 12px', fontSize: '0.875rem' }}
               />
             </div>
-          </form>
-        </div>
+          </div>
 
-        {/* Modal Footer Action Buttons */}
+          {/* ==================================================== */}
+          {/* RIGHT COLUMN: PRODUCT PREVIEW OF SELECTED PRODUCT */}
+          {/* ==================================================== */}
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              border: '1.5px solid var(--border, #e7e5e4)',
+              borderRadius: 'var(--radius-md, 14px)',
+              padding: '18px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '12px',
+                paddingBottom: '8px',
+                borderBottom: '1px solid var(--border-hairline, #f0ede9)',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                Product Preview
+              </span>
+
+              {selectedProduct && (
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    backgroundColor: currentAvailableStock <= 0 ? 'rgba(239, 68, 68, 0.12)' : 'rgba(217, 119, 6, 0.12)',
+                    color: currentAvailableStock <= 0 ? '#dc2626' : '#d97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <AlertTriangle size={12} />
+                  {currentAvailableStock <= 0 ? 'Out of Stock' : `${currentAvailableStock} available`}
+                </span>
+              )}
+            </div>
+
+            {selectedProduct ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Product Large Studio Image */}
+                <div
+                  style={{
+                    width: '100%',
+                    height: '160px',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    backgroundColor: '#faf8f5',
+                    border: '1px solid var(--border-hairline, #e7e5e4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <img
+                    src={selectedProduct.heroImage || '/products/zen_garden_pagoda.jpg'}
+                    alt={selectedProduct.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      padding: '8px',
+                    }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/products/zen_garden_pagoda.jpg';
+                    }}
+                  />
+                </div>
+
+                {/* Product Title, SKU, Price */}
+                <div>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700,
+                      color: '#059669',
+                    }}
+                  >
+                    SKU: {selectedProduct.sku}
+                  </div>
+                  <h3
+                    style={{
+                      fontSize: '1.0625rem',
+                      fontWeight: 800,
+                      color: 'var(--text-main)',
+                      margin: '3px 0 2px',
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {selectedProduct.name}
+                  </h3>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginTop: '4px',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      Category: <strong>{selectedProduct.category}</strong>
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.9375rem',
+                        fontWeight: 800,
+                        color: 'var(--accent, #c85a32)',
+                      }}
+                    >
+                      {formatPHP(selectedProduct.price)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* ERD 4-Metric Inventory Breakdown Grid */}
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-subtle, #fcfbf9)',
+                    border: '1px solid var(--border-hairline, #e7e5e4)',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: '6px',
+                    textAlign: 'center',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ color: 'var(--text-muted)' }}>Physical</div>
+                    <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.9375rem' }}>
+                      {currentStockQuantity}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--text-muted)' }}>Reserved</div>
+                    <div style={{ fontWeight: 800, color: '#d97706', fontSize: '0.9375rem' }}>
+                      {currentReservedQuantity}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--text-muted)' }}>Available</div>
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        color: currentAvailableStock <= 0 ? '#dc2626' : '#059669',
+                        fontSize: '0.9375rem',
+                      }}
+                    >
+                      {currentAvailableStock}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ color: 'var(--text-muted)' }}>Threshold</div>
+                    <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.9375rem' }}>
+                      {currentThreshold}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Stock Projection Forecast Card */}
+                <div
+                  style={{
+                    backgroundColor: willClearAlert ? 'rgba(5, 150, 105, 0.06)' : 'rgba(217, 119, 6, 0.06)',
+                    border: `1px solid ${willClearAlert ? 'rgba(5, 150, 105, 0.25)' : 'rgba(217, 119, 6, 0.25)'}`,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: 'var(--text-main)',
+                      flexWrap: 'wrap',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>Net Avail: <strong>{currentAvailableStock}</strong></span>
+                    <ArrowRight size={13} color="var(--text-muted)" />
+                    <span>Adding: <strong style={{ color: '#059669' }}>+{parsedQuantity}</strong></span>
+                    <ArrowRight size={13} color="var(--text-muted)" />
+                    <span>
+                      Projected:{' '}
+                      <strong style={{ color: willClearAlert ? '#059669' : '#d97706', fontSize: '0.9375rem' }}>
+                        {projectedAvailableStock} units
+                      </strong>
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: willClearAlert ? '#059669' : '#d97706',
+                      marginTop: '2px',
+                    }}
+                  >
+                    {willClearAlert ? (
+                      <>
+                        <CheckCircle2 size={14} style={{ flexShrink: 0 }} />
+                        <span>Clears low-stock alert threshold ({currentThreshold} units).</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                        <span>Will remain at/below threshold ({currentThreshold} units).</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '40px 20px',
+                  textAlign: 'center',
+                  color: 'var(--text-muted)',
+                  gap: '10px',
+                }}
+              >
+                <Layers size={36} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  No Product Selected
+                </div>
+                <p style={{ fontSize: '0.75rem', margin: 0 }}>
+                  Click on any toy product in the list on the left to preview its inventory levels and forecast.
+                </p>
+              </div>
+            )}
+          </div>
+        </form>
+
+        {/* Modal Footer Across Full Width */}
         <div
           style={{
             display: 'flex',
@@ -912,7 +1000,7 @@ export default function RestockModal({
             justifyContent: 'flex-end',
             paddingTop: '16px',
             borderTop: '1px solid var(--border-hairline, #e7e5e4)',
-            marginTop: '8px',
+            marginTop: '14px',
             flexShrink: 0,
           }}
         >
@@ -934,7 +1022,7 @@ export default function RestockModal({
               backgroundColor: '#059669',
               borderColor: '#059669',
               color: '#ffffff',
-              padding: '10px 22px',
+              padding: '10px 24px',
               fontSize: '0.875rem',
               fontWeight: 700,
               display: 'flex',
