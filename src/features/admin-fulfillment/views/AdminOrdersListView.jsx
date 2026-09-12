@@ -17,6 +17,7 @@ export default function AdminOrdersListView() {
     setSearchQuery,
     loading,
     error,
+    updateOrderStatus,
     goToPage,
     nextPage,
     prevPage,
@@ -304,12 +305,13 @@ export default function AdminOrdersListView() {
                         {formatPHP(ord.total || 0)}
                       </td>
 
-                      {/* Status */}
+                      {/* Status & Quick Change */}
                       <td style={{ padding: '16px 20px' }}>
-                        <span
+                        <select
+                          value={ord.status || 'PENDING'}
+                          onChange={(e) => updateOrderStatus(id, e.target.value)}
                           style={{
-                            display: 'inline-block',
-                            padding: '3px 10px',
+                            padding: '4px 10px',
                             borderRadius: 'var(--radius-sm)',
                             fontSize: '0.75rem',
                             fontWeight: 700,
@@ -317,10 +319,18 @@ export default function AdminOrdersListView() {
                             letterSpacing: '0.04em',
                             backgroundColor: stConfig.bg,
                             color: stConfig.color,
+                            border: '1px solid var(--border-hairline)',
+                            cursor: 'pointer',
+                            outline: 'none',
                           }}
+                          title="Click to update order fulfillment status"
                         >
-                          {stConfig.label}
-                        </span>
+                          <option value="PENDING">Pending</option>
+                          <option value="CONFIRMED">Confirmed</option>
+                          <option value="SHIPPED">Shipped</option>
+                          <option value="DELIVERED">Delivered</option>
+                          <option value="CANCELLED">Cancelled</option>
+                        </select>
                       </td>
 
                       {/* Action */}

@@ -78,11 +78,16 @@ export async function placeOrder(orderPayload) {
   }
 }
 
+import { syncOrderStatus } from './orderSync';
+
 /**
  * Cancel Order (Updates order status to CANCELLED and releases reserved inventory)
  * PUT /orders/:orderId/cancel
  */
 export async function cancelOrder(orderId) {
+  // Sync cancellation status across all views and storage
+  syncOrderStatus(orderId, 'CANCELLED');
+
   try {
     const res = await api.put(`/orders/${orderId}/cancel`);
     return res;

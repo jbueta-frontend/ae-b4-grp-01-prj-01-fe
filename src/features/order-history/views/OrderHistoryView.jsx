@@ -17,6 +17,10 @@ import {
 import { useCart } from '../../../context/CartContext';
 import { getCustomerOrders, cancelOrder } from '../../../services/orderService';
 import {
+  applyOrderStatusOverrides,
+  syncOrderStatus,
+} from '../../../services/orderSync';
+import {
   ORDER_STATUS_TABS,
   getOrderStatusConfig,
 } from '../models/orderModel';
@@ -62,12 +66,15 @@ export default function OrderHistoryView() {
         }
       });
 
-      setOrders(combined);
+      // Apply any admin status overrides strictly conforming to the ERD
+      const synced = applyOrderStatusOverrides(combined);
+      setOrders(synced);
     } catch (err) {
       const localOrders = JSON.parse(
         localStorage.getItem('fiddlemania_orders') || '[]'
       );
-      setOrders(localOrders);
+      const synced = applyOrderStatusOverrides(localOrders);
+      setOrders(synced);
       setFeedback({
         type: 'error',
         message: err?.message || 'Unable to sync live orders with database. Displaying cached orders.',
@@ -79,6 +86,31 @@ export default function OrderHistoryView() {
 
   useEffect(() => {
     loadOrders();
+  }, []);
+
+  // Live order status synchronization listener
+  useEffect(() => {
+    const handleOrderUpdate = (e) => {
+      const { orderId, status } = e.detail || {};
+      if (orderId && status) {
+        setOrders((prev) =>
+          prev.map((ord) => {
+            const isMatch =
+              ord.orderId === orderId ||
+              ord.orderNumber === orderId ||
+              ord.id === orderId;
+            return isMatch ? { ...ord, status: status.toUpperCase() } : ord;
+          })
+        );
+      }
+    };
+
+    window.addEventListener('fiddlemania_order_updated', handleOrderUpdate);
+    window.addEventListener('storage', loadOrders);
+    return () => {
+      window.removeEventListener('fiddlemania_order_updated', handleOrderUpdate);
+      window.removeEventListener('storage', loadOrders);
+    };
   }, []);
 
   const confirmCancelOrder = async () => {
