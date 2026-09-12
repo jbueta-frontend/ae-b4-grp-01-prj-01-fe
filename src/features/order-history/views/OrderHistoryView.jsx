@@ -932,7 +932,7 @@ export default function OrderHistoryView() {
               <X size={20} />
             </button>
 
-            {/* 1. Thick Warning SVG Icon (Middle, Alone, No Border) */}
+            {/* 1. Modern Rounded Warning SVG Icon (Middle, Alone, No Border) */}
             <div
               style={{
                 display: 'flex',
@@ -941,18 +941,24 @@ export default function OrderHistoryView() {
                 marginBottom: '16px',
               }}
             >
-              <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+              <svg
+                width="62"
+                height="62"
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ filter: 'drop-shadow(0 4px 12px rgba(220, 38, 38, 0.22))' }}
+              >
                 <path
-                  d="M12 2.5L1.2 21.2C0.8 21.9 1.3 22.8 2.1 22.8H21.9C22.7 22.8 23.2 21.9 22.8 21.2L12 2.5Z"
+                  d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003z"
                   fill="#DC2626"
                 />
                 <path
-                  d="M12 8.5V14.5"
+                  d="M12 8.25v4.5"
                   stroke="#FFFFFF"
-                  strokeWidth="2.6"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                 />
-                <circle cx="12" cy="18" r="1.3" fill="#FFFFFF" />
+                <circle cx="12" cy="16.5" r="1.15" fill="#FFFFFF" />
               </svg>
             </div>
 
