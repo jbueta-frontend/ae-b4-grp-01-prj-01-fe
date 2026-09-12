@@ -879,7 +879,7 @@ export default function OrderHistoryView() {
           </div>
         </div>
       )}
-      {/* Cancel Order Confirmation Modal (Branded High-UX System Modal) */}
+      {/* Cancel Order Confirmation Modal (Branded Centered Modal) */}
       {cancelModalOrder && (
         <div
           role="dialog"
@@ -902,9 +902,9 @@ export default function OrderHistoryView() {
             style={{
               backgroundColor: 'var(--bg-surface, #ffffff)',
               borderRadius: 'var(--radius-lg, 16px)',
-              maxWidth: '520px',
+              maxWidth: '500px',
               width: '100%',
-              padding: '28px',
+              padding: '32px 28px 28px',
               boxShadow:
                 '0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.1)',
               border: '1.5px solid var(--border)',
@@ -912,102 +912,87 @@ export default function OrderHistoryView() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 1. Unified Header: Integrated Icon + Title + Close Button */}
+            {/* Close Button Top-Right */}
+            <button
+              type="button"
+              onClick={() => setCancelModalOrder(null)}
+              disabled={Boolean(cancellingId)}
+              className="btn btn-ghost btn-xs"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                padding: '8px',
+                borderRadius: 'var(--radius-md, 8px)',
+                color: 'var(--text-muted)',
+                cursor: cancellingId ? 'not-allowed' : 'pointer',
+              }}
+              aria-label="Close dialog"
+            >
+              <X size={20} />
+            </button>
+
+            {/* 1. Thick Warning SVG Icon (Middle, Alone, No Border) */}
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
                 alignItems: 'center',
-                paddingBottom: '18px',
-                borderBottom: '1px solid var(--border-hairline, #e5e7eb)',
-                marginBottom: '20px',
+                marginBottom: '16px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div
-                  style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '12px',
-                    backgroundColor: '#FEF2F2',
-                    border: '1.5px solid #FCA5A5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#DC2626',
-                    flexShrink: 0,
-                    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.12)',
-                  }}
-                >
-                  <AlertTriangle size={24} strokeWidth={2.2} />
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h3
-                      id="cancel-modal-title"
-                      style={{
-                        fontSize: '1.25rem',
-                        fontWeight: 800,
-                        color: 'var(--text-main)',
-                        letterSpacing: '-0.02em',
-                        margin: 0,
-                      }}
-                    >
-                      Cancel Order
-                    </h3>
-                    <span
-                      style={{
-                        fontSize: '0.6875rem',
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        padding: '2px 8px',
-                        borderRadius: 'var(--radius-full, 9999px)',
-                        backgroundColor: '#FEE2E2',
-                        color: '#991B1B',
-                        border: '1px solid #FCA5A5',
-                      }}
-                    >
-                      Irreversible
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '0.8125rem',
-                      color: 'var(--text-muted)',
-                      margin: '3px 0 0',
-                    }}
-                  >
-                    Please review the affected items and stock before cancelling.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setCancelModalOrder(null)}
-                disabled={Boolean(cancellingId)}
-                className="btn btn-ghost btn-xs"
-                style={{
-                  padding: '8px',
-                  borderRadius: 'var(--radius-md, 8px)',
-                  color: 'var(--text-muted)',
-                  cursor: cancellingId ? 'not-allowed' : 'pointer',
-                }}
-                aria-label="Close dialog"
-              >
-                <X size={20} />
-              </button>
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 2.5L1.2 21.2C0.8 21.9 1.3 22.8 2.1 22.8H21.9C22.7 22.8 23.2 21.9 22.8 21.2L12 2.5Z"
+                  fill="#DC2626"
+                />
+                <path
+                  d="M12 8.5V14.5"
+                  stroke="#FFFFFF"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                />
+                <circle cx="12" cy="18" r="1.3" fill="#FFFFFF" />
+              </svg>
             </div>
 
-            {/* 2. Clearly Visible Order Details Container */}
+            {/* 2. Primary Heading: 'Cancel Order?' (Centered) */}
+            <h3
+              id="cancel-modal-title"
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: 800,
+                color: 'var(--text-main)',
+                letterSpacing: '-0.02em',
+                textAlign: 'center',
+                margin: '0 0 8px',
+              }}
+            >
+              Cancel Order?
+            </h3>
+
+            {/* 3. Centered Subheading with Inventory Restocking message integrated */}
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: 'var(--text-muted)',
+                lineHeight: 1.55,
+                textAlign: 'center',
+                maxWidth: '430px',
+                margin: '0 auto 20px',
+              }}
+            >
+              Are you sure you want to cancel this order? This action cannot be undone. All reserved items will be released back to available warehouse inventory.
+            </p>
+
+            {/* 4. Order Details Container (Kept as is) */}
             <div
               style={{
                 backgroundColor: 'var(--bg-subtle, #F8F6F2)',
                 border: '1.5px solid #E2D9CE',
                 borderRadius: '12px',
                 padding: '16px',
-                marginBottom: '18px',
+                marginBottom: '20px',
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
               }}
             >
@@ -1161,49 +1146,35 @@ export default function OrderHistoryView() {
               )}
             </div>
 
-            {/* 3. Inventory Advisory Callout */}
+            {/* 5. High-Visibility Action Buttons (Keep Order & Cancel Order) */}
             <div
               style={{
                 display: 'flex',
-                gap: '10px',
-                alignItems: 'flex-start',
-                padding: '12px 14px',
-                borderRadius: '8px',
-                backgroundColor: '#FFFBEB',
-                border: '1px solid #FCD34D',
-                color: '#92400E',
-                fontSize: '0.8125rem',
-                lineHeight: 1.45,
-                marginBottom: '24px',
-              }}
-            >
-              <RotateCcw size={16} style={{ color: '#D97706', marginTop: '2px', flexShrink: 0 }} />
-              <div>
-                <strong>Inventory Restocking:</strong> Cancelling this order will immediately release all reserved units back to available warehouse inventory.
-              </div>
-            </div>
-
-            {/* 4. Action Buttons */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
                 gap: '12px',
+                width: '100%',
               }}
             >
               <button
                 type="button"
                 disabled={Boolean(cancellingId)}
                 onClick={() => setCancelModalOrder(null)}
-                className="btn btn-outline btn-sm"
+                className="btn btn-outline"
                 style={{
-                  padding: '10px 20px',
+                  flex: 1,
+                  height: '48px',
+                  padding: '0 20px',
                   fontWeight: 700,
-                  fontSize: '0.875rem',
+                  fontSize: '0.9375rem',
                   border: '1.5px solid var(--border)',
                   backgroundColor: 'var(--bg-surface, #ffffff)',
                   color: 'var(--text-main)',
+                  borderRadius: 'var(--radius-md, 10px)',
+                  cursor: cancellingId ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                  transition: 'all var(--transition-fast)',
                 }}
               >
                 Keep Order
@@ -1213,27 +1184,30 @@ export default function OrderHistoryView() {
                 type="button"
                 disabled={Boolean(cancellingId)}
                 onClick={confirmCancelOrder}
-                className="btn btn-sm"
+                className="btn"
                 style={{
-                  padding: '10px 22px',
+                  flex: 1,
+                  height: '48px',
+                  padding: '0 20px',
                   fontWeight: 700,
-                  fontSize: '0.875rem',
+                  fontSize: '0.9375rem',
                   backgroundColor: '#DC2626',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: 'var(--radius-md, 8px)',
+                  borderRadius: 'var(--radius-md, 10px)',
                   display: 'inline-flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
                   cursor: cancellingId ? 'not-allowed' : 'pointer',
                   opacity: cancellingId ? 0.7 : 1,
-                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.28)',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.3)',
                   transition: 'all var(--transition-fast)',
                 }}
               >
-                <XCircle size={16} />
+                <XCircle size={18} />
                 <span>
-                  {cancellingId ? 'Cancelling Order...' : 'Yes, Cancel Order'}
+                  {cancellingId ? 'Cancelling...' : 'Cancel Order'}
                 </span>
               </button>
             </div>
