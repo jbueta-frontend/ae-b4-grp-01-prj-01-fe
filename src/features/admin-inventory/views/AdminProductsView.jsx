@@ -31,10 +31,6 @@ export default function AdminProductsView() {
     handleCreateProduct,
     handleUpdateProduct,
     handleDeleteProduct,
-    isCatalogSeeded,
-    isSeeding,
-    seedProgress,
-    handleSeedHundredProducts,
     refresh,
   } = useAdminProductsViewModel();
 
@@ -75,27 +71,6 @@ export default function AdminProductsView() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          {/* 1-Click Seeder Button: immediately unmounted after clicking */}
-          {!isCatalogSeeded && (
-            <button
-              type="button"
-              onClick={handleSeedHundredProducts}
-              disabled={isSeeding}
-              className="btn btn-primary btn-sm"
-              style={{
-                backgroundColor: '#059669',
-                borderColor: '#059669',
-                color: '#ffffff',
-                gap: '6px',
-                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)',
-              }}
-              title="Seed 120 unique toys with distinct images"
-            >
-              <span>⚡</span>
-              <span>{isSeeding ? `Seeding (${seedProgress}/120)...` : 'Seed 120 Unique Toys'}</span>
-            </button>
-          )}
-
           <button
             onClick={refresh}
             disabled={loading}

@@ -64,3 +64,47 @@ export async function getAdminProducts() {
     return Array.isArray(res) ? res : res?.products || res?.data || [];
   }
 }
+
+/**
+ * Restock Product Inventory in Warehouse
+ * Handles updating product stock quantities
+ * @param {string} productId
+ * @param {number} restockQuantity
+ * @param {number} currentStock
+ */
+export async function restockProductInventory(productId, restockQuantity, currentStock = 0) {
+  const newStock = Math.max(0, Number(currentStock) + Number(restockQuantity));
+
+  // 1. Try dedicated product inventory endpoint
+  try {
+    return await api.put(`/admin/products/${productId}/inventory`, {
+      stockQuantity: newStock,
+      quantity: newStock,
+      adjustment: Number(restockQuantity),
+    });
+  } catch {
+    // 2. Try PATCH inventory
+    try {
+      return await api.patch(`/admin/products/${productId}/inventory`, {
+        stockQuantity: newStock,
+        quantity: newStock,
+        adjustment: Number(restockQuantity),
+      });
+    } catch {
+      // 3. Try generic inventory adjust route
+      try {
+        return await api.post('/admin/inventory/adjust', {
+          productId,
+          adjustment: Number(restockQuantity),
+          stockQuantity: newStock,
+        });
+      } catch {
+        // 4. Fallback to product update route
+        return await api.put(`/admin/products/${productId}`, {
+          stockQuantity: newStock,
+        });
+      }
+    }
+  }
+}
+
