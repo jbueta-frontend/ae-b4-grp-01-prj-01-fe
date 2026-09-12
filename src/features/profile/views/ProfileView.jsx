@@ -739,7 +739,7 @@ export default function ProfileView() {
                 >
                   {/* Recipient */}
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Recipient Name</label>
+                    <label className="form-label">Recipient Full Name</label>
                     <input
                       type="text"
                       className="form-input"
@@ -748,7 +748,7 @@ export default function ProfileView() {
                       onChange={(e) =>
                         vm.handleAddressChange('recipientName', e.target.value)
                       }
-                      placeholder="e.g. Kyle Santos"
+                      placeholder="e.g. Maria Santos"
                     />
                     {vm.addressErrors.recipientName && (
                       <span
@@ -777,27 +777,7 @@ export default function ProfileView() {
                       }
                       placeholder="+63 917 555 1234"
                     />
-                  </div>
-
-                  {/* Street */}
-                  <div
-                    className="form-group"
-                    style={{ marginBottom: 0, gridColumn: '1 / -1' }}
-                  >
-                    <label className="form-label">
-                      Street Address & House/Building Number
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      style={{ height: '48px' }}
-                      value={vm.addressDraft.street}
-                      onChange={(e) =>
-                        vm.handleAddressChange('street', e.target.value)
-                      }
-                      placeholder="e.g. 123 Ayala Avenue"
-                    />
-                    {vm.addressErrors.street && (
+                    {vm.addressErrors.phone && (
                       <span
                         style={{
                           color: '#DC2626',
@@ -806,23 +786,55 @@ export default function ProfileView() {
                           display: 'block',
                         }}
                       >
-                        {vm.addressErrors.street}
+                        {vm.addressErrors.phone}
                       </span>
                     )}
                   </div>
 
-                  {/* Unit / Suite */}
-                  <div className="form-group" style={{ marginBottom: 0 }}>
+                  {/* Address Line 1 */}
+                  <div
+                    className="form-group"
+                    style={{ marginBottom: 0, gridColumn: '1 / -1' }}
+                  >
                     <label className="form-label">
-                      Apartment, Suite, Unit, or Landmark
+                      Address Line 1 (Street Address & Building / House No.)
                     </label>
                     <input
                       type="text"
                       className="form-input"
                       style={{ height: '48px' }}
-                      value={vm.addressDraft.unit}
+                      value={vm.addressDraft.addressLine1}
                       onChange={(e) =>
-                        vm.handleAddressChange('unit', e.target.value)
+                        vm.handleAddressChange('addressLine1', e.target.value)
+                      }
+                      placeholder="e.g. 123 Ayala Avenue"
+                    />
+                    {vm.addressErrors.addressLine1 && (
+                      <span
+                        style={{
+                          color: '#DC2626',
+                          fontSize: '0.75rem',
+                          marginTop: '4px',
+                          display: 'block',
+                        }}
+                      >
+                        {vm.addressErrors.addressLine1}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Address Line 2 */}
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">
+                      Address Line 2 (Unit, Floor, Building, Landmark - Optional)
+                    </label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      style={{ height: '48px' }}
+                      value={vm.addressDraft.addressLine2}
+                      onChange={(e) =>
+                        vm.handleAddressChange('addressLine2', e.target.value)
                       }
                       placeholder="e.g. Unit 14B, Tower 2"
                     />
@@ -855,20 +867,20 @@ export default function ProfileView() {
                     )}
                   </div>
 
-                  {/* Province / State */}
+                  {/* State / Province */}
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Province / Region</label>
+                    <label className="form-label">State / Province / Region</label>
                     <input
                       type="text"
                       className="form-input"
                       style={{ height: '48px' }}
-                      value={vm.addressDraft.province}
+                      value={vm.addressDraft.stateProvince}
                       onChange={(e) =>
-                        vm.handleAddressChange('province', e.target.value)
+                        vm.handleAddressChange('stateProvince', e.target.value)
                       }
                       placeholder="e.g. Metro Manila"
                     />
-                    {vm.addressErrors.province && (
+                    {vm.addressErrors.stateProvince && (
                       <span
                         style={{
                           color: '#DC2626',
@@ -877,16 +889,19 @@ export default function ProfileView() {
                           display: 'block',
                         }}
                       >
-                        {vm.addressErrors.province}
+                        {vm.addressErrors.stateProvince}
                       </span>
                     )}
                   </div>
 
-                  {/* Postal Code */}
+                  {/* Postal Code (Integer numbers only) */}
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Postal Code</label>
+                    <label className="form-label">Postal Code (Numbers Only)</label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
                       className="form-input"
                       style={{ height: '48px' }}
                       value={vm.addressDraft.postalCode}
@@ -921,6 +936,18 @@ export default function ProfileView() {
                         vm.handleAddressChange('country', e.target.value)
                       }
                     />
+                    {vm.addressErrors.country && (
+                      <span
+                        style={{
+                          color: '#DC2626',
+                          fontSize: '0.75rem',
+                          marginTop: '4px',
+                          display: 'block',
+                        }}
+                      >
+                        {vm.addressErrors.country}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -942,7 +969,7 @@ export default function ProfileView() {
                   </button>
                 </div>
               </form>
-            ) : (
+            ) : vm.addressData.addressLine1 ? (
               <div
                 style={{
                   backgroundColor: 'var(--bg-subtle)',
@@ -961,7 +988,7 @@ export default function ProfileView() {
                 >
                   <MapPin size={18} color="var(--accent)" />
                   <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>
-                    {vm.addressData.recipientName}
+                    {vm.addressData.recipientName || 'Primary Address'}
                   </h3>
                   <span
                     style={{
@@ -984,23 +1011,51 @@ export default function ProfileView() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {vm.addressData.street}
-                  {vm.addressData.unit ? `, ${vm.addressData.unit}` : ''}
+                  {vm.addressData.addressLine1}
+                  {vm.addressData.addressLine2 ? `, ${vm.addressData.addressLine2}` : ''}
                   <br />
-                  {vm.addressData.city}, {vm.addressData.province}{' '}
+                  {vm.addressData.city}, {vm.addressData.stateProvince}{' '}
                   {vm.addressData.postalCode}
                   <br />
                   {vm.addressData.country}
                 </p>
-                <p
-                  style={{
-                    fontSize: '0.8125rem',
-                    color: 'var(--text-muted)',
-                    marginTop: '8px',
-                  }}
-                >
-                  Phone: {vm.addressData.phone}
+                {vm.addressData.phone && (
+                  <p
+                    style={{
+                      fontSize: '0.8125rem',
+                      color: 'var(--text-muted)',
+                      marginTop: '8px',
+                    }}
+                  >
+                    Phone: {vm.addressData.phone}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: 'var(--bg-subtle)',
+                  padding: '32px 24px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px dashed var(--border-hairline)',
+                  textAlign: 'center',
+                }}
+              >
+                <MapPin size={32} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px' }}>
+                  No Primary Delivery Address Saved
+                </h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '18px' }}>
+                  Add your delivery details to enable quick checkout for your heirloom toys.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => vm.setIsEditingAddress(true)}
+                  className="btn btn-primary btn-sm"
+                  style={{ padding: '8px 20px' }}
+                >
+                  Add Delivery Address
+                </button>
               </div>
             )}
           </div>

@@ -159,26 +159,97 @@ export default function ShipmentTrackingView() {
     addToCart(item, 1, item.variant);
   };
 
-  const currentCarrier = shipmentData?.carrier || 'FEDEX';
-  const currentStatus = shipmentData?.status || 'In Transit';
-  const currentEst = shipmentData?.estimatedDelivery || shipmentData?.deliveryTimestamp || 'Sep 14 – Sep 16';
+  const currentCarrier =
+    shipmentData?.carrier || stateOrder?.carrier || 'Carrier Partner';
+  const currentStatus = (
+    shipmentData?.status ||
+    stateOrder?.status ||
+    'PENDING'
+  ).toUpperCase();
+  const currentEst =
+    shipmentData?.estimatedDelivery ||
+    stateOrder?.estimatedDelivery ||
+    'Estimated upon courier assignment';
   const currentItems = shipmentData?.items || stateOrder?.items || [];
-  const currentTimeline = shipmentData?.timeline || [
-    {
-      title: 'Package Dispatched with Courier',
-      location: `${currentCarrier} Central Gateway`,
-      timestamp: 'Today at 08:30 AM',
+
+  // Generate dynamic milestones from live status
+  const getDynamicTimeline = () => {
+    if (
+      shipmentData?.timeline &&
+      Array.isArray(shipmentData.timeline) &&
+      shipmentData.timeline.length > 0
+    ) {
+      return shipmentData.timeline;
+    }
+
+    const orderTime = stateOrder?.createdAt
+      ? new Date(stateOrder.createdAt).toLocaleString()
+      : 'Order Verified';
+    const isDelivered = currentStatus === 'DELIVERED';
+    const isShipped = currentStatus === 'SHIPPED';
+    const isConfirmed = currentStatus === 'CONFIRMED';
+    const isCancelled = currentStatus === 'CANCELLED';
+
+    if (isCancelled) {
+      return [
+        {
+          title: 'Order Cancelled',
+          location: 'Customer Service / Order Desk',
+          timestamp: 'Order Terminated',
+          completed: true,
+          current: true,
+        },
+      ];
+    }
+
+    const timeline = [];
+
+    if (isDelivered) {
+      timeline.push({
+        title: 'Delivered to Doorstep',
+        location: stateOrder?.shippingAddress?.city
+          ? `${stateOrder.shippingAddress.city}, ${stateOrder.shippingAddress.country || 'PH'}`
+          : 'Delivery Destination',
+        timestamp: 'Successfully Handed Over',
+        completed: true,
+        current: true,
+      });
+    }
+
+    if (isDelivered || isShipped) {
+      timeline.push({
+        title: `In Transit with ${currentCarrier}`,
+        location: `${currentCarrier} Logistics Hub`,
+        timestamp: isDelivered
+          ? 'Departed sorting facility'
+          : 'Active Express Transit',
+        completed: true,
+        current: isShipped,
+      });
+    }
+
+    if (isDelivered || isShipped || isConfirmed) {
+      timeline.push({
+        title: 'Prepared for Dispatch',
+        location: 'Central Fulfillment Facility',
+        timestamp: 'Packed & Barcode Scanned',
+        completed: true,
+        current: isConfirmed && !isShipped,
+      });
+    }
+
+    timeline.push({
+      title: 'Order Placed & Inventory Reserved',
+      location: 'Fulfillment Order Center',
+      timestamp: orderTime,
       completed: true,
-      current: true,
-    },
-    {
-      title: 'Order Verified & Warehouse Stock Reserved',
-      location: 'FiddleMania Bavarian Workshop Depot',
-      timestamp: 'Yesterday at 04:15 PM',
-      completed: true,
-      current: false,
-    },
-  ];
+      current: currentStatus === 'PENDING',
+    });
+
+    return timeline;
+  };
+
+  const currentTimeline = getDynamicTimeline();
 
   return (
     <div style={{ padding: '40px 0 80px' }}>

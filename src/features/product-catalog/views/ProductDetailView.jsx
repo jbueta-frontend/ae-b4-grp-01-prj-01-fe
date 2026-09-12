@@ -346,22 +346,47 @@ export default function ProductDetailView() {
                     key={i}
                     size={16}
                     fill={
-                      i < Math.floor(product.rating) ? '#F59E0B' : '#E5E7EB'
+                      product.rating && i < Math.floor(product.rating)
+                        ? '#F59E0B'
+                        : 'none'
                     }
                     color={
-                      i < Math.floor(product.rating) ? '#F59E0B' : '#E5E7EB'
+                      product.rating && i < Math.floor(product.rating)
+                        ? '#F59E0B'
+                        : '#d4ccc4'
                     }
                   />
                 ))}
               </div>
-              <span style={{ fontSize: 'var(--font-small, 14px)', fontWeight: 700 }}>
-                {product.rating}
-              </span>
-              <span
-                style={{ fontSize: 'var(--font-small, 14px)', color: 'var(--text-muted)' }}
-              >
-                ({product.reviewCount} verified reviews)
-              </span>
+              {product.rating ? (
+                <>
+                  <span
+                    style={{
+                      fontSize: 'var(--font-small, 14px)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {product.rating.toFixed(1)}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 'var(--font-small, 14px)',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    ({product.reviewCount || reviews.length} verified reviews)
+                  </span>
+                </>
+              ) : (
+                <span
+                  style={{
+                    fontSize: 'var(--font-small, 14px)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  No customer reviews yet
+                </span>
+              )}
             </div>
 
             {/* Price Row (Text Sensitivity: Price Prominence & Stock Badge) */}
@@ -780,20 +805,31 @@ export default function ProductDetailView() {
                       lineHeight: 1.6,
                     }}
                   >
-                    <p>
-                      <strong>Dimensions:</strong>{' '}
-                      {product.specs?.dimensions || '28 × 18 × 12 cm'}
-                    </p>
-                    <p style={{ marginTop: '4px' }}>
-                      <strong>Materials:</strong>{' '}
-                      {product.specs?.materials ||
-                        'Sustainable FSC Certified Beechwood, Non-toxic Beeswax Seals, Organic Pigments'}
-                    </p>
-                    <p style={{ marginTop: '4px' }}>
-                      <strong>Craftsmanship:</strong>{' '}
-                      {product.specs?.origin ||
-                        'Precision engineered and hand-finished for heirloom durability'}
-                    </p>
+                    {product.specs?.dimensions ||
+                    product.specs?.materials ||
+                    product.specs?.origin ? (
+                      <>
+                        {product.specs?.dimensions && (
+                          <p>
+                            <strong>Dimensions:</strong> {product.specs.dimensions}
+                          </p>
+                        )}
+                        {product.specs?.materials && (
+                          <p style={{ marginTop: '4px' }}>
+                            <strong>Materials:</strong> {product.specs.materials}
+                          </p>
+                        )}
+                        {product.specs?.origin && (
+                          <p style={{ marginTop: '4px' }}>
+                            <strong>Craftsmanship:</strong> {product.specs.origin}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                        No specific dimensions or material specifications recorded for this catalog item.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -829,15 +865,27 @@ export default function ProductDetailView() {
                       lineHeight: 1.6,
                     }}
                   >
-                    <p>
-                      <strong>Certifications:</strong>{' '}
-                      {product.specs?.safety ||
-                        'EN71, ASTM F963, 100% Non-toxic & BPA-Free Certified'}
-                    </p>
-                    <p style={{ marginTop: '4px' }}>
-                      <strong>Age Range:</strong>{' '}
-                      {product.specs?.ageRange || product.ageGroup || 'All Ages'}
-                    </p>
+                    {product.specs?.safety ||
+                    product.specs?.ageRange ||
+                    (product.ageMin != null) ? (
+                      <>
+                        {product.specs?.safety && (
+                          <p>
+                            <strong>Certifications:</strong> {product.specs.safety}
+                          </p>
+                        )}
+                        {(product.specs?.ageRange || product.ageGroup) && (
+                          <p style={{ marginTop: '4px' }}>
+                            <strong>Age Range:</strong>{' '}
+                            {product.specs?.ageRange || product.ageGroup}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                        No additional safety certifications or age restrictions recorded for this catalog item.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

@@ -55,88 +55,33 @@ export function AuthProvider({ children }) {
       setIsGuest(false);
       return { success: true, user: userData };
     } catch (err) {
-      const message = getAuthErrorMessage(err, 'login');
-      const authError = new Error(message);
-      authError.code = err?.code || err?.response?.data?.code;
-      authError.status = err?.status || err?.response?.status;
-      authError.raw = err;
-      throw authError;
+      throw new Error(getAuthErrorMessage(err, 'login'));
     }
   };
 
   const register = async (email, password, name) => {
     try {
-      const res = await api.post('/auth/register', { email, password, name });
-      // In updated Supabase auth, accounts are created with status UNVERIFIED
-      // without immediate login tokens.
-      const token = res?.accessToken;
-      const refreshToken = res?.refreshToken;
+      const res = await api.post('/auth/register', {
+        email,
+        password,
+        name,
+        fullName: name,
+        firstName: name.split(' ')[0],
+      });
+      const token = res.accessToken;
+      const refreshToken = res.refreshToken;
+      const userData = res.user || { email, role: 'CUSTOMER', name, fullName: name };
 
-      if (token) {
-        const userData = res.user || { email, role: 'CUSTOMER', name };
-        localStorage.setItem('accessToken', token);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
-        localStorage.removeItem('fiddlemania_is_guest');
+      if (token) localStorage.setItem('accessToken', token);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
+      localStorage.removeItem('fiddlemania_is_guest');
 
-        setUser(userData);
-        setIsGuest(false);
-        return { success: true, user: userData, unverified: false };
-      }
-
-      return { success: true, unverified: true, email };
-    } catch (err) {
-      const message = getAuthErrorMessage(err, 'register');
-      const authError = new Error(message);
-      authError.code = err?.code || err?.response?.data?.code;
-      authError.status = err?.status || err?.response?.status;
-      authError.raw = err;
-      throw authError;
-    }
-  };
-
-  const resendVerification = async (email) => {
-    try {
-      const res = await api.post('/auth/resend-verification', { email });
-      return res;
-    } catch (err) {
-      const message = getAuthErrorMessage(err, 'resend');
-      const authError = new Error(message);
-      authError.code = err?.code || err?.response?.data?.code;
-      authError.status = err?.status || err?.response?.status;
-      authError.raw = err;
-      throw authError;
-    }
-  };
-
-  const verifyEmail = async (token) => {
-    try {
-      const res = await api.get(
-        `/auth/verify-email?token=${encodeURIComponent(token)}`
-      );
-      // API returns 200 OK with accessToken, refreshToken, user
-      const accessToken = res?.accessToken || res?.data?.accessToken;
-      const refreshToken = res?.refreshToken || res?.data?.refreshToken;
-      const userData = res?.user || res?.data?.user;
-
-      if (accessToken) {
-        localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-        if (userData) {
-          localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
-          setUser(userData);
-        }
-        localStorage.removeItem('fiddlemania_is_guest');
-        setIsGuest(false);
-      }
+      setUser(userData);
+      setIsGuest(false);
       return { success: true, user: userData };
     } catch (err) {
-      const message = getAuthErrorMessage(err, 'verify');
-      const authError = new Error(message);
-      authError.code = err?.code || err?.response?.data?.code;
-      authError.status = err?.status || err?.response?.status;
-      authError.raw = err;
-      throw authError;
+      throw new Error(getAuthErrorMessage(err, 'register'));
     }
   };
 
@@ -196,8 +141,6 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!user && !isGuest,
         login,
         register,
-        resendVerification,
-        verifyEmail,
         continueAsGuest,
         logout,
         updateProfile,
@@ -210,7 +153,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

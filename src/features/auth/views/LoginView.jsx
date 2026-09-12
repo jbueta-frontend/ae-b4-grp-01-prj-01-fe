@@ -1,5 +1,16 @@
 import { useAuthViewModel } from '../viewmodels/useAuthViewModel';
-import { ArrowRight, ShieldCheck, AlertCircle, Mail, RefreshCw } from 'lucide-react';
+import {
+  Lock,
+  ArrowRight,
+  ShieldCheck,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  KeyRound,
+  CheckCircle2,
+  ArrowLeft,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Logo from '../../../shared/components/Logo';
 
 export default function LoginView({ initialTab = 'login' }) {
@@ -12,15 +23,24 @@ export default function LoginView({ initialTab = 'login' }) {
     handleEmailChange,
     password,
     handlePasswordChange,
+    confirmPassword,
+    handleConfirmPasswordChange,
+    showPassword,
+    toggleShowPassword,
+    showConfirmPassword,
+    toggleShowConfirmPassword,
+    isForgotPassword,
+    setIsForgotPassword,
+    forgotEmail,
+    handleForgotEmailChange,
+    forgotErrors,
+    forgotLoading,
+    forgotMessage,
+    forgotError,
+    handleForgotPasswordSubmit,
     errors,
     loading,
     apiError,
-    isUnverified,
-    registrationSuccess,
-    registeredEmail,
-    resendLoading,
-    resendStatus,
-    handleResendVerification,
     handleSubmit,
     handleSocialAuth,
     handleGuestCheckout,
@@ -47,123 +67,156 @@ export default function LoginView({ initialTab = 'login' }) {
             <Logo size="lg" />
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Sign in to track orders, save favorite pieces, and manage delivery
-            addresses.
+            {isForgotPassword
+              ? 'Enter your registered email to receive password reset instructions.'
+              : 'Sign in to track orders, save favorite pieces, and manage delivery addresses.'}
           </p>
         </div>
 
-        {/* Minimal Auth Card */}
+        {/* Auth / Forgot Password Card */}
         <div className="card-clean">
-          {registrationSuccess ? (
-            /* Post-Registration Email Verification Confirmation */
-            <div style={{ textAlign: 'center', padding: '12px 6px' }}>
+          {isForgotPassword ? (
+            /* Forgot Password View */
+            <div>
               <div
                 style={{
-                  width: '60px',
-                  height: '60px',
-                  margin: '0 auto 18px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(217, 119, 6, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#D97706',
-                }}
-              >
-                <Mail size={30} />
-              </div>
-
-              <h2
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  marginBottom: '10px',
-                  color: 'var(--text-main)',
-                }}
-              >
-                Check your email inbox
-              </h2>
-
-              <p
-                style={{
-                  color: 'var(--text-muted)',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.55',
-                  marginBottom: '16px',
-                }}
-              >
-                Account created! Please check your email inbox to verify your
-                account before signing in.
-              </p>
-
-              <div
-                style={{
-                  padding: '10px 14px',
-                  backgroundColor: 'var(--bg-subtle)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.85rem',
-                  color: 'var(--text-main)',
-                  fontWeight: 600,
+                  gap: '10px',
                   marginBottom: '20px',
-                  wordBreak: 'break-all',
+                  paddingBottom: '14px',
+                  borderBottom: '1px solid var(--border-hairline)',
                 }}
               >
-                {registeredEmail}
-              </div>
-
-              {resendStatus && (
                 <div
                   style={{
-                    padding: '10px 12px',
-                    marginBottom: '16px',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.8125rem',
-                    backgroundColor:
-                      resendStatus.type === 'success'
-                        ? 'rgba(16, 185, 129, 0.1)'
-                        : 'rgba(220, 38, 38, 0.1)',
-                    color:
-                      resendStatus.type === 'success' ? '#059669' : '#DC2626',
-                    fontWeight: 500,
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--accent-light)',
+                    color: 'var(--accent)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  {resendStatus.message}
+                  <KeyRound size={18} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: 800 }}>
+                    Forgot Password
+                  </h2>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Reset link will be sent to your account email.
+                  </p>
+                </div>
+              </div>
+
+              {forgotMessage && (
+                <div
+                  role="status"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                    border: '1px solid #16A34A',
+                    borderRadius: 'var(--radius-md)',
+                    color: '#16A34A',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.45',
+                    marginBottom: '18px',
+                  }}
+                >
+                  <CheckCircle2
+                    size={18}
+                    style={{ flexShrink: 0, marginTop: '2px' }}
+                  />
+                  <span style={{ fontWeight: 500 }}>{forgotMessage}</span>
                 </div>
               )}
 
-              <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setTab('login')}
-                  className="btn btn-primary btn-block"
-                  style={{ padding: '12px' }}
+              {forgotError && (
+                <div
+                  role="alert"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                    border: '1px solid #DC2626',
+                    borderRadius: 'var(--radius-md)',
+                    color: '#DC2626',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.45',
+                    marginBottom: '18px',
+                  }}
                 >
-                  <span>Proceed to Sign In</span>
+                  <AlertCircle
+                    size={18}
+                    style={{ flexShrink: 0, marginTop: '2px' }}
+                  />
+                  <span style={{ fontWeight: 500 }}>{forgotError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPasswordSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Registered Account Email</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    required
+                    placeholder="name@example.com"
+                    value={forgotEmail}
+                    onChange={handleForgotEmailChange}
+                  />
+                  {forgotErrors.email && (
+                    <p className="form-error">{forgotErrors.email}</p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="btn btn-primary btn-block"
+                  style={{ padding: '14px', marginTop: '8px' }}
+                >
+                  <span>
+                    {forgotLoading ? 'Sending Reset Instructions...' : 'Send Reset Link'}
+                  </span>
                   <ArrowRight size={16} />
                 </button>
 
                 <button
                   type="button"
-                  disabled={resendLoading}
-                  onClick={() => handleResendVerification(registeredEmail)}
-                  className="btn btn-outline btn-block"
-                  style={{ fontSize: '0.85rem', padding: '10px' }}
+                  onClick={() => setIsForgotPassword(false)}
+                  style={{
+                    width: '100%',
+                    marginTop: '16px',
+                    padding: '10px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                  }}
                 >
-                  {resendLoading ? (
-                    <>
-                      <RefreshCw size={14} className="spin" />
-                      <span>Resending link...</span>
-                    </>
-                  ) : (
-                    <span>Resend verification link</span>
-                  )}
+                  <ArrowLeft size={15} />
+                  <span>Back to Sign In</span>
                 </button>
-              </div>
+              </form>
             </div>
           ) : (
-            <>
+            /* Sign In / Register View */
+            <div>
               {/* Tab Switcher */}
               <div
                 style={{
@@ -185,9 +238,7 @@ export default function LoginView({ initialTab = 'login' }) {
                     backgroundColor:
                       tab === 'login' ? 'var(--bg-card)' : 'transparent',
                     color:
-                      tab === 'login'
-                        ? 'var(--text-main)'
-                        : 'var(--text-muted)',
+                      tab === 'login' ? 'var(--text-main)' : 'var(--text-muted)',
                     boxShadow: tab === 'login' ? 'var(--shadow-sm)' : 'none',
                     transition: 'all 0.15s ease',
                   }}
@@ -308,91 +359,29 @@ export default function LoginView({ initialTab = 'login' }) {
                 />
               </div>
 
-              {/* Error Banner */}
+              {/* Form */}
               {apiError && (
                 <div
                   role="alert"
                   style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
+                    alignItems: 'flex-start',
+                    gap: '10px',
                     padding: '12px 14px',
-                    backgroundColor: isUnverified
-                      ? 'rgba(217, 119, 6, 0.08)'
-                      : 'rgba(220, 38, 38, 0.08)',
-                    border: `1px solid ${isUnverified ? '#D97706' : '#DC2626'}`,
+                    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                    border: '1px solid #DC2626',
                     borderRadius: 'var(--radius-md)',
-                    color: isUnverified ? '#B45309' : '#DC2626',
+                    color: '#DC2626',
                     fontSize: '0.875rem',
                     lineHeight: '1.45',
                     marginBottom: '18px',
                   }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '10px',
-                    }}
-                  >
-                    {isUnverified ? (
-                      <Mail
-                        size={18}
-                        style={{ flexShrink: 0, marginTop: '2px' }}
-                      />
-                    ) : (
-                      <AlertCircle
-                        size={18}
-                        style={{ flexShrink: 0, marginTop: '2px' }}
-                      />
-                    )}
-                    <span style={{ fontWeight: 600 }}>{apiError}</span>
-                  </div>
-
-                  {/* Unverified Action: Resend Verification Link */}
-                  {isUnverified && (
-                    <div style={{ marginTop: '4px', paddingLeft: '28px' }}>
-                      <button
-                        type="button"
-                        disabled={resendLoading}
-                        onClick={() => handleResendVerification()}
-                        className="btn btn-outline"
-                        style={{
-                          padding: '6px 12px',
-                          fontSize: '0.8125rem',
-                          borderColor: '#D97706',
-                          color: '#B45309',
-                          backgroundColor: '#FFFFFF',
-                          borderRadius: 'var(--radius-sm)',
-                        }}
-                      >
-                        {resendLoading ? (
-                          <>
-                            <RefreshCw size={13} className="spin" />
-                            <span>Resending link...</span>
-                          </>
-                        ) : (
-                          <span>Resend Verification Link</span>
-                        )}
-                      </button>
-
-                      {resendStatus && (
-                        <p
-                          style={{
-                            marginTop: '8px',
-                            fontSize: '0.8125rem',
-                            color:
-                              resendStatus.type === 'success'
-                                ? '#059669'
-                                : '#DC2626',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {resendStatus.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  <AlertCircle
+                    size={18}
+                    style={{ flexShrink: 0, marginTop: '2px' }}
+                  />
+                  <span style={{ fontWeight: 500 }}>{apiError}</span>
                 </div>
               )}
 
@@ -422,25 +411,132 @@ export default function LoginView({ initialTab = 'login' }) {
                     value={email}
                     onChange={handleEmailChange}
                   />
-                  {errors.email && (
-                    <p className="form-error">{errors.email}</p>
-                  )}
+                  {errors.email && <p className="form-error">{errors.email}</p>}
                 </div>
 
+                {/* Password input with show/hide toggle */}
                 <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <input
-                    type="password"
-                    className="form-input"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={handlePasswordChange}
-                  />
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <label className="form-label" style={{ marginBottom: 0 }}>
+                      Password
+                    </label>
+                    {tab === 'login' && (
+                      <button
+                        type="button"
+                        onClick={() => setIsForgotPassword(true)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--accent)',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          padding: 0,
+                        }}
+                      >
+                        Forgot Password?
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="form-input"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={handlePasswordChange}
+                      style={{ paddingRight: '42px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowPassword}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                      }}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                   {errors.password && (
                     <p className="form-error">{errors.password}</p>
                   )}
                 </div>
+
+                {/* Confirm Password (Registration Only) */}
+                {tab === 'register' && (
+                  <div className="form-group">
+                    <label className="form-label">Confirm Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        className="form-input"
+                        required
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={handleConfirmPasswordChange}
+                        style={{ paddingRight: '42px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={toggleShowConfirmPassword}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '4px',
+                        }}
+                        title={
+                          showConfirmPassword
+                            ? 'Hide confirm password'
+                            : 'Show confirm password'
+                        }
+                        aria-label={
+                          showConfirmPassword
+                            ? 'Hide confirm password'
+                            : 'Show confirm password'
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="form-error">{errors.confirmPassword}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Primary CTA */}
                 <button
@@ -491,7 +587,7 @@ export default function LoginView({ initialTab = 'login' }) {
                   to checkout →
                 </button>
               </div>
-            </>
+            </div>
           )}
         </div>
 
