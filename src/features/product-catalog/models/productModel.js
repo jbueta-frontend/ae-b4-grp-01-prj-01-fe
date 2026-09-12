@@ -208,14 +208,7 @@ export function mapApiProduct(p) {
         ? `Ages ${p.ageMin}+`
         : 'All Ages';
 
-  const variants =
-    Array.isArray(p.variants) && p.variants.length > 0
-      ? p.variants
-      : [
-          { id: `${id}-v1`, name: 'Classic Edition', color: '#D4B896' },
-          { id: `${id}-v2`, name: 'Terracotta Craft', color: '#C85A32' },
-          { id: `${id}-v3`, name: 'Forest Nordic', color: '#3A5A40' },
-        ];
+  const variants = [];
 
   const specs = {
     dimensions:

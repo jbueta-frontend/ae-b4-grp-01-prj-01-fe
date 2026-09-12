@@ -11,21 +11,24 @@ import {
   MessageSquare,
   Sparkles,
   Send,
+  ShoppingCart,
+  Package,
 } from 'lucide-react';
 
 export default function ProductDetailView() {
   const {
     product,
+    loading,
+    error,
     activeImage,
     setActiveImage,
-    selectedVariant,
-    setSelectedVariant,
     quantity,
     incrementQty,
     decrementQty,
     openAccordion,
     toggleAccordion,
     handleAddToCart,
+    handleBuyNow,
     addedNotice,
     goBack,
     reviews,
@@ -41,17 +44,138 @@ export default function ProductDetailView() {
   const [formComment, setFormComment] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
 
+  // 1. Loading State: Display elegant skeleton layout instead of prematurely showing 'Product not found'
+  if (loading) {
+    return (
+      <div style={{ padding: '32px 0 80px' }}>
+        <div className="container" style={{ maxWidth: '1200px' }}>
+          {/* Breadcrumb / Back Skeleton */}
+          <div
+            style={{
+              width: '140px',
+              height: '18px',
+              backgroundColor: 'var(--border-hairline, #E5E0D8)',
+              borderRadius: 'var(--radius-sm, 4px)',
+              marginBottom: '28px',
+              opacity: 0.6,
+            }}
+          />
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '48px',
+              alignItems: 'start',
+            }}
+          >
+            {/* Gallery Skeleton */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div
+                style={{
+                  width: '100%',
+                  aspectRatio: '1',
+                  backgroundColor: 'var(--bg-subtle, #F7F5F0)',
+                  borderRadius: 'var(--radius-lg, 12px)',
+                  border: '1px solid var(--border-hairline, #E5E0D8)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
+                  Loading product details...
+                </span>
+              </div>
+            </div>
+
+            {/* Content Details Skeleton */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div
+                style={{
+                  width: '100px',
+                  height: '14px',
+                  backgroundColor: 'var(--border-hairline, #E5E0D8)',
+                  borderRadius: '4px',
+                  opacity: 0.7,
+                }}
+              />
+              <div
+                style={{
+                  width: '75%',
+                  height: '34px',
+                  backgroundColor: 'var(--border-hairline, #E5E0D8)',
+                  borderRadius: '6px',
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                style={{
+                  width: '35%',
+                  height: '24px',
+                  backgroundColor: 'var(--border-hairline, #E5E0D8)',
+                  borderRadius: '4px',
+                  opacity: 0.7,
+                }}
+              />
+              <div
+                style={{
+                  width: '100%',
+                  height: '70px',
+                  backgroundColor: 'var(--bg-subtle, #F7F5F0)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-hairline, #E5E0D8)',
+                }}
+              />
+              <div
+                style={{
+                  width: '60%',
+                  height: '50px',
+                  backgroundColor: 'var(--bg-subtle, #F7F5F0)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-hairline, #E5E0D8)',
+                  marginTop: '12px',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Not Found State: Only show after loading completes and product truly does not exist
   if (!product) {
     return (
       <div
         className="container"
-        style={{ padding: '64px 0', textAlign: 'center' }}
+        style={{ padding: '80px 24px', textAlign: 'center', maxWidth: '600px' }}
       >
-        <p>Product not found.</p>
+        <div
+          style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--bg-subtle, #F7F5F0)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            color: 'var(--text-muted)',
+          }}
+        >
+          <Package size={28} />
+        </div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-main)' }}>
+          Product Not Found
+        </h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
+          The item you are looking for does not exist or may have been removed.
+        </p>
         <button
           onClick={goBack}
-          className="btn btn-outline"
-          style={{ marginTop: '16px' }}
+          className="btn btn-primary"
+          style={{ padding: '12px 28px' }}
         >
           Back to Catalog
         </button>
@@ -299,101 +423,73 @@ export default function ProductDetailView() {
               {product.shortDescription}
             </p>
 
-            {/* Variant Selector */}
-            {product.variants?.length > 0 && (
-              <div style={{ marginBottom: '24px' }}>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    color: 'var(--text-main)',
-                    marginBottom: '8px',
-                  }}
-                >
-                  Finish: <strong>{selectedVariant?.name}</strong>
-                </span>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  {product.variants.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => setSelectedVariant(v)}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-md)',
-                        border: `1.5px solid ${selectedVariant?.id === v.id ? 'var(--text-main)' : 'var(--border-hairline)'}`,
-                        backgroundColor:
-                          selectedVariant?.id === v.id
-                            ? 'var(--bg-card)'
-                            : 'transparent',
-                        fontWeight: 600,
-                        fontSize: '0.875rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          backgroundColor: v.color,
-                          border: '1px solid rgba(0,0,0,0.1)',
-                        }}
-                      />
-                      <span>{v.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity & Add to Bag Row (Balanced 52px height & matching radius) */}
+            {/* 1. Quantity Row: [Quantity] [ - | 1 | + ] [ pieces available ] */}
             <div
               style={{
                 display: 'flex',
-                gap: '14px',
                 alignItems: 'center',
-                marginBottom: '32px',
+                gap: '18px',
+                marginBottom: '24px',
+                flexWrap: 'wrap',
               }}
             >
-              {/* Symmetrical & Balanced Stepper */}
+              <span
+                style={{
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  color: 'var(--text-muted)',
+                  minWidth: '68px',
+                }}
+              >
+                Quantity
+              </span>
+
+              {/* Stepper matching system branding */}
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  height: '52px',
+                  height: '42px',
                   border: '1px solid var(--border-hairline)',
                   borderRadius: 'var(--radius-md)',
                   backgroundColor: 'var(--bg-card)',
                   overflow: 'hidden',
                   boxShadow: 'var(--shadow-sm)',
-                  flexShrink: 0,
                 }}
               >
                 <button
                   type="button"
                   onClick={decrementQty}
+                  disabled={quantity <= 1 || product.stockCount <= 0}
                   style={{
-                    width: '46px',
+                    width: '40px',
                     height: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.25rem',
+                    fontSize: '1.2rem',
                     fontWeight: 600,
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                    transition: 'background-color var(--transition-fast)',
+                    color:
+                      quantity <= 1 || product.stockCount <= 0
+                        ? 'var(--text-disabled)'
+                        : 'var(--text-main)',
+                    cursor:
+                      quantity <= 1 || product.stockCount <= 0
+                        ? 'not-allowed'
+                        : 'pointer',
+                    backgroundColor: 'transparent',
+                    border: 'none',
                     borderRight: '1px solid var(--border-hairline)',
+                    transition: 'background-color var(--transition-fast)',
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = 'var(--bg-subtle)')
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = 'transparent')
-                  }
+                  onMouseEnter={(e) => {
+                    if (quantity > 1 && product.stockCount > 0) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                   aria-label="Decrease quantity"
                 >
                   −
@@ -406,69 +502,168 @@ export default function ProductDetailView() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     textAlign: 'center',
-                    fontSize: '1rem',
+                    fontSize: '0.95rem',
                     fontWeight: 700,
                     color: 'var(--text-main)',
                   }}
                 >
-                  {quantity}
+                  {product.stockCount <= 0 ? 0 : quantity}
                 </div>
                 <button
                   type="button"
                   onClick={incrementQty}
+                  disabled={
+                    product.stockCount <= 0 ||
+                    (product.stockCount > 0 && quantity >= product.stockCount)
+                  }
                   style={{
-                    width: '46px',
+                    width: '40px',
                     height: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.25rem',
+                    fontSize: '1.2rem',
                     fontWeight: 600,
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                    transition: 'background-color var(--transition-fast)',
+                    color:
+                      product.stockCount <= 0 ||
+                      (product.stockCount > 0 && quantity >= product.stockCount)
+                        ? 'var(--text-disabled)'
+                        : 'var(--text-main)',
+                    cursor:
+                      product.stockCount <= 0 ||
+                      (product.stockCount > 0 && quantity >= product.stockCount)
+                        ? 'not-allowed'
+                        : 'pointer',
+                    backgroundColor: 'transparent',
+                    border: 'none',
                     borderLeft: '1px solid var(--border-hairline)',
+                    transition: 'background-color var(--transition-fast)',
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = 'var(--bg-subtle)')
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = 'transparent')
-                  }
+                  onMouseEnter={(e) => {
+                    if (product.stockCount > 0 && quantity < product.stockCount) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                   aria-label="Increase quantity"
                 >
                   +
                 </button>
               </div>
 
-              {/* Commanding Add to Bag CTA (Matching 52px height) */}
+              {/* Pieces available text positioned directly beside stepper per reference */}
+              <span
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color:
+                    product.stockCount > 0
+                      ? 'var(--text-muted)'
+                      : 'var(--danger, #DC2626)',
+                }}
+              >
+                {product.stockCount > 0
+                  ? `${product.stockCount} pieces available`
+                  : '0 pieces available (Out of stock)'}
+              </span>
+            </div>
+
+
+            {/* 3. Action Buttons Row: [ Add To Cart ] [ Buy Now ] */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '14px',
+                alignItems: 'center',
+                marginBottom: '32px',
+                flexWrap: 'wrap',
+              }}
+            >
+              {/* Add To Cart button (Outline / subtle tint with ShoppingCart icon) */}
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="btn btn-primary"
+                disabled={product.stockCount <= 0}
                 style={{
                   flex: 1,
-                  height: '52px',
-                  padding: '0 24px',
-                  fontSize: '1rem',
+                  minWidth: '160px',
+                  height: '50px',
+                  padding: '0 20px',
+                  fontSize: '0.95rem',
                   fontWeight: 700,
                   letterSpacing: '-0.01em',
                   borderRadius: 'var(--radius-md)',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
+                  gap: '10px',
+                  border: '1.5px solid var(--accent)',
+                  backgroundColor: 'rgba(188, 90, 69, 0.07)',
+                  color: 'var(--accent)',
+                  cursor: product.stockCount <= 0 ? 'not-allowed' : 'pointer',
+                  opacity: product.stockCount <= 0 ? 0.5 : 1,
+                  transition: 'all var(--transition-fast)',
+                }}
+                onMouseEnter={(e) => {
+                  if (product.stockCount > 0) {
+                    e.currentTarget.style.backgroundColor =
+                      'rgba(188, 90, 69, 0.14)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (product.stockCount > 0) {
+                    e.currentTarget.style.backgroundColor =
+                      'rgba(188, 90, 69, 0.07)';
+                  }
                 }}
               >
                 {addedNotice ? (
                   <>
                     <Check size={18} strokeWidth={3} />
-                    <span>Added to Bag!</span>
+                    <span>Added to Cart!</span>
                   </>
                 ) : (
-                  <span>
-                    Add to Bag — ₱{(product.price * quantity).toFixed(2)}
-                  </span>
+                  <>
+                    <ShoppingCart size={18} />
+                    <span>Add To Cart</span>
+                  </>
+                )}
+              </button>
+
+              {/* Buy Now button (Primary brand solid terracotta button - proceeds to /checkout) */}
+              <button
+                type="button"
+                onClick={handleBuyNow}
+                disabled={product.stockCount <= 0}
+                className="btn btn-primary"
+                style={{
+                  flex: 1,
+                  minWidth: '160px',
+                  height: '50px',
+                  padding: '0 24px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  backgroundColor: 'var(--accent)',
+                  color: '#ffffff',
+                  border: 'none',
+                  cursor: product.stockCount <= 0 ? 'not-allowed' : 'pointer',
+                  opacity: product.stockCount <= 0 ? 0.5 : 1,
+                  boxShadow: '0 2px 8px rgba(188, 90, 69, 0.25)',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                {product.stockCount <= 0 ? (
+                  <span>Out of Stock</span>
+                ) : (
+                  <span>Buy Now</span>
                 )}
               </button>
             </div>

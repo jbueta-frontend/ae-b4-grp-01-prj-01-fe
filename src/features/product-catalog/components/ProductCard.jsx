@@ -3,10 +3,6 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Check, Star } from 'lucide-react';
 
 export default function ProductCard({ product, onQuickAdd, isAdded }) {
-  const [activeVariant, setActiveVariant] = useState(
-    product.variants?.[0]?.id || null
-  );
-
   const isOnSale =
     product.isOnSale ||
     product.tag === 'Sale' ||
@@ -266,51 +262,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         )}
       </div>
 
-      {/* 6. Color Swatches / Dots (Reference format: ● ● ●) */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginBottom: '14px',
-          minHeight: '20px',
-        }}
-      >
-        {product.variants && product.variants.length > 0 ? (
-          product.variants.map((v) => {
-            const isCurrent = activeVariant === v.id;
-            return (
-              <button
-                key={v.id}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveVariant(v.id);
-                }}
-                style={{
-                  width: '14px',
-                  height: '14px',
-                  borderRadius: '50%',
-                  backgroundColor: v.color || '#D4B896',
-                  border: isCurrent
-                    ? '2px solid var(--text-main)'
-                    : '1px solid rgba(0, 0, 0, 0.15)',
-                  boxShadow: isCurrent
-                    ? '0 0 0 2px rgba(200, 90, 50, 0.3)'
-                    : 'none',
-                  cursor: 'pointer',
-                  padding: 0,
-                  transition: 'transform 0.15s ease',
-                }}
-                title={v.name}
-                aria-label={`Select variant ${v.name}`}
-              />
-            );
-          })
-        ) : (
-          <div style={{ height: '14px' }} />
-        )}
-      </div>
+
 
       {/* 7. Emphasized Add to Cart Button (Uniform 44px height) */}
       <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
