@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { validateAuthForm } from '../models/authModel';
+import { validateAuthForm, validateForgotPasswordForm } from '../models/authModel';
 import { getAuthErrorMessage } from '../../../shared/utils/errorHandler';
+import api from '../../../services/api';
 
 export function useAuthViewModel(defaultTab = 'login') {
   const [tab, setTab] = useState(defaultTab);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
+
+  // Forgot Password state
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotErrors, setForgotErrors] = useState({});
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState(null);
+  const [forgotError, setForgotError] = useState(null);
 
   const { user, isAuthenticated, login, register, continueAsGuest } = useAuth();
   const navigate = useNavigate();
@@ -28,6 +40,7 @@ export function useAuthViewModel(defaultTab = 'login') {
 
   const handleTabSwitch = (newTab) => {
     setTab(newTab);
+    setIsForgotPassword(false);
     setApiError(null);
     setErrors({});
   };
@@ -50,6 +63,51 @@ export function useAuthViewModel(defaultTab = 'login') {
     if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
   };
 
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+    if (apiError) setApiError(null);
+    if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: null }));
+  };
+
+  const handleForgotEmailChange = (e) => {
+    setForgotEmail(e.target.value);
+    if (forgotError) setForgotError(null);
+    if (forgotErrors.email) setForgotErrors((prev) => ({ ...prev, email: null }));
+  };
+
+  const toggleShowPassword = () => setShowPassword((prev) => !prev);
+  const toggleShowConfirmPassword = () => setShowConfirmPassword((prev) => !prev);
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotMessage(null);
+
+    const validation = validateForgotPasswordForm({ email: forgotEmail.trim() });
+    if (!validation.isValid) {
+      setForgotErrors(validation.errors);
+      return;
+    }
+
+    setForgotErrors({});
+    setForgotLoading(true);
+
+    try {
+      const res = await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
+      const msg = res?.data?.message || res?.message || 'If an account exists with this email address, a password reset link has been sent.';
+      setForgotMessage(msg);
+    } catch (err) {
+      setForgotError(
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        err.message ||
+        'Unable to process password reset request. Please check your email and try again.'
+      );
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
@@ -58,6 +116,7 @@ export function useAuthViewModel(defaultTab = 'login') {
       name,
       email,
       password,
+      confirmPassword,
       isRegister: tab === 'register',
     });
     if (!validation.isValid) {
@@ -115,6 +174,22 @@ export function useAuthViewModel(defaultTab = 'login') {
     password,
     setPassword,
     handlePasswordChange,
+    confirmPassword,
+    setConfirmPassword,
+    handleConfirmPasswordChange,
+    showPassword,
+    toggleShowPassword,
+    showConfirmPassword,
+    toggleShowConfirmPassword,
+    isForgotPassword,
+    setIsForgotPassword,
+    forgotEmail,
+    handleForgotEmailChange,
+    forgotErrors,
+    forgotLoading,
+    forgotMessage,
+    forgotError,
+    handleForgotPasswordSubmit,
     errors,
     loading,
     apiError,

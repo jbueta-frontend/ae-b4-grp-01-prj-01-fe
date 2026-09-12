@@ -5,31 +5,31 @@
 
 export const INITIAL_PROFILE_STATE = {
   personal: {
-    id: 'usr_88291',
-    name: 'Kyle Santos',
-    displayName: 'kyle',
-    email: 'kyle.user@example.com',
-    phone: '+63 917 555 1234',
-    birthDate: '1996-05-14',
-    gender: 'Male',
-    bio: 'Collector of heirloom wooden toys, artisanal puzzles, and Montessori learning materials.',
-    role: 'Verified Customer',
-    createdAt: 'March 2024',
+    id: '',
+    name: '',
+    displayName: '',
+    email: '',
+    phone: '',
+    birthDate: '',
+    gender: '',
+    bio: '',
+    role: 'Customer',
+    createdAt: '',
     avatarUrl: null,
   },
   address: {
-    recipientName: 'Kyle Santos',
-    phone: '+63 917 555 1234',
-    street: '123 Ayala Avenue, Unit 14B',
-    unit: 'Tower 2, Legaspi Village',
-    city: 'Makati City',
-    province: 'Metro Manila',
-    postalCode: '1226',
+    recipientName: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    stateProvince: '',
+    postalCode: '',
     country: 'Philippines',
   },
   security: {
-    twoFactorEnabled: true,
-    lastPasswordChange: '2 months ago',
+    twoFactorEnabled: false,
+    lastPasswordChange: '',
   },
 };
 
@@ -47,7 +47,7 @@ export function validatePersonal(data) {
   if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = 'Please provide a valid email address.';
   }
-  if (!data.phone || data.phone.trim().length < 7) {
+  if (data.phone && data.phone.trim().length > 0 && data.phone.trim().length < 7) {
     errors.phone = 'Please provide a valid contact number.';
   }
   return {
@@ -57,24 +57,35 @@ export function validatePersonal(data) {
 }
 
 /**
- * Validate delivery address fields
+ * Validate delivery address fields (ERD Standards)
  */
 export function validateAddress(data) {
   const errors = {};
   if (!data.recipientName || data.recipientName.trim().length < 2) {
-    errors.recipientName = 'Recipient name is required.';
+    errors.recipientName = 'Recipient name is required (minimum 2 characters).';
   }
-  if (!data.street || data.street.trim().length < 5) {
-    errors.street = 'Complete street address is required.';
+  if (!data.phone || data.phone.trim().length < 7) {
+    errors.phone = 'Valid delivery contact phone number is required.';
+  }
+  if (!data.addressLine1 || data.addressLine1.trim().length < 5) {
+    errors.addressLine1 = 'Street address (Address Line 1) is required (minimum 5 characters).';
   }
   if (!data.city || data.city.trim().length < 2) {
     errors.city = 'City / Municipality is required.';
   }
-  if (!data.province || data.province.trim().length < 2) {
-    errors.province = 'Province / Region is required.';
+  if (!data.stateProvince || data.stateProvince.trim().length < 2) {
+    errors.stateProvince = 'Province / State is required.';
   }
-  if (!data.postalCode || data.postalCode.trim().length < 4) {
-    errors.postalCode = 'Valid postal code is required.';
+  const rawPostal = data.postalCode != null ? String(data.postalCode).trim() : '';
+  if (!rawPostal) {
+    errors.postalCode = 'Postal code is required.';
+  } else if (!/^\d+$/.test(rawPostal)) {
+    errors.postalCode = 'Postal code can only contain numbers (integers only).';
+  } else if (rawPostal.length < 4 || rawPostal.length > 6) {
+    errors.postalCode = 'Postal code must be between 4 and 6 digits.';
+  }
+  if (!data.country || data.country.trim().length < 2) {
+    errors.country = 'Country is required.';
   }
   return {
     isValid: Object.keys(errors).length === 0,

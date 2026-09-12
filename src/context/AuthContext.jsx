@@ -61,10 +61,16 @@ export function AuthProvider({ children }) {
 
   const register = async (email, password, name) => {
     try {
-      const res = await api.post('/auth/register', { email, password, name });
+      const res = await api.post('/auth/register', {
+        email,
+        password,
+        name,
+        fullName: name,
+        firstName: name.split(' ')[0],
+      });
       const token = res.accessToken;
       const refreshToken = res.refreshToken;
-      const userData = res.user || { email, role: 'CUSTOMER', name };
+      const userData = res.user || { email, role: 'CUSTOMER', name, fullName: name };
 
       if (token) localStorage.setItem('accessToken', token);
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);

@@ -445,12 +445,18 @@ export default function AdminOrderDetailView() {
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '0.75rem',
                   fontWeight: 700,
-                  backgroundColor: 'var(--success-bg)',
-                  color: 'var(--success)',
+                  backgroundColor:
+                    payment.status === 'PAID' || payment.status === 'COMPLETED'
+                      ? 'var(--success-bg)'
+                      : 'rgba(217, 119, 6, 0.1)',
+                  color:
+                    payment.status === 'PAID' || payment.status === 'COMPLETED'
+                      ? 'var(--success)'
+                      : '#D97706',
                   textTransform: 'uppercase',
                 }}
               >
-                {payment.status || 'PAID'}
+                {payment.status || (order.status === 'CANCELLED' ? 'CANCELLED' : 'PENDING SETTLEMENT')}
               </span>
             </div>
 
@@ -467,7 +473,7 @@ export default function AdminOrderDetailView() {
                   Method:
                 </span>
                 <div style={{ fontWeight: 600 }}>
-                  {payment.paymentMethod || 'Online Gateway (GCash / Card)'}
+                  {payment.paymentMethod || order.paymentMethod || 'Awaiting Payment Confirmation'}
                 </div>
               </div>
 
@@ -479,10 +485,10 @@ export default function AdminOrderDetailView() {
                   style={{
                     fontFamily: 'monospace',
                     fontSize: '0.8125rem',
-                    color: 'var(--text-muted)',
+                    color: payment.transactionRef ? 'var(--text-main)' : 'var(--text-muted)',
                   }}
                 >
-                  {payment.transactionRef || 'PAY-REF-' + order.orderId}
+                  {payment.transactionRef || order.paymentRef || '—'}
                 </div>
               </div>
 
@@ -491,7 +497,7 @@ export default function AdminOrderDetailView() {
                   Amount Captured:
                 </span>
                 <div style={{ fontWeight: 700, color: 'var(--accent)' }}>
-                  {formatPHP(payment.amount || order.total || 0)}
+                  {formatPHP(payment.amount || order.totalAmount || order.total || 0)}
                 </div>
               </div>
 
@@ -528,12 +534,22 @@ export default function AdminOrderDetailView() {
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '0.75rem',
                   fontWeight: 700,
-                  backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                  color: '#7c3aed',
+                  backgroundColor:
+                    shipment.status === 'DELIVERED'
+                      ? 'var(--success-bg)'
+                      : shipment.status === 'SHIPPED' || shipment.status === 'IN_TRANSIT'
+                      ? 'rgba(124, 58, 237, 0.1)'
+                      : 'rgba(113, 113, 122, 0.1)',
+                  color:
+                    shipment.status === 'DELIVERED'
+                      ? 'var(--success)'
+                      : shipment.status === 'SHIPPED' || shipment.status === 'IN_TRANSIT'
+                      ? '#7c3aed'
+                      : '#71717a',
                   textTransform: 'uppercase',
                 }}
               >
-                {shipment.status || 'DISPATCHED'}
+                {shipment.status || (order.status === 'SHIPPED' ? 'SHIPPED' : 'UNASSIGNED')}
               </span>
             </div>
 
@@ -550,7 +566,7 @@ export default function AdminOrderDetailView() {
                   Carrier Partner:
                 </span>
                 <div style={{ fontWeight: 600 }}>
-                  {shipment.carrier || 'Lalamove / J&T Express'}
+                  {shipment.carrier || (order.carrier ? order.carrier : 'Unassigned Courier')}
                 </div>
               </div>
 
@@ -563,13 +579,14 @@ export default function AdminOrderDetailView() {
                     fontFamily: 'monospace',
                     fontWeight: 700,
                     marginTop: '2px',
+                    color: shipment.trackingNumber ? 'var(--text-main)' : 'var(--text-muted)',
                   }}
                 >
-                  {shipment.trackingNumber || 'TRK-98314512'}
+                  {shipment.trackingNumber || order.trackingNumber || 'Awaiting Waybill Generation'}
                 </div>
-                {shipment.trackingNumber && (
+                {(shipment.trackingNumber || order.trackingNumber) && (
                   <Link
-                    to={`/track/${shipment.trackingNumber}`}
+                    to={`/track/${shipment.trackingNumber || order.trackingNumber}`}
                     style={{
                       fontSize: '0.75rem',
                       color: 'var(--accent)',

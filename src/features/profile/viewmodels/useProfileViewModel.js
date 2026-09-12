@@ -27,21 +27,35 @@ export function useProfileViewModel() {
 
   // Profile Entities State
   const [personalData, setPersonalData] = useState(() => {
+    const defaultName = user?.name || user?.fullName || '';
+    const defaultDisplay =
+      user?.displayName ||
+      (defaultName ? defaultName.split(' ')[0].toLowerCase() : '') ||
+      (user?.email ? user.email.split('@')[0] : 'user');
+
     return {
       ...INITIAL_PROFILE_STATE.personal,
-      name: user?.name || INITIAL_PROFILE_STATE.personal.name,
-      displayName:
-        user?.displayName ||
-        user?.name?.split(' ')[0]?.toLowerCase() ||
-        INITIAL_PROFILE_STATE.personal.displayName,
-      email: user?.email || INITIAL_PROFILE_STATE.personal.email,
-      phone: user?.phone || INITIAL_PROFILE_STATE.personal.phone,
-      bio: user?.bio || INITIAL_PROFILE_STATE.personal.bio,
-      role: user?.role || INITIAL_PROFILE_STATE.personal.role,
+      id: user?.userId || user?.id || '',
+      name: defaultName,
+      displayName: defaultDisplay,
+      email: user?.email || '',
+      phone: user?.phone || '',
+      bio: user?.bio || '',
+      role: user?.role || 'Customer',
+      createdAt: user?.createdAt || '',
     };
   });
 
-  const [addressData, setAddressData] = useState(INITIAL_PROFILE_STATE.address);
+  const [addressData, setAddressData] = useState(() => {
+    if (user?.address) {
+      return { ...INITIAL_PROFILE_STATE.address, ...user.address };
+    }
+    try {
+      const saved = localStorage.getItem('fiddlemania_user_address');
+      if (saved) return { ...INITIAL_PROFILE_STATE.address, ...JSON.parse(saved) };
+    } catch {}
+    return INITIAL_PROFILE_STATE.address;
+  });
 
   // Edit Mode Toggles
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
@@ -164,10 +178,22 @@ export function useProfileViewModel() {
 
   /* ----------------- ADDRESS HANDLERS ----------------- */
   const handleAddressChange = (field, value) => {
-    setAddressDraft((prev) => ({ ...prev, [field]: value }));
-    if (addressErrors[field]) {
+    let sanitized = value;
+    if (field === 'postalCode') {
+      // Postal Code must be digits only and cannot exceed 6 digits
+      sanitized = value.replace(/\D/g, '').slice(0, 6);
+      if (value && /\D/.test(value)) {
+        setAddressErrors((prev) => ({
+          ...prev,
+          postalCode: 'Postal code can only contain numbers (integers only).',
+        }));
+      } else if (addressErrors.postalCode) {
+        setAddressErrors((prev) => ({ ...prev, postalCode: null }));
+      }
+    } else if (addressErrors[field]) {
       setAddressErrors((prev) => ({ ...prev, [field]: null }));
     }
+    setAddressDraft((prev) => ({ ...prev, [field]: sanitized }));
   };
 
   const handleSaveAddress = async (e) => {
@@ -181,6 +207,9 @@ export function useProfileViewModel() {
     try {
       await api.patch('/users/address', addressDraft).catch(() => {});
       setAddressData(addressDraft);
+      try {
+        localStorage.setItem('fiddlemania_user_address', JSON.stringify(addressDraft));
+      } catch {}
       setIsEditingAddress(false);
       setAddressErrors({});
       showNotice('success', 'Delivery address saved successfully.');
