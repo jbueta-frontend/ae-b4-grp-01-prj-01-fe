@@ -5,7 +5,7 @@ import {
   useNavigate,
   useSearchParams,
 } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Search, X } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Search, X, Package } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
@@ -444,7 +444,36 @@ export default function Navbar() {
                       <span>Profile</span>
                     </Link>
 
-                    {/* Item 2: Logout */}
+                    {/* Item 2: My Purchase */}
+                    <Link
+                      to="/orders"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: 'var(--text-main)',
+                        textDecoration: 'none',
+                        transition: 'background-color var(--transition-fast)',
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          'var(--bg-subtle)')
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = 'transparent')
+                      }
+                    >
+                      <Package size={16} color="var(--accent)" />
+                      <span>My Purchase</span>
+                    </Link>
+
+                    {/* Item 3: Logout */}
                     <button
                       type="button"
                       onClick={() => {

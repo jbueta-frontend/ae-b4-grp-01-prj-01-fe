@@ -67,6 +67,10 @@ function App() {
                   {/* 4. Order Confirmation & Tracking */}
                   <Route path="/orders" element={<OrderHistoryView />} />
                   <Route
+                    path="/order-history"
+                    element={<Navigate to="/orders" replace />}
+                  />
+                  <Route
                     path="/orders/:orderId"
                     element={<OrderConfirmationView />}
                   />
