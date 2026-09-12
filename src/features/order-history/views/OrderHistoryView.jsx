@@ -7,6 +7,7 @@ import {
   RotateCcw,
   XCircle,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   MessageSquare,
   X,
@@ -26,6 +27,9 @@ export default function OrderHistoryView() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [cancellingId, setCancellingId] = useState(null);
   const [feedback, setFeedback] = useState(null);
+
+  // Cancel Order Confirmation Modal State
+  const [cancelModalOrder, setCancelModalOrder] = useState(null);
 
   // Contact Seller Modal State
   const [contactModalOrder, setContactModalOrder] = useState(null);
@@ -77,14 +81,9 @@ export default function OrderHistoryView() {
     loadOrders();
   }, []);
 
-  const handleCancelOrder = async (orderId) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to cancel Order ${orderId}? This will release the reserved inventory back to available warehouse stock.`
-      )
-    ) {
-      return;
-    }
+  const confirmCancelOrder = async () => {
+    if (!cancelModalOrder) return;
+    const orderId = cancelModalOrder.orderId || cancelModalOrder.orderNumber;
 
     setCancellingId(orderId);
     setFeedback(null);
@@ -115,6 +114,7 @@ export default function OrderHistoryView() {
         type: 'success',
         message: `Order ${orderId} has been successfully cancelled and warehouse inventory released.`,
       });
+      setCancelModalOrder(null);
     } catch (err) {
       setFeedback({
         type: 'error',
@@ -645,7 +645,7 @@ export default function OrderHistoryView() {
                     {!isCancelled && !isDelivered && (
                       <button
                         type="button"
-                        onClick={() => handleCancelOrder(currentOrderId)}
+                        onClick={() => setCancelModalOrder(order)}
                         disabled={cancellingId === currentOrderId}
                         className="btn btn-outline btn-sm"
                         style={{
@@ -656,11 +656,7 @@ export default function OrderHistoryView() {
                         }}
                       >
                         <XCircle size={14} />
-                        <span>
-                          {cancellingId === currentOrderId
-                            ? 'Cancelling...'
-                            : 'Cancel Order'}
-                        </span>
+                        <span>Cancel Order</span>
                       </button>
                     )}
 
@@ -880,6 +876,200 @@ export default function OrderHistoryView() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Cancel Order Confirmation Modal (Branded System Modal) */}
+      {cancelModalOrder && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-modal-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(4px)',
+            padding: '20px',
+          }}
+          onClick={() => !cancellingId && setCancelModalOrder(null)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-surface, #ffffff)',
+              borderRadius: 'var(--radius-lg, 16px)',
+              maxWidth: '460px',
+              width: '100%',
+              padding: '28px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border)',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Top Icon & Close Button */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '16px',
+              }}
+            >
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#dc2626',
+                }}
+              >
+                <AlertTriangle size={24} />
+              </div>
+              <button
+                type="button"
+                onClick={() => setCancelModalOrder(null)}
+                disabled={Boolean(cancellingId)}
+                className="btn btn-ghost btn-xs"
+                style={{
+                  padding: '6px',
+                  color: 'var(--text-muted)',
+                  cursor: cancellingId ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <h3
+              id="cancel-modal-title"
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 800,
+                color: 'var(--text-main)',
+                letterSpacing: '-0.02em',
+                marginBottom: '8px',
+              }}
+            >
+              Cancel Order Confirmation
+            </h3>
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: 'var(--text-muted)',
+                lineHeight: 1.5,
+                marginBottom: '18px',
+              }}
+            >
+              Are you sure you want to cancel this order? This action cannot be undone. All reserved items will be released back to warehouse stock in accordance with inventory policies.
+            </p>
+
+            {/* Order Details Snippet */}
+            <div
+              style={{
+                padding: '12px 16px',
+                borderRadius: 'var(--radius-md, 8px)',
+                backgroundColor: 'var(--bg-subtle, #f9fafb)',
+                border: '1px solid var(--border-hairline, #e5e7eb)',
+                marginBottom: '24px',
+                fontSize: '0.8125rem',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '6px',
+                }}
+              >
+                <span style={{ color: 'var(--text-muted)' }}>Order ID:</span>
+                <strong style={{ color: 'var(--accent)' }}>
+                  #{cancelModalOrder.orderId || cancelModalOrder.orderNumber}
+                </strong>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '6px',
+                }}
+              >
+                <span style={{ color: 'var(--text-muted)' }}>Total Amount:</span>
+                <strong style={{ fontWeight: 800 }}>
+                  ₱{(Number(cancelModalOrder.totalAmount || cancelModalOrder.total) || 0).toFixed(2)}
+                </strong>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span style={{ color: 'var(--text-muted)' }}>Items Count:</span>
+                <span>
+                  {cancelModalOrder.items?.length || 0} item
+                  {(cancelModalOrder.items?.length || 0) > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+              }}
+            >
+              <button
+                type="button"
+                disabled={Boolean(cancellingId)}
+                onClick={() => setCancelModalOrder(null)}
+                className="btn btn-outline btn-sm"
+                style={{
+                  padding: '10px 18px',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
+                Keep Order
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(cancellingId)}
+                onClick={confirmCancelOrder}
+                className="btn btn-sm"
+                style={{
+                  padding: '10px 20px',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: cancellingId ? 'not-allowed' : 'pointer',
+                  opacity: cancellingId ? 0.7 : 1,
+                  boxShadow: '0 2px 8px rgba(220, 38, 38, 0.25)',
+                }}
+              >
+                <XCircle size={15} />
+                <span>
+                  {cancellingId ? 'Cancelling...' : 'Yes, Cancel Order'}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       )}
