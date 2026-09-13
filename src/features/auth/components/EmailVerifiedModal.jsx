@@ -90,12 +90,16 @@ export default function EmailVerifiedModal({
           <button
             type="button"
             id="close-verified-modal-btn"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             aria-label="Close dialog"
             style={{
               position: 'absolute',
               top: '16px',
               right: '16px',
+              zIndex: 10,
               background: 'transparent',
               border: 'none',
               color: '#94a3b8',

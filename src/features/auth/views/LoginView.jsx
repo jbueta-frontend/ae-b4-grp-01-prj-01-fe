@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthViewModel } from '../viewmodels/useAuthViewModel';
 import {
   Lock,
@@ -52,13 +52,29 @@ export default function LoginView({ initialTab = 'login' }) {
     handleGuestCheckout,
   } = useAuthViewModel(initialTab);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isVerifiedModalOpen, setIsVerifiedModalOpen] = useState(false);
   const [verifiedModalMessage, setVerifiedModalMessage] = useState(
     'Email verified successfully!'
   );
+  const hasProcessedVerificationRef = useRef(false);
+
+  const handleCloseVerifiedModal = () => {
+    setIsVerifiedModalOpen(false);
+    hasProcessedVerificationRef.current = true;
+    setTab('login');
+    // Clean up verification parameters from URL so the modal never re-triggers
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('verified');
+    nextParams.delete('isEmailVerified');
+    nextParams.delete('token');
+    nextParams.delete('token_hash');
+    setSearchParams(nextParams, { replace: true });
+  };
 
   useEffect(() => {
+    if (hasProcessedVerificationRef.current) return;
+
     const isDirectlyVerified =
       searchParams.get('isEmailVerified') === 'true' ||
       searchParams.get('verified') === 'true';
@@ -70,12 +86,14 @@ export default function LoginView({ initialTab = 'login' }) {
     }
 
     if (isDirectlyVerified) {
+      hasProcessedVerificationRef.current = true;
       setTab('login');
       setIsVerifiedModalOpen(true);
       return;
     }
 
     if (token) {
+      hasProcessedVerificationRef.current = true;
       // Confirm verification with backend
       api
         .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
@@ -119,14 +137,8 @@ export default function LoginView({ initialTab = 'login' }) {
       {/* Email Verified Modal */}
       <EmailVerifiedModal
         isOpen={isVerifiedModalOpen}
-        onClose={() => {
-          setIsVerifiedModalOpen(false);
-          setTab('login');
-        }}
-        onProceed={() => {
-          setIsVerifiedModalOpen(false);
-          setTab('login');
-        }}
+        onClose={handleCloseVerifiedModal}
+        onProceed={handleCloseVerifiedModal}
         message={verifiedModalMessage}
         email={searchParams.get('email') || email || ''}
         isAuthenticated={false}
