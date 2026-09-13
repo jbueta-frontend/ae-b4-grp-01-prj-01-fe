@@ -93,13 +93,10 @@ export function useAuthViewModel(defaultTab = 'login') {
     setForgotLoading(true);
 
     try {
-      const res = await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
-      // Use the backend's actual message — it is intentionally neutral for security
-      const msg =
-        res?.data?.message ||
-        res?.message ||
-        'If an account exists with this email address, a password reset link has been sent. Please check your inbox.';
-      setForgotMessage(msg);
+      await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
+      setForgotMessage(
+        `A password reset link has been sent to ${forgotEmail.trim()}. Please check your inbox and click the link to create a new password.`
+      );
     } catch (err) {
       setForgotError(
         err.response?.data?.error?.message ||
