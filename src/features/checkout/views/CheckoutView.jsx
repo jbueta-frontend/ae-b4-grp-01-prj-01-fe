@@ -153,10 +153,12 @@ export default function CheckoutView() {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingBottom: '24px',
+                    justifyContent: 'flex-start',
+                    paddingBottom: '20px',
                     marginBottom: '28px',
                     borderBottom: '1px solid var(--border-hairline, #e8e3df)',
+                    flexWrap: 'wrap',
+                    gap: '4px',
                   }}
                 >
                   {/* Step 1 Indicator */}
@@ -164,7 +166,7 @@ export default function CheckoutView() {
                     type="button"
                     onClick={() => goToStep(1)}
                     style={{
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
                       gap: '10px',
                       background: 'none',
@@ -231,16 +233,17 @@ export default function CheckoutView() {
                     </div>
                   </button>
 
-                  {/* Connecting Progress Track */}
+                  {/* Connecting Progress Track (Compact Distance) */}
                   <div
                     style={{
-                      flex: 1,
+                      width: '44px',
                       height: '2px',
                       backgroundColor:
                         currentStep > 1
                           ? 'var(--accent, #c85a32)'
                           : 'var(--border-hairline, #e8e3df)',
-                      margin: '0 16px',
+                      margin: '0 12px',
+                      flexShrink: 0,
                       transition: 'background-color 0.3s ease',
                     }}
                   />
@@ -248,7 +251,7 @@ export default function CheckoutView() {
                   {/* Step 2 Indicator */}
                   <div
                     style={{
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
                       gap: '10px',
                       textAlign: 'left',
