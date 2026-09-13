@@ -36,6 +36,7 @@ import VerifyEmailView from './features/auth/views/VerifyEmailView';
 import ResetPasswordView from './features/auth/views/ResetPasswordView';
 import ProfileView from './features/profile/views/ProfileView';
 import SupportView from './features/support/views/SupportView';
+import LegalPolicyView from './features/support/views/LegalPolicyView';
 
 // Admin Persona Views
 import AdminReportsView from './features/admin-reports/views/AdminReportsView';
@@ -167,6 +168,11 @@ function App() {
                   <Route path="/support" element={<SupportView />} />
                   <Route path="/faq" element={<SupportView />} />
                   <Route path="/faqs" element={<SupportView />} />
+                  <Route path="/privacy-policy" element={<LegalPolicyView />} />
+                  <Route path="/privacy" element={<LegalPolicyView />} />
+                  <Route path="/terms-of-service" element={<LegalPolicyView />} />
+                  <Route path="/terms" element={<LegalPolicyView />} />
+                  <Route path="/policies" element={<LegalPolicyView />} />
                 </Route>
 
                 {/* 7. Admin Portal (Protected with Role Guard) */}

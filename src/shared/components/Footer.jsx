@@ -243,7 +243,7 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Col 2: Quick Navigation / Heirloom Shop */}
+            {/* Col 2: Privacy Policy & Terms of Service */}
             <div>
               <h4
                 style={{
@@ -255,16 +255,16 @@ export default function Footer() {
                   marginBottom: '18px',
                 }}
               >
-                Heirloom Catalog
+                Privacy & Terms
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '11px' }}>
                 {[
-                  { name: 'All Wooden Toys', path: '/' },
-                  { name: 'Architectural & Castles', path: '/#products' },
-                  { name: 'STEM & Mechanical', path: '/#products' },
-                  { name: 'Sensory & Discovery', path: '/#products' },
-                  { name: 'Best Sellers', path: '/#products' },
-                  { name: 'Featured Collections', path: '/#products' },
+                  { name: 'Privacy Policy', path: '/privacy-policy' },
+                  { name: 'Terms of Service', path: '/terms-of-service' },
+                  { name: 'Data Protection (RA 10173)', path: '/privacy-policy' },
+                  { name: '30-Day Return & Refund Policy', path: '/terms-of-service' },
+                  { name: 'Toy Safety & Compliance', path: '/terms-of-service' },
+                  { name: 'Cookie & Security Standards', path: '/privacy-policy' },
                 ].map((link, idx) => (
                   <li key={idx}>
                     <Link
@@ -489,10 +489,10 @@ export default function Footer() {
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-              <Link to="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+              <Link to="/privacy-policy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
                 Privacy Policy
               </Link>
-              <Link to="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+              <Link to="/terms-of-service" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
                 Terms of Service
               </Link>
               <Link to="/faqs" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
