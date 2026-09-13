@@ -134,6 +134,7 @@ export default function HeroCarousel({ onSelectCategory }) {
 
       <div className="container" style={{ position: 'relative', zIndex: 2 }}>
         <div
+          className="hero-slide-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
@@ -211,6 +212,7 @@ export default function HeroCarousel({ onSelectCategory }) {
 
             {/* Integrated "Don't Miss!!" Countdown Timer Container */}
             <div
+              className="hero-countdown-box"
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.75)',
                 border: '1px solid #D4CCC4',
@@ -401,6 +403,7 @@ export default function HeroCarousel({ onSelectCategory }) {
 
             {/* Action Row: Shop Now CTA Button + Review Social Proof Cluster */}
             <div
+              className="hero-cta-wrapper"
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',

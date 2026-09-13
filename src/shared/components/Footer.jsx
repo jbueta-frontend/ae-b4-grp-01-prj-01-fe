@@ -136,8 +136,8 @@ export default function Footer() {
                   <span>Welcome to the circle! Check your inbox for your welcome guide.</span>
                 </div>
               ) : (
-                <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '8px' }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
+                <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ position: 'relative', flex: '1 1 220px', minWidth: '200px' }}>
                     <Mail
                       size={16}
                       style={{
