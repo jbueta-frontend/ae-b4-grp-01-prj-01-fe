@@ -60,6 +60,8 @@ const CATEGORY_METADATA = {
 export default function CategoryShowcase({
   categoryItems = DATABASE_CATEGORIES,
   products = [],
+  selectedCategory,
+  onSelectCategory,
   onQuickAdd,
   addedNotice,
   onExploreCatalog,
@@ -70,6 +72,45 @@ export default function CategoryShowcase({
   const [dbProducts, setDbProducts] = useState(products || []);
   const [liveCategories, setLiveCategories] = useState(categoryItems || DATABASE_CATEGORIES);
   const [loadingDb, setLoadingDb] = useState(false);
+
+  // Normalize categories list from database or props
+  const displayCategories = useMemo(() => {
+    return Array.isArray(liveCategories) && liveCategories.length > 0
+      ? liveCategories
+      : DATABASE_CATEGORIES;
+  }, [liveCategories]);
+
+  // Determine initial active category from URL, prop, localStorage, or fallback
+  const getInitialCategory = () => {
+    const fromProp =
+      selectedCategory && selectedCategory !== 'All Toys'
+        ? selectedCategory
+        : null;
+    const fromUrl = new URLSearchParams(window.location.search).get('cat');
+    const fromStorage = localStorage.getItem('fiddlemania_selected_category');
+    const target = fromProp || fromUrl || fromStorage;
+
+    if (target && target !== 'All Toys') {
+      const found = displayCategories.find(
+        (c) =>
+          (c.name || c.categoryKey)?.toLowerCase().trim() ===
+          target.toLowerCase().trim()
+      );
+      if (found) return found.name || found.categoryKey;
+      return target;
+    }
+
+    const defaultCat = displayCategories.find(
+      (c) =>
+        (c.name || c.categoryKey) === 'Action Figures' ||
+        (c.name || c.categoryKey) === 'Building Sets'
+    );
+    return defaultCat
+      ? defaultCat.name || defaultCat.categoryKey
+      : displayCategories[0]?.name || 'Action Figures';
+  };
+
+  const [activeCategory, setActiveCategory] = useState(getInitialCategory);
 
   // Direct database query on mount to guarantee fresh live PostgreSQL data
   useEffect(() => {
@@ -121,22 +162,12 @@ export default function CategoryShowcase({
     }
   }, [categoryItems]);
 
-  // Normalize categories list from database or props
-  const displayCategories = useMemo(() => {
-    return Array.isArray(liveCategories) && liveCategories.length > 0
-      ? liveCategories
-      : DATABASE_CATEGORIES;
-  }, [liveCategories]);
-
-  // Default active category to the first real category ('Building Sets' or displayCategories[0])
-  const [activeCategory, setActiveCategory] = useState(() => {
-    const building = displayCategories.find(
-      (c) => (c.name || c.categoryKey) === 'Building Sets'
-    );
-    return building
-      ? building.name || building.categoryKey
-      : displayCategories[0]?.name || 'Building Sets';
-  });
+  // Sync activeCategory when selectedCategory prop changes
+  useEffect(() => {
+    if (selectedCategory && selectedCategory !== 'All Toys') {
+      setActiveCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
 
   // Filter products for currently active category in showcase from live database products
   const categoryProducts = useMemo(() => {
@@ -244,7 +275,17 @@ export default function CategoryShowcase({
               <button
                 key={cat.id || cat.categoryId || catName}
                 type="button"
-                onClick={() => setActiveCategory(catName)}
+                onClick={() => {
+                  setActiveCategory(catName);
+                  localStorage.setItem('fiddlemania_selected_category', catName);
+                  if (onSelectCategory) {
+                    onSelectCategory(catName);
+                  } else {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('cat', catName);
+                    window.history.replaceState({}, '', url.toString());
+                  }
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

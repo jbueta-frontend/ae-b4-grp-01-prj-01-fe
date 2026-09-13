@@ -55,15 +55,29 @@ export const PRICE_OPTIONS = [
 export function useProductCatalogViewModel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlQuery = searchParams.get('q') || '';
-  const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get('cat') || 'All Toys'
-  );
+  const initialCategory = useMemo(() => {
+    return (
+      searchParams.get('cat') ||
+      localStorage.getItem('fiddlemania_selected_category') ||
+      'All Toys'
+    );
+  }, []);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [categories, setCategories] = useState(CATEGORIES);
   const [categoryItems, setCategoryItems] = useState(DATABASE_CATEGORIES);
   const [selectedAge, setSelectedAge] = useState('All Ages');
   const [selectedPrice, setSelectedPrice] = useState('all');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [addedNotice, setAddedNotice] = useState(null);
+
+  // Sync initialCategory from localStorage into URL if not present
+  useEffect(() => {
+    if (initialCategory && initialCategory !== 'All Toys' && !searchParams.get('cat')) {
+      const next = new URLSearchParams(searchParams);
+      next.set('cat', initialCategory);
+      setSearchParams(next, { replace: true });
+    }
+  }, []);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +206,11 @@ export function useProductCatalogViewModel() {
 
   const handleSetCategory = (cat) => {
     setSelectedCategory(cat);
+    if (cat && cat !== 'All Toys') {
+      localStorage.setItem('fiddlemania_selected_category', cat);
+    } else {
+      localStorage.removeItem('fiddlemania_selected_category');
+    }
     const next = new URLSearchParams(searchParams);
     if (cat && cat !== 'All Toys') {
       next.set('cat', cat);
@@ -229,11 +248,15 @@ export function useProductCatalogViewModel() {
   const prevPage = () => goToPage(currentPage - 1);
 
   const resetFilters = () => {
+    localStorage.removeItem('fiddlemania_selected_category');
     setSelectedCategory('All Toys');
     setSelectedAge('All Ages');
     setSelectedPrice('all');
     setInStockOnly(false);
     handleSetSearchQuery('');
+    const next = new URLSearchParams(searchParams);
+    next.delete('cat');
+    setSearchParams(next, { replace: true });
     setCurrentPage(1);
   };
 
@@ -255,6 +278,7 @@ export function useProductCatalogViewModel() {
     searchQuery: urlQuery,
     setSearchQuery: handleSetSearchQuery,
     products: paginatedProducts,
+    allProducts: products,
     totalFilteredCount: filteredProducts.length,
     totalProductsCount: products.length,
     currentPage,
