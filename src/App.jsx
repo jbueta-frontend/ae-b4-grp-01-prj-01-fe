@@ -47,10 +47,12 @@ import AdminOrdersListView from './features/admin-fulfillment/views/AdminOrdersL
 import AdminOrderDetailView from './features/admin-fulfillment/views/AdminOrderDetailView';
 
 /**
- * Listens for Supabase/backend password reset links (e.g. #access_token=...&type=recovery or ?type=recovery)
- * and guarantees automatic redirection to the Reset Password form.
+ * Automatically intercepts incoming email action links (Forgot Password recovery vs Account Registration verification)
+ * and guarantees immediate redirection to the correct destination:
+ * 1. Forgot Password -> /reset-password?token=...
+ * 2. Account Registration -> /login?verified=true&token=...
  */
-function AuthRecoveryRedirect() {
+function AuthRedirectHandler() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -61,36 +63,82 @@ function AuthRecoveryRedirect() {
     const hashParams = new URLSearchParams(hash);
     const searchParams = new URLSearchParams(location.search);
 
-    const type = hashParams.get('type') || searchParams.get('type');
+    const type = (
+      hashParams.get('type') ||
+      searchParams.get('type') ||
+      ''
+    ).toLowerCase();
+
     const isRecovery =
       type === 'recovery' ||
       type === 'reset' ||
-      hash.includes('type=recovery') ||
-      hash.includes('type=reset') ||
-      location.search.includes('type=recovery') ||
-      location.search.includes('type=reset');
+      hash.toLowerCase().includes('type=recovery') ||
+      hash.toLowerCase().includes('type=reset') ||
+      location.search.toLowerCase().includes('type=recovery') ||
+      location.search.toLowerCase().includes('type=reset') ||
+      sessionStorage.getItem('fiddlemania_auth_action') === 'forgot_password';
+
+    // 1. FORGOT PASSWORD FLOW -> MUST LAND ON /reset-password
+    if (isRecovery) {
+      if (
+        location.pathname !== '/reset-password' &&
+        location.pathname !== '/resetPassword'
+      ) {
+        const token =
+          hashParams.get('access_token') ||
+          hashParams.get('token') ||
+          hashParams.get('token_hash') ||
+          searchParams.get('token') ||
+          searchParams.get('token_hash') ||
+          searchParams.get('access_token') ||
+          searchParams.get('code') ||
+          '';
+
+        sessionStorage.removeItem('fiddlemania_auth_action');
+        const forwardParams = new URLSearchParams();
+        if (token) forwardParams.set('token', token);
+        forwardParams.set('type', 'recovery');
+
+        navigate(
+          `/reset-password?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
+          { replace: true }
+        );
+      }
+      return;
+    }
+
+    // 2. REGISTRATION EMAIL VERIFICATION FLOW -> MUST LAND ON /login WITH MODAL
+    const isSignupVerification =
+      type === 'signup' ||
+      type === 'email_verification' ||
+      type === 'invite' ||
+      hash.toLowerCase().includes('type=signup') ||
+      hash.toLowerCase().includes('type=email_verification') ||
+      searchParams.get('isEmailVerified') === 'true' ||
+      searchParams.get('verified') === 'true';
+
+    const verificationToken =
+      searchParams.get('token') ||
+      searchParams.get('token_hash') ||
+      hashParams.get('access_token') ||
+      searchParams.get('access_token');
 
     if (
-      isRecovery &&
-      location.pathname !== '/reset-password' &&
-      location.pathname !== '/resetPassword'
+      (isSignupVerification || (verificationToken && !isRecovery)) &&
+      location.pathname !== '/login'
     ) {
-      const token =
-        hashParams.get('access_token') ||
-        hashParams.get('token') ||
-        hashParams.get('token_hash') ||
-        searchParams.get('token') ||
-        searchParams.get('token_hash') ||
-        searchParams.get('access_token') ||
-        searchParams.get('code') ||
+      const email =
+        searchParams.get('email') ||
+        hashParams.get('email') ||
         '';
 
       const forwardParams = new URLSearchParams();
-      if (token) forwardParams.set('token', token);
-      if (type) forwardParams.set('type', type);
+      forwardParams.set('verified', 'true');
+      if (verificationToken) forwardParams.set('token', verificationToken);
+      if (email) forwardParams.set('email', email);
 
       navigate(
-        `/reset-password?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
+        `/login?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
         { replace: true }
       );
     }
@@ -99,41 +147,12 @@ function AuthRecoveryRedirect() {
   return null;
 }
 
-/**
- * Displays persistent email verification success modal on the storefront
- * when user arrives from an email verification link.
- */
-function GlobalAuthModals() {
-  const { verifiedNotification, closeVerifiedNotification, isAuthenticated } =
-    useAuth();
-
-  if (!verifiedNotification?.isOpen) return null;
-
-  return (
-    <EmailVerifiedModal
-      isOpen={true}
-      onClose={closeVerifiedNotification}
-      onProceed={closeVerifiedNotification}
-      message={verifiedNotification.message || 'Email verified successfully!'}
-      email={verifiedNotification.email || ''}
-      userName={
-        verifiedNotification.user?.name ||
-        verifiedNotification.user?.fullName ||
-        ''
-      }
-      isAuthenticated={isAuthenticated}
-      proceedText="Start Shopping"
-    />
-  );
-}
-
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
-          <AuthRecoveryRedirect />
-          <GlobalAuthModals />
+          <AuthRedirectHandler />
           <div
             style={{
               display: 'flex',

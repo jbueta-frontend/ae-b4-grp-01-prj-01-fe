@@ -93,6 +93,7 @@ export function useAuthViewModel(defaultTab = 'login') {
     setForgotLoading(true);
 
     try {
+      sessionStorage.setItem('fiddlemania_auth_action', 'forgot_password');
       await api.post('/auth/forgot-password', { email: forgotEmail.trim() });
       setForgotMessage(
         `A password reset link has been sent to ${forgotEmail.trim()}. Please check your inbox and click the link to create a new password.`

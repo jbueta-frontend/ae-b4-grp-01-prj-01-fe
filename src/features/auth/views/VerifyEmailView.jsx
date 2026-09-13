@@ -83,17 +83,10 @@ export default function VerifyEmailView() {
       return;
     }
 
-    // 1. If an access_token is present in the redirect, authenticate the session immediately
-    if (accessToken) {
-      setAuthSession(accessToken, refreshToken);
+    // 1. If an access_token or direct verification is present
+    if (accessToken || isDirectlyVerified) {
       setStatus('success');
-      setVerifiedMessage('Email verified successfully! You are now logged in.');
-      setIsModalOpen(true);
-      return;
-    }
-
-    if (isDirectlyVerified) {
-      setStatus('success');
+      setVerifiedMessage('Email verified successfully! Please log in to your account.');
       setIsModalOpen(true);
       return;
     }
@@ -103,26 +96,10 @@ export default function VerifyEmailView() {
       api
         .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
         .then((res) => {
-          // If response returns session token or user, authenticate immediately
-          const sessionToken =
-            res?.accessToken ||
-            res?.data?.accessToken ||
-            res?.token ||
-            res?.session?.access_token;
-          if (sessionToken) {
-            setAuthSession(
-              sessionToken,
-              res?.refreshToken || res?.session?.refresh_token,
-              res?.user
-            );
-          }
-
           const successMsg =
             res?.message ||
             res?.data?.message ||
-            (sessionToken
-              ? 'Email verified successfully! You are now logged in.'
-              : 'Email verified successfully!');
+            'Email verified successfully! Please log in to your account.';
           setVerifiedMessage(successMsg);
           setStatus('success');
           setIsModalOpen(true);
@@ -131,17 +108,10 @@ export default function VerifyEmailView() {
           // Fallback check: in case endpoint accepts POST or alternative path
           try {
             const fallbackRes = await api.post('/auth/verify', { token, type });
-            const sessionToken =
-              fallbackRes?.accessToken ||
-              fallbackRes?.data?.accessToken ||
-              fallbackRes?.token;
-            if (sessionToken) {
-              setAuthSession(sessionToken, fallbackRes?.refreshToken, fallbackRes?.user);
-            }
             const successMsg =
               fallbackRes?.message ||
               fallbackRes?.data?.message ||
-              'Email verified successfully!';
+              'Email verified successfully! Please log in to your account.';
             setVerifiedMessage(successMsg);
             setStatus('success');
             setIsModalOpen(true);
@@ -155,7 +125,7 @@ export default function VerifyEmailView() {
               '';
 
             if (msg.toLowerCase().includes('already verified')) {
-              setVerifiedMessage('Email is already verified!');
+              setVerifiedMessage('Email is already verified! Please log in to your account.');
               setStatus('success');
               setIsModalOpen(true);
             } else {
@@ -199,21 +169,17 @@ export default function VerifyEmailView() {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          if (isAuthenticated) navigate('/');
+          navigate('/login');
         }}
         onProceed={() => {
           setIsModalOpen(false);
-          if (isAuthenticated) {
-            navigate('/');
-          } else {
-            navigate('/login');
-          }
+          navigate('/login');
         }}
         message={verifiedMessage}
         email={emailParam || user?.email || ''}
         userName={user?.name || ''}
-        isAuthenticated={isAuthenticated}
-        proceedText={isAuthenticated ? 'Start Shopping' : 'Proceed to Login'}
+        isAuthenticated={false}
+        proceedText="Proceed to Login"
       />
 
       <div style={{ width: '100%', maxWidth: '440px' }}>
