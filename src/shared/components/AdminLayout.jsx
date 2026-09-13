@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { NavLink, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, Package, Truck, LogOut, ShieldCheck, Activity } from 'lucide-react';
+import { BarChart3, Package, Truck, LogOut, ShieldCheck, Activity, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
 
@@ -7,6 +8,7 @@ export default function AdminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -26,29 +28,16 @@ export default function AdminLayout() {
   const pageTitle = currentNav?.label || 'Admin Control Terminal';
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        backgroundColor: 'var(--admin-canvas)',
-        fontFamily: 'var(--font-sans)',
-      }}
-    >
+    <div className="admin-viewport-root">
+      {/* Mobile Backdrop */}
+      <div
+        className={`admin-mobile-backdrop ${mobileOpen ? 'mobile-open' : ''}`}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+
       {/* 1. Left Vertical Sidebar */}
-      <aside
-        style={{
-          width: '260px',
-          flexShrink: 0,
-          backgroundColor: '#161619',
-          borderRight: '1px solid #27272e',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          zIndex: 50,
-        }}
-      >
+      <aside className={`admin-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Brand Area - Height: 64px matching the main header container */}
         <div
           style={{
@@ -113,6 +102,7 @@ export default function AdminLayout() {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => setMobileOpen(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -250,30 +240,18 @@ export default function AdminLayout() {
       </aside>
 
       {/* 2. Main Right Content Panel */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0,
-        }}
-      >
+      <div className="admin-main-panel">
         {/* Top Header Bar */}
-        <header
-          style={{
-            height: '64px',
-            backgroundColor: '#ffffff',
-            borderBottom: '1px solid var(--admin-card-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 36px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 40,
-          }}
-        >
+        <header className="admin-header-bar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              className="admin-mobile-toggle"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle admin sidebar navigation"
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
             <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
               Admin
             </span>
@@ -311,14 +289,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Page Views - Maximized screen layout */}
-        <main
-          style={{
-            flex: 1,
-            padding: '28px 36px 64px',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
+        <main className="admin-content-area">
           <Outlet />
         </main>
       </div>

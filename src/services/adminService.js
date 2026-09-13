@@ -67,12 +67,13 @@ export async function updateAdminOrderStatus(orderId, status) {
  * Get Admin Products Catalog
  * GET /admin/products (or GET /products)
  */
-export async function getAdminProducts() {
+export async function getAdminProducts(params = {}) {
+  const mergedParams = { limit: 100, ...params };
   try {
-    const res = await api.get('/admin/products');
+    const res = await api.get('/admin/products', { params: mergedParams });
     return Array.isArray(res) ? res : res?.products || res?.data || [];
   } catch {
-    const res = await api.get('/products');
+    const res = await api.get('/products', { params: mergedParams });
     return Array.isArray(res) ? res : res?.products || res?.data || [];
   }
 }

@@ -11,6 +11,114 @@ import {
 import { mapApiProduct } from '../../product-catalog/models/productModel.js';
 import { getErrorMessage } from '../../../shared/utils/errorHandler';
 
+function enrichLowStockAlerts(rawAlerts, catalogList = []) {
+  const alertsFromReport = (Array.isArray(rawAlerts) ? rawAlerts : []).map((alert) => {
+    const prod = alert.product || {};
+    const id = alert.productId || prod.productId || alert.id || alert.product_id;
+    const matched = catalogList.find((p) => (p.productId || p.id) === id);
+
+    const name = prod.name || alert.name || matched?.name || 'Toy Product';
+    const sku = prod.sku || alert.sku || matched?.sku || 'N/A';
+    const price = Number(prod.price || alert.price || matched?.price || 0);
+    const heroImage =
+      matched?.heroImage ||
+      alert.heroImage ||
+      alert.imageUrl ||
+      prod.imageUrl ||
+      (matched?.images && matched.images[0]?.imageUrl) ||
+      '/products/cyber_mech_figure.jpg';
+    const category = matched?.category || prod.category?.name || 'Toys';
+    const stockQuantity = Number(
+      alert.stockQuantity ?? alert.stock ?? matched?.stockQuantity ?? matched?.inventory?.stockQuantity ?? 0
+    );
+    const reservedQuantity = Number(
+      alert.reservedQuantity ?? matched?.reservedQuantity ?? matched?.inventory?.reservedQuantity ?? 0
+    );
+    const lowStockThreshold = Number(
+      alert.lowStockThreshold ?? matched?.lowStockThreshold ?? matched?.inventory?.lowStockThreshold ?? 5
+    );
+
+    return {
+      ...alert,
+      ...(matched || {}),
+      productId: id,
+      name,
+      productName: name,
+      sku,
+      price,
+      heroImage,
+      category,
+      stockQuantity,
+      reservedQuantity,
+      lowStockThreshold,
+      availableStock: Math.max(0, stockQuantity - reservedQuantity),
+      isOutOfStock: stockQuantity <= 0,
+      isLowStock: stockQuantity > 0 && stockQuantity <= lowStockThreshold,
+    };
+  });
+
+  const alertIds = new Set(alertsFromReport.map((a) => a.productId));
+  const additionalFromCatalog = catalogList
+    .filter((p) => {
+      const id = p.productId || p.id;
+      if (alertIds.has(id)) return false;
+      const stock = Number(p.stockQuantity ?? p.inventory?.stockQuantity ?? p.stock ?? 0);
+      const threshold = Number(p.lowStockThreshold ?? p.inventory?.lowStockThreshold ?? 5);
+      return stock <= threshold;
+    })
+    .map((p) => {
+      const stock = Number(p.stockQuantity ?? p.inventory?.stockQuantity ?? p.stock ?? 0);
+      const threshold = Number(p.lowStockThreshold ?? p.inventory?.lowStockThreshold ?? 5);
+      const resQty = Number(p.reservedQuantity ?? p.inventory?.reservedQuantity ?? 0);
+      return {
+        productId: p.productId || p.id,
+        name: p.name || 'Toy Product',
+        productName: p.name || 'Toy Product',
+        sku: p.sku || 'N/A',
+        price: Number(p.price || 0),
+        heroImage: p.heroImage || '/products/cyber_mech_figure.jpg',
+        category: p.category || 'Toys',
+        stockQuantity: stock,
+        reservedQuantity: resQty,
+        lowStockThreshold: threshold,
+        availableStock: Math.max(0, stock - resQty),
+        isOutOfStock: stock <= 0,
+        isLowStock: stock > 0 && stock <= threshold,
+      };
+    });
+
+  return [...alertsFromReport, ...additionalFromCatalog];
+}
+
+function enrichTopProducts(rawTop, catalogList = []) {
+  return (Array.isArray(rawTop) ? rawTop : []).map((prod, idx) => {
+    const id = prod.productId || prod.id;
+    const matched = catalogList.find((p) => (p.productId || p.id) === id);
+
+    const name = prod.name || matched?.name || 'Toy Product';
+    const sku = prod.sku || matched?.sku || 'N/A';
+    const heroImage = matched?.heroImage || prod.heroImage || '/products/cyber_mech_figure.jpg';
+    const category = matched?.category || prod.category || 'Toys';
+    const sold = Number(prod.soldQuantity ?? prod.totalSold ?? prod.quantity ?? 0);
+    const revenue = Number(prod.revenue ?? prod.totalRevenue ?? 0);
+
+    return {
+      ...prod,
+      ...(matched || {}),
+      productId: id,
+      name,
+      sku,
+      heroImage,
+      category,
+      soldQuantity: sold,
+      totalSold: sold,
+      quantity: sold,
+      revenue,
+      rank: idx + 1,
+    };
+  });
+}
+
 export function useAdminReportsViewModel() {
   const [activePreset, setActivePreset] = useState('today');
   const initialRange = getDateRangeByPreset('today');
@@ -38,8 +146,35 @@ export function useAdminReportsViewModel() {
       if (from) params.from = from;
       if (to) params.to = to;
 
-      // Executive BI Dashboard Overview endpoint GET /admin/reports/overview
-      const res = await getAdminReportsOverview(params);
+      // 1. Fetch executive reports overview and database inventory catalog concurrently
+      const [reportsResult, productsResult] = await Promise.allSettled([
+        getAdminReportsOverview(params),
+        getAdminProducts({ limit: 100 }),
+      ]);
+
+      const res = reportsResult.status === 'fulfilled' ? reportsResult.value : {};
+      const rawProducts = productsResult.status === 'fulfilled' ? productsResult.value : [];
+      const list = Array.isArray(rawProducts) ? rawProducts : rawProducts?.products || rawProducts?.data || [];
+
+      // Check locally cached products
+      const cached = localStorage.getItem('fiddlemania_seeded_products');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            const ids = new Set(list.map((p) => p.productId || p.id));
+            parsed.forEach((p) => {
+              const id = p.productId || p.id;
+              if (!ids.has(id)) list.push(p);
+            });
+          }
+        } catch {}
+      }
+
+      const mappedCatalog = list.map((p) => mapApiProduct(p)).filter(Boolean);
+      if (mappedCatalog.length > 0) {
+        setCatalogProducts(mappedCatalog);
+      }
 
       const revenue = Number(res?.totalRevenue ?? res?.revenue ?? 0);
       const orders = Number(
@@ -50,16 +185,20 @@ export function useAdminReportsViewModel() {
       );
       const aov = Number(res?.averageOrderValue ?? (orders > 0 ? revenue / orders : 0));
       const activeProductsCount = Number(
-        res?.activeProductsCount ??
-        res?.activeProducts ??
-        res?.productCount ??
-        0
+        mappedCatalog.length ||
+        (res?.activeProductsCount ??
+          res?.activeProducts ??
+          res?.productCount ??
+          0)
       );
-      const lowStockAlerts = Array.isArray(res?.lowStockAlerts)
+
+      const rawAlerts = Array.isArray(res?.lowStockAlerts)
         ? res.lowStockAlerts
         : Array.isArray(res?.lowStock)
           ? res.lowStock
           : [];
+      const lowStockAlerts = enrichLowStockAlerts(rawAlerts, mappedCatalog);
+
       const orderMetrics = res?.orderMetrics || {
         total: orders,
         confirmed: Number(res?.confirmedOrders || 0),
@@ -67,9 +206,9 @@ export function useAdminReportsViewModel() {
         delivered: Number(res?.deliveredOrders || 0),
         cancelled: Number(res?.cancelledOrders || 0),
       };
-      const topProducts = Array.isArray(res?.topProducts)
-        ? res.topProducts
-        : [];
+
+      const rawTop = Array.isArray(res?.topProducts) ? res.topProducts : [];
+      const topProducts = enrichTopProducts(rawTop, mappedCatalog);
 
       setData({
         totalRevenue: revenue,
@@ -90,61 +229,15 @@ export function useAdminReportsViewModel() {
     }
   }, []);
 
-  // Fetch full products list with authentic images and ERD inventory mappings
+  // Sync catalog updates to reports data if catalog is updated independently
   useEffect(() => {
-    async function loadCatalog() {
-      try {
-        const items = await getAdminProducts();
-        let list = Array.isArray(items) ? items : items?.products || items?.data || [];
-
-        // Check locally cached products to ensure complete synchronization
-        const cached = localStorage.getItem('fiddlemania_seeded_products');
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed)) {
-              const ids = new Set(list.map((p) => p.productId || p.id));
-              parsed.forEach((p) => {
-                const id = p.productId || p.id;
-                if (!ids.has(id)) list.push(p);
-              });
-            }
-          } catch {}
-        }
-
-        // Map every product through canonical normalizer strictly conforming to the ERD
-        const mapped = list.map((p) => mapApiProduct(p));
-        setCatalogProducts(mapped);
-      } catch {
-        // Fallback silently if public/admin endpoint fails
-      }
-    }
-    loadCatalog();
-  }, []);
-
-  // Correlate and enrich lowStockAlerts with catalog products metadata (name, SKU, image)
-  useEffect(() => {
-    if (catalogProducts.length > 0 && data.lowStockAlerts.length > 0) {
-      setData((prev) => {
-        let changed = false;
-        const enriched = prev.lowStockAlerts.map((alert) => {
-          const id = alert.productId || alert.id || alert.product_id;
-          const matched = catalogProducts.find((p) => (p.productId || p.id) === id);
-          if (!matched) return alert;
-          changed = true;
-          return {
-            ...alert,
-            ...matched,
-            productId: id,
-            name: matched.name || alert.name || 'Toy Product',
-            sku: matched.sku || alert.sku || 'N/A',
-            heroImage: matched.heroImage || alert.heroImage,
-            stockQuantity: Number(alert.stockQuantity ?? alert.stock ?? matched.stockQuantity ?? 0),
-            lowStockThreshold: Number(alert.lowStockThreshold ?? matched.lowStockThreshold ?? 5),
-          };
-        });
-        return changed ? { ...prev, lowStockAlerts: enriched } : prev;
-      });
+    if (catalogProducts.length > 0) {
+      setData((prev) => ({
+        ...prev,
+        activeProductsCount: catalogProducts.length || prev.activeProductsCount,
+        lowStockAlerts: enrichLowStockAlerts(prev.lowStockAlerts, catalogProducts),
+        topProducts: enrichTopProducts(prev.topProducts, catalogProducts),
+      }));
     }
   }, [catalogProducts]);
 
