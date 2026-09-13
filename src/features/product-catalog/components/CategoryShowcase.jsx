@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,8 +8,11 @@ import {
   Award,
   TreePine,
   Layers,
+  Loader2,
 } from 'lucide-react';
-import { DATABASE_CATEGORIES } from '../models/productModel';
+import api from '../../../services/api';
+import { getCategories } from '../../../services/productService';
+import { DATABASE_CATEGORIES, mapApiProduct } from '../models/productModel';
 import ProductCard from './ProductCard';
 
 const CATEGORY_IMAGE_MAP = {
@@ -63,35 +66,94 @@ export default function CategoryShowcase({
 }) {
   const productsScrollRef = useRef(null);
 
+  // Live database state
+  const [dbProducts, setDbProducts] = useState(products || []);
+  const [liveCategories, setLiveCategories] = useState(categoryItems || DATABASE_CATEGORIES);
+  const [loadingDb, setLoadingDb] = useState(false);
+
+  // Direct database query on mount to guarantee fresh live PostgreSQL data
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchFromDatabase() {
+      setLoadingDb(true);
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          api.get('/products?limit=100'),
+          getCategories(),
+        ]);
+        if (!isMounted) return;
+
+        const rawList = Array.isArray(prodRes)
+          ? prodRes
+          : prodRes?.products || prodRes?.data || [];
+
+        if (rawList.length > 0) {
+          const mapped = rawList.map(mapApiProduct).filter(Boolean);
+          setDbProducts(mapped);
+        }
+        if (Array.isArray(catRes) && catRes.length > 0) {
+          setLiveCategories(catRes);
+        }
+      } catch (err) {
+        console.warn('CategoryShowcase: Failed to query database directly:', err);
+      } finally {
+        if (isMounted) setLoadingDb(false);
+      }
+    }
+
+    fetchFromDatabase();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync with parent products prop if passed and non-empty
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setDbProducts(products);
+    }
+  }, [products]);
+
+  // Sync category items if passed
+  useEffect(() => {
+    if (categoryItems && categoryItems.length > 0) {
+      setLiveCategories(categoryItems);
+    }
+  }, [categoryItems]);
+
   // Normalize categories list from database or props
   const displayCategories = useMemo(() => {
-    return Array.isArray(categoryItems) && categoryItems.length > 0
-      ? categoryItems
+    return Array.isArray(liveCategories) && liveCategories.length > 0
+      ? liveCategories
       : DATABASE_CATEGORIES;
-  }, [categoryItems]);
+  }, [liveCategories]);
 
   // Default active category to the first real category ('Building Sets' or displayCategories[0])
   const [activeCategory, setActiveCategory] = useState(() => {
     const building = displayCategories.find(
       (c) => (c.name || c.categoryKey) === 'Building Sets'
     );
-    return building ? building.name || building.categoryKey : displayCategories[0]?.name || 'Building Sets';
+    return building
+      ? building.name || building.categoryKey
+      : displayCategories[0]?.name || 'Building Sets';
   });
 
-  // Filter products for currently active category in showcase
+  // Filter products for currently active category in showcase from live database products
   const categoryProducts = useMemo(() => {
-    if (!products || products.length === 0) return [];
-    return products.filter((p) => {
+    const source = dbProducts.length > 0 ? dbProducts : products;
+    if (!source || source.length === 0) return [];
+
+    return source.filter((p) => {
       const pCat = (p.category || '').toLowerCase().trim();
       const aCat = (activeCategory || '').toLowerCase().trim();
       return pCat === aCat || pCat.includes(aCat) || aCat.includes(pCat);
     });
-  }, [products, activeCategory]);
+  }, [dbProducts, products, activeCategory]);
 
   // Scroll handler for product carousel
   const scrollProducts = (direction) => {
     if (productsScrollRef.current) {
-      const scrollAmount = direction === 'left' ? -320 : 320;
+      const scrollAmount = direction === 'left' ? -340 : 340;
       productsScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
@@ -112,124 +174,48 @@ export default function CategoryShowcase({
       }}
     >
       <div className="container">
-        {/* 1. Header: Eyebrow, Title and Product Carousel Controls */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            marginBottom: '28px',
-            flexWrap: 'wrap',
-            gap: '16px',
-          }}
-        >
-          <div>
-            <div
+        {/* 1. Section Header: Eyebrow and Title */}
+        <div style={{ marginBottom: '24px' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.8125rem',
+              fontWeight: 700,
+              color: 'var(--accent, #c85a32)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '6px',
+            }}
+          >
+            <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: 'var(--accent, #c85a32)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                marginBottom: '6px',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--accent, #c85a32)',
+                display: 'inline-block',
               }}
-            >
-              <span
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--accent, #c85a32)',
-                  display: 'inline-block',
-                }}
-              />
-              <span>Curated Collections</span>
-            </div>
-
-            <h2
-              style={{
-                fontSize: 'var(--font-h2-fluid, 36px)',
-                fontWeight: 800,
-                color: 'var(--text-main, #18181b)',
-                letterSpacing: '-0.02em',
-                margin: 0,
-                lineHeight: 1.2,
-              }}
-            >
-              Browse by Category
-            </h2>
+            />
+            <span>Curated Collections</span>
           </div>
 
-          {/* Navigation Arrows for Category Product Carousel */}
-          {categoryProducts.length > 3 && (
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-              <button
-                type="button"
-                onClick={() => scrollProducts('left')}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: 'var(--radius-md, 8px)',
-                  border: '1px solid var(--border-hairline, #e8e3df)',
-                  backgroundColor: '#FFFFFF',
-                  color: 'var(--text-main, #18181b)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                }}
-                aria-label="Scroll products left"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-subtle, #f5f1ed)';
-                  e.currentTarget.style.borderColor = 'var(--accent, #c85a32)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
-                  e.currentTarget.style.borderColor = 'var(--border-hairline, #e8e3df)';
-                }}
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => scrollProducts('right')}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: 'var(--radius-md, 8px)',
-                  border: '1px solid var(--border-hairline, #e8e3df)',
-                  backgroundColor: '#FFFFFF',
-                  color: 'var(--text-main, #18181b)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-                }}
-                aria-label="Scroll products right"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--bg-subtle, #f5f1ed)';
-                  e.currentTarget.style.borderColor = 'var(--accent, #c85a32)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
-                  e.currentTarget.style.borderColor = 'var(--border-hairline, #e8e3df)';
-                }}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
+          <h2
+            style={{
+              fontSize: 'var(--font-h2-fluid, 36px)',
+              fontWeight: 800,
+              color: 'var(--text-main, #18181b)',
+              letterSpacing: '-0.02em',
+              margin: 0,
+              lineHeight: 1.2,
+            }}
+          >
+            Browse by Category
+          </h2>
         </div>
 
-        {/* 2. Interactive Category Tabs Strip (Clicking updates in-place without jumping down) */}
+        {/* 2. Interactive Category Tabs Strip (Clicking updates in-place without page jump) */}
         <div
           className="custom-scrollbar"
           style={{
@@ -246,8 +232,9 @@ export default function CategoryShowcase({
             const imgSrc =
               CATEGORY_IMAGE_MAP[catName] || cat.thumbnail || cat.imageUrl;
 
-            // Count products in this category
-            const count = products.filter((p) => {
+            // Count products in this category from live database
+            const source = dbProducts.length > 0 ? dbProducts : products;
+            const count = source.filter((p) => {
               const pCat = (p.category || '').toLowerCase().trim();
               const cName = catName.toLowerCase().trim();
               return pCat === cName || pCat.includes(cName) || cName.includes(pCat);
@@ -320,13 +307,13 @@ export default function CategoryShowcase({
             backgroundColor: '#faf7f4',
             border: '1px solid #e8e1d9',
             borderRadius: '16px',
-            padding: '24px 28px',
-            marginBottom: '28px',
+            padding: '22px 26px',
+            marginBottom: '20px',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '18px',
+            gap: '16px',
           }}
         >
           <div style={{ maxWidth: '640px' }}>
@@ -351,7 +338,7 @@ export default function CategoryShowcase({
                 fontSize: '1.25rem',
                 fontWeight: 800,
                 color: 'var(--text-main, #18181b)',
-                margin: '0 0 6px',
+                margin: '0 0 4px',
                 letterSpacing: '-0.01em',
               }}
             >
@@ -362,7 +349,7 @@ export default function CategoryShowcase({
                 margin: 0,
                 fontSize: '0.875rem',
                 color: 'var(--text-muted, #71717a)',
-                lineHeight: 1.55,
+                lineHeight: 1.5,
               }}
             >
               {currentMeta.tagline}
@@ -408,55 +395,154 @@ export default function CategoryShowcase({
           </div>
         </div>
 
-        {/* 4. Category Products Showcase (Horizontal Slider) */}
-        {categoryProducts.length > 0 ? (
-          <div
-            ref={productsScrollRef}
-            className="custom-scrollbar"
-            style={{
-              display: 'flex',
-              gap: '20px',
-              overflowX: 'auto',
-              paddingBottom: '16px',
-              marginBottom: '20px',
-            }}
-          >
-            {categoryProducts.map((product) => (
-              <div
-                key={product.id || product.productId}
-                style={{
-                  flex: '0 0 270px',
-                  minWidth: '270px',
-                }}
-              >
-                <ProductCard
-                  product={product}
-                  onQuickAdd={onQuickAdd}
-                  isAdded={addedNotice === product.id}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div
-            style={{
-              padding: '48px 24px',
-              textAlign: 'center',
-              backgroundColor: 'var(--bg-subtle, #f5f1ed)',
-              borderRadius: '14px',
-              border: '1px dashed var(--border-hairline, #e8e3df)',
-              marginBottom: '20px',
-            }}
-          >
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9375rem', fontWeight: 500 }}>
-              New handcrafted {activeCategory} pieces are currently in timber workshop finishing.
-            </p>
-          </div>
-        )}
+        {/* 4. Category Products Showcase Track with Floating Left & Right Scroll Buttons directly on the Products */}
+        <div style={{ position: 'relative' }}>
+          {/* Floating Left Scroll Button (Centered directly on the products carousel) */}
+          {categoryProducts.length > 2 && (
+            <button
+              type="button"
+              onClick={() => scrollProducts('left')}
+              style={{
+                position: 'absolute',
+                left: '-16px',
+                top: '48%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                border: '1.5px solid var(--border-hairline, #e8e3df)',
+                backgroundColor: '#FFFFFF',
+                color: 'var(--text-main, #18181b)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              aria-label="Scroll products left"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent, #c85a32)';
+                e.currentTarget.style.color = 'var(--accent, #c85a32)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-hairline, #e8e3df)';
+                e.currentTarget.style.color = 'var(--text-main, #18181b)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronLeft size={22} strokeWidth={2.5} />
+            </button>
+          )}
+
+          {/* Loading State from Database */}
+          {loadingDb && categoryProducts.length === 0 ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                padding: '48px 0',
+                color: 'var(--text-muted)',
+                fontSize: '0.9375rem',
+              }}
+            >
+              <Loader2 size={20} className="spinner" style={{ animation: 'spin 1s linear infinite' }} />
+              <span>Fetching live {activeCategory} pieces from database...</span>
+            </div>
+          ) : categoryProducts.length > 0 ? (
+            <div
+              ref={productsScrollRef}
+              className="custom-scrollbar"
+              style={{
+                display: 'flex',
+                gap: '20px',
+                overflowX: 'auto',
+                paddingBottom: '16px',
+                paddingTop: '6px',
+                scrollBehavior: 'smooth',
+              }}
+            >
+              {categoryProducts.map((product) => (
+                <div
+                  key={product.id || product.productId}
+                  style={{
+                    flex: '0 0 270px',
+                    minWidth: '270px',
+                  }}
+                >
+                  <ProductCard
+                    product={product}
+                    onQuickAdd={onQuickAdd}
+                    isAdded={addedNotice === product.id}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                padding: '48px 24px',
+                textAlign: 'center',
+                backgroundColor: 'var(--bg-subtle, #f5f1ed)',
+                borderRadius: '14px',
+                border: '1px dashed var(--border-hairline, #e8e3df)',
+                marginBottom: '20px',
+              }}
+            >
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9375rem', fontWeight: 500 }}>
+                New handcrafted {activeCategory} pieces are currently in timber workshop finishing.
+              </p>
+            </div>
+          )}
+
+          {/* Floating Right Scroll Button (Centered directly on the products carousel) */}
+          {categoryProducts.length > 2 && (
+            <button
+              type="button"
+              onClick={() => scrollProducts('right')}
+              style={{
+                position: 'absolute',
+                right: '-16px',
+                top: '48%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                width: '46px',
+                height: '46px',
+                borderRadius: '50%',
+                border: '1.5px solid var(--border-hairline, #e8e3df)',
+                backgroundColor: '#FFFFFF',
+                color: 'var(--text-main, #18181b)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              aria-label="Scroll products right"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent, #c85a32)';
+                e.currentTarget.style.color = 'var(--accent, #c85a32)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-hairline, #e8e3df)';
+                e.currentTarget.style.color = 'var(--text-main, #18181b)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronRight size={22} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
 
         {/* 5. Contextual Action: Explore Full Category in Deep Catalog */}
         {onExploreCatalog && categoryProducts.length > 0 && (
-          <div style={{ textAlign: 'center', marginTop: '12px' }}>
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
             <button
               type="button"
               onClick={() => onExploreCatalog(activeCategory)}
