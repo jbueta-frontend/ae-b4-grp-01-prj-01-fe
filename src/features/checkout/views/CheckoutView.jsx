@@ -137,85 +137,185 @@ export default function CheckoutView() {
                 </div>
               )}
 
-              {/* Step 1: Shipping Address (ERD Aligned & Auto-Profile Prefilled) */}
+              {/* Unified Multistep Checkout Container */}
               <div
                 className="card-clean"
                 style={{
-                  marginBottom: '20px',
-                  border:
-                    currentStep === 1
-                      ? '1.5px solid var(--accent)'
-                      : '1px solid var(--border-hairline)',
-                  boxShadow:
-                    currentStep === 1
-                      ? '0 6px 20px rgba(200, 90, 50, 0.08)'
-                      : 'var(--shadow-sm)',
+                  border: '1px solid var(--border-hairline, #e8e3df)',
+                  borderRadius: '16px',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
+                  padding: '32px 28px',
                 }}
               >
+                {/* 1. Multistep Header Stepper Progress Indicator */}
                 <div
-                  onClick={() => goToStep(1)}
                   style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    cursor: currentStep > 1 ? 'pointer' : 'default',
-                    marginBottom: currentStep === 1 ? '20px' : '0',
+                    justifyContent: 'space-between',
+                    paddingBottom: '24px',
+                    marginBottom: '28px',
+                    borderBottom: '1px solid var(--border-hairline, #e8e3df)',
                   }}
                 >
-                  <div
+                  {/* Step 1 Indicator */}
+                  <button
+                    type="button"
+                    onClick={() => goToStep(1)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '12px',
+                      gap: '10px',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: currentStep > 1 ? 'pointer' : 'default',
+                      textAlign: 'left',
                     }}
                   >
                     <span
                       style={{
-                        width: '28px',
-                        height: '28px',
+                        width: '32px',
+                        height: '32px',
                         borderRadius: '50%',
                         backgroundColor:
                           currentStep > 1
-                            ? 'var(--success)'
-                            : 'var(--accent)',
+                            ? 'var(--success, #16a34a)'
+                            : 'var(--accent, #c85a32)',
                         color: '#FFFFFF',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '0.8125rem',
+                        fontSize: '0.875rem',
                         fontWeight: 700,
+                        flexShrink: 0,
+                        boxShadow:
+                          currentStep === 1
+                            ? '0 0 0 4px rgba(200, 90, 50, 0.15)'
+                            : 'none',
+                        transition: 'all 0.2s ease',
                       }}
                     >
                       {currentStep > 1 ? (
-                        <Check size={16} strokeWidth={3} />
+                        <Check size={18} strokeWidth={3} />
                       ) : (
                         '1'
                       )}
                     </span>
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                      Shipping Address
-                    </h3>
-                  </div>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '0.6875rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color:
+                            currentStep === 1
+                              ? 'var(--accent, #c85a32)'
+                              : 'var(--text-muted, #71717a)',
+                          display: 'block',
+                        }}
+                      >
+                        Step 1
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.9375rem',
+                          fontWeight: 700,
+                          color: 'var(--text-main, #18181b)',
+                        }}
+                      >
+                        Shipping Address
+                      </span>
+                    </div>
+                  </button>
 
-                  {currentStep > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => goToStep(1)}
+                  {/* Connecting Progress Track */}
+                  <div
+                    style={{
+                      flex: 1,
+                      height: '2px',
+                      backgroundColor:
+                        currentStep > 1
+                          ? 'var(--accent, #c85a32)'
+                          : 'var(--border-hairline, #e8e3df)',
+                      margin: '0 16px',
+                      transition: 'background-color 0.3s ease',
+                    }}
+                  />
+
+                  {/* Step 2 Indicator */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span
                       style={{
-                        fontSize: '0.8125rem',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor:
+                          currentStep === 2
+                            ? 'var(--accent, #c85a32)'
+                            : 'var(--bg-muted, #ece7e2)',
+                        color:
+                          currentStep === 2
+                            ? '#FFFFFF'
+                            : 'var(--text-muted, #71717a)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.875rem',
                         fontWeight: 700,
-                        color: 'var(--accent)',
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
+                        flexShrink: 0,
+                        boxShadow:
+                          currentStep === 2
+                            ? '0 0 0 4px rgba(200, 90, 50, 0.15)'
+                            : 'none',
+                        transition: 'all 0.2s ease',
                       }}
                     >
-                      Edit
-                    </button>
-                  )}
+                      2
+                    </span>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '0.6875rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          color:
+                            currentStep === 2
+                              ? 'var(--accent, #c85a32)'
+                              : 'var(--text-muted, #71717a)',
+                          display: 'block',
+                        }}
+                      >
+                        Step 2
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.9375rem',
+                          fontWeight: 700,
+                          color:
+                            currentStep === 2
+                              ? 'var(--text-main, #18181b)'
+                              : 'var(--text-muted, #71717a)',
+                        }}
+                      >
+                        Payment Method
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {currentStep === 1 ? (
+                {/* 2. Step 1: Shipping Address Form */}
+                {currentStep === 1 && (
                   <form onSubmit={proceedFromShipping}>
                     {/* Auto-fetched profile notification badge */}
                     <div
@@ -375,91 +475,110 @@ export default function CheckoutView() {
                       type="submit"
                       className="btn btn-primary btn-block"
                       style={{
-                        padding: '14px',
+                        padding: '16px',
                         fontSize: '1rem',
                         fontWeight: 700,
-                        marginTop: '8px',
+                        marginTop: '12px',
                       }}
                     >
                       <span>Continue to Payment Method</span>
                       <ChevronRight size={18} />
                     </button>
                   </form>
-                ) : (
-                  <div
-                    style={{
-                      fontSize: '0.875rem',
-                      color: 'var(--text-muted)',
-                      marginTop: '6px',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <p style={{ fontWeight: 700, color: 'var(--text-main)' }}>
-                      {shippingAddress.fullName} ({shippingAddress.email})
-                    </p>
-                    <p>
-                      {shippingAddress.addressLine1}
-                      {shippingAddress.addressLine2
-                        ? `, ${shippingAddress.addressLine2}`
-                        : ''}
-                    </p>
-                    <p>
-                      {shippingAddress.city}, {shippingAddress.stateProvince}{' '}
-                      {shippingAddress.postalCode}, {shippingAddress.country}
-                    </p>
-                  </div>
                 )}
-              </div>
 
-              {/* Step 2: Payment Method (Including Cash on Delivery option) */}
-              <div
-                className="card-clean"
-                style={{
-                  border:
-                    currentStep === 2
-                      ? '1.5px solid var(--accent)'
-                      : '1px solid var(--border-hairline)',
-                  boxShadow:
-                    currentStep === 2
-                      ? '0 6px 20px rgba(200, 90, 50, 0.08)'
-                      : 'var(--shadow-sm)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: currentStep === 2 ? '20px' : '0',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      backgroundColor:
-                        currentStep === 2
-                          ? 'var(--accent)'
-                          : 'var(--bg-muted)',
-                      color:
-                        currentStep === 2 ? '#FFFFFF' : 'var(--text-muted)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.8125rem',
-                      fontWeight: 700,
-                    }}
-                  >
-                    2
-                  </span>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                    Payment Method
-                  </h3>
-                </div>
-
+                {/* 3. Step 2: Payment Method */}
                 {currentStep === 2 && (
                   <div>
+                    {/* Compact Verified Delivery Address Summary */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '14px 18px',
+                        backgroundColor: 'var(--bg-subtle, #f5f1ed)',
+                        borderRadius: 'var(--radius-md, 8px)',
+                        border: '1px solid var(--border-hairline, #e8e3df)',
+                        marginBottom: '24px',
+                      }}
+                    >
+                      <div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            marginBottom: '2px',
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              color: 'var(--accent, #c85a32)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            Delivering to:
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.875rem',
+                              fontWeight: 700,
+                              color: 'var(--text-main)',
+                            }}
+                          >
+                            {shippingAddress.fullName}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.8125rem',
+                              color: 'var(--text-muted)',
+                            }}
+                          >
+                            ({shippingAddress.email})
+                          </span>
+                        </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '0.8125rem',
+                            color: 'var(--text-muted)',
+                          }}
+                        >
+                          {shippingAddress.addressLine1}
+                          {shippingAddress.addressLine2
+                            ? `, ${shippingAddress.addressLine2}`
+                            : ''}
+                          , {shippingAddress.city},{' '}
+                          {shippingAddress.stateProvince}{' '}
+                          {shippingAddress.postalCode},{' '}
+                          {shippingAddress.country}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(1)}
+                        style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 700,
+                          color: 'var(--accent, #c85a32)',
+                          background: '#ffffff',
+                          border: '1px solid var(--border-hairline, #e8e3df)',
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          marginLeft: '12px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+
                     {/* Payment Type Switcher */}
                     <div
                       style={{
@@ -762,32 +881,62 @@ export default function CheckoutView() {
                       </div>
                     )}
 
-                    {/* Primary Authoritative Place Order CTA */}
-                    <button
-                      type="button"
-                      onClick={handlePlaceOrder}
-                      disabled={isProcessing}
-                      className="btn btn-primary btn-block"
+                    {/* Navigation Actions: Back to Shipping & Authoritative Place Order CTA */}
+                    <div
                       style={{
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'center',
                         marginTop: '28px',
-                        padding: '18px 24px',
-                        fontSize: '1.0625rem',
-                        fontWeight: 700,
-                        boxShadow: '0 4px 16px rgba(200, 90, 50, 0.35)',
+                        flexWrap: 'wrap',
                       }}
                     >
-                      <Lock size={18} />
-                      <span>
-                        {isProcessing
-                          ? 'Authorizing Order...'
-                          : paymentType === 'cod'
-                            ? `Confirm Order with Cash on Delivery — ₱${finalTotal.toFixed(2)}`
-                            : `Place Order — ₱${finalTotal.toFixed(2)}`}
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => goToStep(1)}
+                        className="btn btn-secondary"
+                        style={{
+                          padding: '16px 20px',
+                          fontSize: '0.9375rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <ArrowLeft size={16} />
+                        <span>Back to Shipping</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handlePlaceOrder}
+                        disabled={isProcessing}
+                        className="btn btn-primary"
+                        style={{
+                          flex: 1,
+                          minWidth: '220px',
+                          padding: '16px 24px',
+                          fontSize: '1.0625rem',
+                          fontWeight: 700,
+                          boxShadow: '0 4px 16px rgba(200, 90, 50, 0.35)',
+                        }}
+                      >
+                        <Lock size={18} />
+                        <span>
+                          {isProcessing
+                            ? 'Authorizing Order...'
+                            : paymentType === 'cod'
+                              ? `Confirm Order with COD — ₱${finalTotal.toFixed(2)}`
+                              : `Place Order — ₱${finalTotal.toFixed(2)}`}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
+
             </div>
 
             {/* Right Sticky Order Summary with In-Place Edit & Prominent Monetary Typography */}
