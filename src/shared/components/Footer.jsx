@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Truck,
-  ShieldCheck,
-  RotateCcw,
-  Sparkles,
   Mail,
   Send,
   MapPin,
   Phone,
   CheckCircle2,
   Lock,
-  ArrowRight,
   HelpCircle,
-  Package,
+  Sparkles,
+  ShieldCheck,
+  Truck,
+  RotateCcw,
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -36,7 +34,7 @@ export default function Footer() {
       setIsSubscribed(true);
       setSubscribing(false);
       setNewsletterEmail('');
-    }, 600);
+    }, 500);
   };
 
   const currentYear = new Date().getFullYear();
@@ -45,154 +43,29 @@ export default function Footer() {
     <footer
       style={{
         marginTop: 'auto',
-        backgroundColor: '#121215',
-        color: '#e4e4e7',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: '#f8f5f1',
+        color: 'var(--text-main, #18181b)',
+        borderTop: '1px solid var(--border-hairline, #e8e3df)',
         fontFamily: 'var(--font-sans, inherit)',
       }}
     >
       {/* ============================================================ */}
-      {/* 1. VALUE PROPOSITIONS & TRUST PILLARS BAR */}
+      {/* 1. NEWSLETTER & ARTISAN COMMUNITY BANNER */}
       {/* ============================================================ */}
       <div
         style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
-          backgroundColor: '#16161a',
-          padding: '28px 0',
-        }}
-      >
-        <div className="container">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-              gap: '24px',
-            }}
-          >
-            {/* Pillar 1 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(234, 88, 12, 0.12)',
-                  color: '#f97316',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Truck size={22} />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, margin: 0, color: '#f4f4f5' }}>
-                  Nationwide PH Delivery
-                </h4>
-                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', margin: '2px 0 0' }}>
-                  Carbon-neutral shipping to all provinces
-                </p>
-              </div>
-            </div>
-
-            {/* Pillar 2 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                  color: '#10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <ShieldCheck size={22} />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, margin: 0, color: '#f4f4f5' }}>
-                  Certified Child-Safe
-                </h4>
-                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', margin: '2px 0 0' }}>
-                  ASTM F963-17 & EN71 lab tested & verified
-                </p>
-              </div>
-            </div>
-
-            {/* Pillar 3 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(59, 130, 246, 0.12)',
-                  color: '#3b82f6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <RotateCcw size={22} />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, margin: 0, color: '#f4f4f5' }}>
-                  30-Day Guarantee
-                </h4>
-                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', margin: '2px 0 0' }}>
-                  Hassle-free returns & replacement
-                </p>
-              </div>
-            </div>
-
-            {/* Pillar 4 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(168, 85, 247, 0.12)',
-                  color: '#a855f7',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Sparkles size={22} />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: 700, margin: 0, color: '#f4f4f5' }}>
-                  FSC® Certified Wood
-                </h4>
-                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', margin: '2px 0 0' }}>
-                  Organic German beeswax finish, 0% plastic
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* 2. NEWSLETTER SUBSCRIPTION BANNER */}
-      {/* ============================================================ */}
-      <div
-        style={{
+          borderBottom: '1px solid var(--border-hairline, #e8e3df)',
+          backgroundColor: '#ffffff',
           padding: '44px 0',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
-          background: 'linear-gradient(180deg, rgba(234, 88, 12, 0.05) 0%, transparent 100%)',
         }}
       >
         <div className="container">
           <div
             style={{
+              backgroundColor: '#faf7f4',
+              border: '1px solid #e8e1d9',
+              borderRadius: '16px',
+              padding: '36px 32px',
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'space-between',
@@ -200,48 +73,61 @@ export default function Footer() {
               gap: '24px',
             }}
           >
-            <div style={{ maxWidth: '500px' }}>
-              <span
+            <div style={{ maxWidth: '520px' }}>
+              <div
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(200, 90, 50, 0.08)',
+                  color: 'var(--accent, #c85a32)',
                   fontSize: '0.75rem',
                   fontWeight: 800,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  color: '#f97316',
-                  display: 'block',
-                  marginBottom: '6px',
+                  letterSpacing: '0.06em',
+                  marginBottom: '10px',
                 }}
               >
-                Heirloom Collectors Circle
-              </span>
+                <Sparkles size={13} />
+                <span>The Heirloom Circle</span>
+              </div>
               <h3
                 style={{
                   fontSize: '1.5rem',
                   fontWeight: 800,
-                  color: '#ffffff',
+                  color: 'var(--text-main, #18181b)',
                   letterSpacing: '-0.02em',
-                  margin: '0 0 6px',
+                  margin: '0 0 8px',
                 }}
               >
-                Join the Fiddle & Bloom Community
+                Join the FiddleMania Community
               </h3>
-              <p style={{ fontSize: '0.875rem', color: '#a1a1aa', margin: 0, lineHeight: 1.5 }}>
+              <p
+                style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--text-muted, #71717a)',
+                  margin: 0,
+                  lineHeight: 1.55,
+                }}
+              >
                 Receive artisan wood release announcements, child play guides, and special access to limited toy batches.
               </p>
             </div>
 
-            <div style={{ width: '100%', maxWidth: '440px' }}>
+            <div style={{ width: '100%', maxWidth: '420px' }}>
               {isSubscribed ? (
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '10px',
-                    padding: '12px 18px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                    border: '1px solid #10b981',
-                    color: '#34d399',
+                    padding: '14px 18px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                    border: '1px solid #16a34a',
+                    color: '#15803d',
                     fontSize: '0.875rem',
                     fontWeight: 600,
                   }}
@@ -250,13 +136,7 @@ export default function Footer() {
                   <span>Welcome to the circle! Check your inbox for your welcome guide.</span>
                 </div>
               ) : (
-                <form
-                  onSubmit={handleSubscribe}
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                  }}
-                >
+                <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '8px' }}>
                   <div style={{ position: 'relative', flex: 1 }}>
                     <Mail
                       size={16}
@@ -265,7 +145,7 @@ export default function Footer() {
                         left: '14px',
                         top: '50%',
                         transform: 'translateY(-50%)',
-                        color: '#71717a',
+                        color: 'var(--text-muted, #71717a)',
                       }}
                     />
                     <input
@@ -276,39 +156,33 @@ export default function Footer() {
                       onChange={(e) => setNewsletterEmail(e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '12px 14px 12px 40px',
-                        borderRadius: '10px',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
-                        backgroundColor: '#1c1c21',
-                        color: '#f4f4f5',
+                        padding: '12px 14px 12px 38px',
+                        borderRadius: 'var(--radius-md, 8px)',
+                        border: '1px solid var(--border-hairline, #e8e3df)',
+                        backgroundColor: '#ffffff',
+                        color: 'var(--text-main, #18181b)',
                         fontSize: '0.875rem',
                         outline: 'none',
                         transition: 'border-color 0.2s',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
                       }}
-                      onFocus={(e) => (e.target.style.borderColor = '#f97316')}
-                      onBlur={(e) => (e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)')}
+                      onFocus={(e) => (e.target.style.borderColor = 'var(--accent, #c85a32)')}
+                      onBlur={(e) => (e.target.style.borderColor = 'var(--border-hairline, #e8e3df)')}
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={subscribing}
+                    className="btn btn-primary"
                     style={{
-                      padding: '12px 22px',
-                      backgroundColor: '#ea580c',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontWeight: 700,
+                      padding: '12px 20px',
                       fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
+                      fontWeight: 700,
                       gap: '6px',
-                      transition: 'background-color 0.15s ease',
                       flexShrink: 0,
+                      borderRadius: 'var(--radius-md, 8px)',
+                      cursor: 'pointer',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#c2410c')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ea580c')}
                   >
                     <span>{subscribing ? 'Sending...' : 'Subscribe'}</span>
                     <Send size={15} />
@@ -321,47 +195,50 @@ export default function Footer() {
       </div>
 
       {/* ============================================================ */}
-      {/* 3. MAIN NAVIGATION COLUMNS */}
+      {/* 2. MAIN NAVIGATION COLUMNS (LIGHT / LINEN THEME) */}
       {/* ============================================================ */}
-      <div style={{ padding: '56px 0 40px' }}>
+      <div style={{ padding: '54px 0 44px' }}>
         <div className="container">
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
               gap: '40px 30px',
             }}
           >
-            {/* Col 1: Brand & Contact */}
+            {/* Col 1: Brand & Manila Concierge */}
             <div style={{ gridColumn: 'span 1' }}>
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '14px' }}>
                 <Logo size="md" />
               </div>
               <p
                 style={{
                   fontSize: '0.875rem',
-                  color: '#a1a1aa',
+                  color: 'var(--text-muted, #71717a)',
                   lineHeight: 1.6,
-                  marginBottom: '20px',
+                  marginBottom: '22px',
                 }}
               >
                 Heirloom wooden toys crafted for cognitive wonder, tactile discovery, and enduring childhood memories across the Philippines.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.8125rem', color: '#71717a' }}>
-                  <MapPin size={16} style={{ color: '#f97316', flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                  <MapPin size={16} style={{ color: 'var(--accent, #c85a32)', flexShrink: 0, marginTop: '2px' }} />
                   <span>Bonifacio Global City, Taguig, Metro Manila, Philippines</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8125rem', color: '#71717a' }}>
-                  <Mail size={16} style={{ color: '#f97316', flexShrink: 0 }} />
-                  <a href="mailto:concierge@fiddlemania.com" style={{ color: '#d4d4d8', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8125rem' }}>
+                  <Mail size={16} style={{ color: 'var(--accent, #c85a32)', flexShrink: 0 }} />
+                  <a
+                    href="mailto:concierge@fiddlemania.com"
+                    style={{ color: 'var(--text-main)', textDecoration: 'none', fontWeight: 500 }}
+                  >
                     concierge@fiddlemania.com
                   </a>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8125rem', color: '#71717a' }}>
-                  <Phone size={16} style={{ color: '#f97316', flexShrink: 0 }} />
-                  <span style={{ color: '#d4d4d8' }}>+63 (2) 8888-TOYS (8697)</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.8125rem' }}>
+                  <Phone size={16} style={{ color: 'var(--accent, #c85a32)', flexShrink: 0 }} />
+                  <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>+63 (2) 8888-TOYS (8697)</span>
                 </div>
               </div>
             </div>
@@ -370,9 +247,9 @@ export default function Footer() {
             <div>
               <h4
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   fontWeight: 800,
-                  color: '#ffffff',
+                  color: 'var(--text-main, #18181b)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
                   marginBottom: '18px',
@@ -394,7 +271,7 @@ export default function Footer() {
                       to={link.path}
                       style={{
                         fontSize: '0.875rem',
-                        color: '#a1a1aa',
+                        color: 'var(--text-muted, #71717a)',
                         textDecoration: 'none',
                         transition: 'color 0.15s ease, transform 0.15s ease',
                         display: 'inline-flex',
@@ -402,11 +279,11 @@ export default function Footer() {
                         gap: '6px',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#f97316';
+                        e.currentTarget.style.color = 'var(--accent, #c85a32)';
                         e.currentTarget.style.transform = 'translateX(3px)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color = '#a1a1aa';
+                        e.currentTarget.style.color = 'var(--text-muted, #71717a)';
                         e.currentTarget.style.transform = 'translateX(0)';
                       }}
                     >
@@ -417,13 +294,13 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Col 3: Customer Care & FAQs (Direct routes to /faqs and /support) */}
+            {/* Col 3: Customer Care & FAQs (Direct link to /faqs) */}
             <div>
               <h4
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   fontWeight: 800,
-                  color: '#ffffff',
+                  color: 'var(--text-main, #18181b)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
                   marginBottom: '18px',
@@ -445,7 +322,7 @@ export default function Footer() {
                       to={link.path}
                       style={{
                         fontSize: '0.875rem',
-                        color: link.highlight ? '#f97316' : '#a1a1aa',
+                        color: link.highlight ? 'var(--accent, #c85a32)' : 'var(--text-muted, #71717a)',
                         fontWeight: link.highlight ? 700 : 400,
                         textDecoration: 'none',
                         transition: 'color 0.15s ease, transform 0.15s ease',
@@ -454,11 +331,11 @@ export default function Footer() {
                         gap: '6px',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#ffffff';
+                        e.currentTarget.style.color = link.highlight ? 'var(--accent-hover, #b54e28)' : 'var(--accent, #c85a32)';
                         e.currentTarget.style.transform = 'translateX(3px)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color = link.highlight ? '#f97316' : '#a1a1aa';
+                        e.currentTarget.style.color = link.highlight ? 'var(--accent, #c85a32)' : 'var(--text-muted, #71717a)';
                         e.currentTarget.style.transform = 'translateX(0)';
                       }}
                     >
@@ -474,9 +351,9 @@ export default function Footer() {
             <div>
               <h4
                 style={{
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   fontWeight: 800,
-                  color: '#ffffff',
+                  color: 'var(--text-main, #18181b)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
                   marginBottom: '18px',
@@ -497,7 +374,7 @@ export default function Footer() {
                       to={link.path}
                       style={{
                         fontSize: '0.875rem',
-                        color: '#a1a1aa',
+                        color: 'var(--text-muted, #71717a)',
                         textDecoration: 'none',
                         transition: 'color 0.15s ease, transform 0.15s ease',
                         display: 'inline-flex',
@@ -505,11 +382,11 @@ export default function Footer() {
                         gap: '6px',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.color = '#f97316';
+                        e.currentTarget.style.color = 'var(--accent, #c85a32)';
                         e.currentTarget.style.transform = 'translateX(3px)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.color = '#a1a1aa';
+                        e.currentTarget.style.color = 'var(--text-muted, #71717a)';
                         e.currentTarget.style.transform = 'translateX(0)';
                       }}
                     >
@@ -524,13 +401,13 @@ export default function Footer() {
       </div>
 
       {/* ============================================================ */}
-      {/* 4. PAYMENT METHODS & SECURITY BADGES */}
+      {/* 3. PAYMENT METHODS & SECURITY ASSURANCE BAR */}
       {/* ============================================================ */}
       <div
         style={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.07)',
-          padding: '20px 0',
-          backgroundColor: '#0e0e11',
+          borderTop: '1px solid var(--border-hairline, #e8e3df)',
+          padding: '18px 0',
+          backgroundColor: '#f1ede8',
         }}
       >
         <div className="container">
@@ -544,8 +421,8 @@ export default function Footer() {
             }}
           >
             {/* Payment Methods */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.75rem', color: '#71717a', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                 Accepted Payment Methods:
               </span>
               {['GCash', 'Maya', 'Visa', 'Mastercard', 'Cash on Delivery (COD)'].map((method, idx) => (
@@ -556,9 +433,10 @@ export default function Footer() {
                     fontWeight: 700,
                     padding: '3px 8px',
                     borderRadius: '5px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                    color: '#d4d4d8',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backgroundColor: '#ffffff',
+                    color: 'var(--text-main)',
+                    border: '1px solid var(--border-hairline, #e8e3df)',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
                   }}
                 >
                   {method}
@@ -567,23 +445,33 @@ export default function Footer() {
             </div>
 
             {/* Security Guarantee */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#10b981' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.75rem',
+                color: '#16a34a',
+                fontWeight: 600,
+              }}
+            >
               <Lock size={14} />
-              <span style={{ fontWeight: 600 }}>256-Bit SSL Encrypted & Secure Checkout</span>
+              <span>256-Bit SSL Encrypted & Secure Checkout</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* ============================================================ */}
-      {/* 5. BOTTOM COPYRIGHT & LEGAL BAR */}
+      {/* 4. BOTTOM COPYRIGHT & LEGAL BAR */}
       {/* ============================================================ */}
       <div
         style={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          borderTop: '1px solid var(--border-hairline, #e8e3df)',
           padding: '20px 0',
           fontSize: '0.8125rem',
-          color: '#71717a',
+          color: 'var(--text-muted, #71717a)',
+          backgroundColor: '#eae5df',
         }}
       >
         <div className="container">
@@ -597,20 +485,20 @@ export default function Footer() {
             }}
           >
             <div>
-              <span>© {currentYear} FiddleMania Inc. All rights reserved. Handcrafted heirloom pieces.</span>
+              <span>© {currentYear} FiddleMania Inc. All rights reserved. Handcrafted heirloom toys.</span>
             </div>
 
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-              <Link to="/support" style={{ color: '#a1a1aa', textDecoration: 'none' }}>
+              <Link to="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
                 Privacy Policy
               </Link>
-              <Link to="/support" style={{ color: '#a1a1aa', textDecoration: 'none' }}>
+              <Link to="/support" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
                 Terms of Service
               </Link>
-              <Link to="/faqs" style={{ color: '#a1a1aa', textDecoration: 'none' }}>
-                FAQs & Care
+              <Link to="/faqs" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+                FAQs & Safety
               </Link>
-              <span style={{ color: '#52525b' }}>
+              <span style={{ color: 'var(--text-muted)' }}>
                 🇵🇭 Philippines (PHP ₱)
               </span>
             </div>
