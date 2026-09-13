@@ -1,4 +1,13 @@
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 
@@ -34,11 +43,58 @@ import AdminProductsView from './features/admin-inventory/views/AdminProductsVie
 import AdminOrdersListView from './features/admin-fulfillment/views/AdminOrdersListView';
 import AdminOrderDetailView from './features/admin-fulfillment/views/AdminOrderDetailView';
 
+/**
+ * Listens for Supabase/backend password reset links (e.g. #access_token=...&type=recovery or ?type=recovery)
+ * and guarantees automatic redirection to the Reset Password form.
+ */
+function AuthRecoveryRedirect() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+    const searchParams = new URLSearchParams(location.search);
+
+    const type = hashParams.get('type') || searchParams.get('type');
+    const isRecovery =
+      type === 'recovery' ||
+      type === 'reset' ||
+      hash.includes('type=recovery') ||
+      location.search.includes('type=recovery');
+
+    if (isRecovery && location.pathname !== '/reset-password') {
+      const token =
+        hashParams.get('access_token') ||
+        hashParams.get('token') ||
+        hashParams.get('token_hash') ||
+        searchParams.get('token') ||
+        searchParams.get('token_hash') ||
+        searchParams.get('code') ||
+        '';
+
+      const forwardParams = new URLSearchParams();
+      if (token) forwardParams.set('token', token);
+      if (type) forwardParams.set('type', type);
+
+      navigate(
+        `/reset-password?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
+        { replace: true }
+      );
+    }
+  }, [location, navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+          <AuthRecoveryRedirect />
           <div
             style={{
               display: 'flex',

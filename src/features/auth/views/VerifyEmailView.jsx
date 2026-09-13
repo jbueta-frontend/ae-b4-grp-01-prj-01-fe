@@ -30,6 +30,25 @@ export default function VerifyEmailView() {
   );
 
   useEffect(() => {
+    // 0. If this is a password recovery link, immediately route to Reset Password view
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+    const isRecovery =
+      type === 'recovery' ||
+      type === 'reset' ||
+      searchParams.get('type') === 'recovery' ||
+      hashParams.get('type') === 'recovery';
+
+    if (isRecovery) {
+      navigate(
+        `/reset-password?${searchParams.toString()}${window.location.hash ? window.location.hash : ''}`,
+        { replace: true }
+      );
+      return;
+    }
+
     if (isDirectlyVerified) {
       setStatus('success');
       setIsModalOpen(true);
