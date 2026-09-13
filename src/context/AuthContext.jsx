@@ -4,6 +4,25 @@ import { getAuthErrorMessage } from '../shared/utils/errorHandler';
 
 const AuthContext = createContext(null);
 
+function parseJwt(token) {
+  try {
+    if (!token || typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
@@ -19,11 +38,104 @@ export function AuthProvider({ children }) {
   });
 
   const [loading, setLoading] = useState(true);
+  const [verifiedNotification, setVerifiedNotification] = useState(null);
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
+      // 1. Inspect URL hash and query string for incoming session tokens (from email verification)
+      const hash = window.location.hash.startsWith('#')
+        ? window.location.hash.substring(1)
+        : window.location.hash;
+      const hashParams = new URLSearchParams(hash);
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const type = hashParams.get('type') || searchParams.get('type') || '';
+      const isRecovery =
+        type === 'recovery' ||
+        type === 'reset' ||
+        hash.includes('type=recovery') ||
+        window.location.search.includes('type=recovery');
+
+      // If it is a password recovery link, do not treat as a storefront session;
+      // AuthRecoveryRedirect in App.jsx will forward to /reset-password
+      let tokenFromUrl = null;
+      let refreshTokenFromUrl = null;
+
+      if (!isRecovery) {
+        tokenFromUrl =
+          hashParams.get('access_token') ||
+          searchParams.get('access_token') ||
+          ((type === 'signup' || type === 'email_verification') &&
+            (hashParams.get('token') || searchParams.get('token')));
+
+        refreshTokenFromUrl =
+          hashParams.get('refresh_token') ||
+          searchParams.get('refresh_token');
+      }
+
+      let activeToken = tokenFromUrl || localStorage.getItem('accessToken');
+
+      if (tokenFromUrl) {
+        localStorage.setItem('accessToken', tokenFromUrl);
+        if (refreshTokenFromUrl) {
+          localStorage.setItem('refreshToken', refreshTokenFromUrl);
+        }
+        localStorage.removeItem('fiddlemania_is_guest');
+        setIsGuest(false);
+
+        // Immediate optimistic hydration from JWT claims
+        const claims = parseJwt(tokenFromUrl);
+        const userEmail =
+          claims?.email ||
+          claims?.user_metadata?.email ||
+          searchParams.get('email') ||
+          hashParams.get('email') ||
+          '';
+        const userName =
+          claims?.user_metadata?.name ||
+          claims?.user_metadata?.full_name ||
+          (userEmail ? userEmail.split('@')[0] : 'Member');
+
+        const initialUser = {
+          userId:
+            claims?.sub ||
+            claims?.id ||
+            claims?.user_id ||
+            'user-' + Date.now(),
+          email: userEmail,
+          name: userName,
+          fullName: userName,
+          firstName: userName.split(' ')[0],
+          role: claims?.app_metadata?.role || claims?.role || 'CUSTOMER',
+          isEmailVerified: true,
+        };
+
+        setUser(initialUser);
+        localStorage.setItem('fiddlemania_user', JSON.stringify(initialUser));
+
+        // Trigger confirmation success notification state
+        setVerifiedNotification({
+          isOpen: true,
+          message: 'Email verified successfully! You are now signed in.',
+          email: userEmail,
+          user: initialUser,
+        });
+
+        // Clean up hash fragment / tokens from browser history
+        try {
+          const cleanUrl =
+            window.location.pathname +
+            (window.location.search
+              ? window.location.search.replace(
+                  /([?&])(access_token|refresh_token)=[^&#]*/g,
+                  ''
+                )
+              : '');
+          window.history.replaceState(null, '', cleanUrl || '/');
+        } catch {}
+      }
+
+      if (activeToken) {
         try {
           const res = await api.get('/auth/me');
           const userData = res.user || res;
@@ -34,8 +146,10 @@ export function AuthProvider({ children }) {
               if (raw) userData.address = JSON.parse(raw);
             } catch {}
           }
+          userData.isEmailVerified = true;
           setUser(userData);
           localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
+          setIsGuest(false);
         } catch {
           // Token may be expired, api interceptor handles refresh or cleans up
         }
@@ -44,6 +158,48 @@ export function AuthProvider({ children }) {
     };
     initAuth();
   }, []);
+
+  const setAuthSession = async (token, refreshToken = null, customUserData = null) => {
+    if (token) localStorage.setItem('accessToken', token);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+    localStorage.removeItem('fiddlemania_is_guest');
+    setIsGuest(false);
+
+    let initial = customUserData;
+    if (!initial && token) {
+      const claims = parseJwt(token);
+      const userEmail = claims?.email || claims?.user_metadata?.email || '';
+      const userName =
+        claims?.user_metadata?.name ||
+        claims?.user_metadata?.full_name ||
+        (userEmail ? userEmail.split('@')[0] : 'Member');
+
+      initial = {
+        userId: claims?.sub || claims?.id || 'user-' + Date.now(),
+        email: userEmail,
+        name: userName,
+        fullName: userName,
+        role: claims?.app_metadata?.role || claims?.role || 'CUSTOMER',
+        isEmailVerified: true,
+      };
+    }
+
+    if (initial) {
+      setUser(initial);
+      localStorage.setItem('fiddlemania_user', JSON.stringify(initial));
+    }
+
+    try {
+      const res = await api.get('/auth/me');
+      const liveData = res.user || res;
+      liveData.isEmailVerified = true;
+      setUser(liveData);
+      localStorage.setItem('fiddlemania_user', JSON.stringify(liveData));
+      return liveData;
+    } catch {
+      return initial;
+    }
+  };
 
   const login = async (email, password) => {
     try {
@@ -153,6 +309,10 @@ export function AuthProvider({ children }) {
         updateProfile,
         deactivateAccount,
         deleteAccount,
+        setAuthSession,
+        verifiedNotification,
+        closeVerifiedNotification: () => setVerifiedNotification(null),
+        showVerifiedNotification: (notif) => setVerifiedNotification(notif),
       }}
     >
       {children}

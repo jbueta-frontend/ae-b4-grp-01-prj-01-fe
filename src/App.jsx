@@ -9,7 +9,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Shared Chrome
 import Navbar from './shared/components/Navbar';
@@ -20,6 +20,7 @@ import BackToTop from './shared/components/BackToTop';
 import AdminGuard from './shared/components/AdminGuard';
 import AdminLayout from './shared/components/AdminLayout';
 import CustomerGuard from './shared/components/CustomerGuard';
+import EmailVerifiedModal from './features/auth/components/EmailVerifiedModal';
 
 // Feature Views
 import ProductCatalogView from './features/product-catalog/views/ProductCatalogView';
@@ -65,15 +66,22 @@ function AuthRecoveryRedirect() {
       type === 'recovery' ||
       type === 'reset' ||
       hash.includes('type=recovery') ||
-      location.search.includes('type=recovery');
+      hash.includes('type=reset') ||
+      location.search.includes('type=recovery') ||
+      location.search.includes('type=reset');
 
-    if (isRecovery && location.pathname !== '/reset-password') {
+    if (
+      isRecovery &&
+      location.pathname !== '/reset-password' &&
+      location.pathname !== '/resetPassword'
+    ) {
       const token =
         hashParams.get('access_token') ||
         hashParams.get('token') ||
         hashParams.get('token_hash') ||
         searchParams.get('token') ||
         searchParams.get('token_hash') ||
+        searchParams.get('access_token') ||
         searchParams.get('code') ||
         '';
 
@@ -91,12 +99,41 @@ function AuthRecoveryRedirect() {
   return null;
 }
 
+/**
+ * Displays persistent email verification success modal on the storefront
+ * when user arrives from an email verification link.
+ */
+function GlobalAuthModals() {
+  const { verifiedNotification, closeVerifiedNotification, isAuthenticated } =
+    useAuth();
+
+  if (!verifiedNotification?.isOpen) return null;
+
+  return (
+    <EmailVerifiedModal
+      isOpen={true}
+      onClose={closeVerifiedNotification}
+      onProceed={closeVerifiedNotification}
+      message={verifiedNotification.message || 'Email verified successfully!'}
+      email={verifiedNotification.email || ''}
+      userName={
+        verifiedNotification.user?.name ||
+        verifiedNotification.user?.fullName ||
+        ''
+      }
+      isAuthenticated={isAuthenticated}
+      proceedText="Start Shopping"
+    />
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
           <AuthRecoveryRedirect />
+          <GlobalAuthModals />
           <div
             style={{
               display: 'flex',

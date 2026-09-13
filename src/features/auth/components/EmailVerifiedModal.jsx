@@ -8,6 +8,9 @@ export default function EmailVerifiedModal({
   onProceed,
   message = 'Email verified successfully!',
   email = '',
+  userName = '',
+  isAuthenticated = false,
+  proceedText = '',
 }) {
   const navigate = useNavigate();
 
@@ -28,7 +31,11 @@ export default function EmailVerifiedModal({
       onProceed();
     } else {
       if (onClose) onClose();
-      navigate('/login');
+      if (isAuthenticated) {
+        navigate('/');
+      } else {
+        navigate('/login');
+      }
     }
   };
 
@@ -220,7 +227,11 @@ export default function EmailVerifiedModal({
               marginBottom: '22px',
             }}
           >
-            {email ? (
+            {isAuthenticated ? (
+              <>
+                Welcome to Fiddle &amp; Bloom{userName ? `, ${userName}` : ''}! Your email account has been verified and you are now securely signed in. You can explore our heirloom toy collections and manage your account.
+              </>
+            ) : email ? (
               <>
                 <strong style={{ color: '#334155' }}>{email}</strong> has been confirmed.
                 You can now proceed to log in to your account and explore our heirloom toy collections.
@@ -284,7 +295,7 @@ export default function EmailVerifiedModal({
             </span>
           </div>
 
-          {/* Action Button: Proceed to Login */}
+          {/* Action Button: Start Shopping or Proceed to Login */}
           <button
             type="button"
             id="proceed-to-login-btn"
@@ -304,7 +315,7 @@ export default function EmailVerifiedModal({
               width: '100%',
             }}
           >
-            <span>Proceed to Login</span>
+            <span>{proceedText || (isAuthenticated ? 'Start Shopping' : 'Proceed to Login')}</span>
             <ArrowRight size={18} />
           </button>
         </div>

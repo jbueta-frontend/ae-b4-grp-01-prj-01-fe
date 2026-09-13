@@ -4,48 +4,91 @@ import { CheckCircle2, Mail, AlertCircle, ArrowRight, RefreshCw, AlertTriangle }
 import Logo from '../../../shared/components/Logo';
 import EmailVerifiedModal from '../components/EmailVerifiedModal';
 import api from '../../../services/api';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function VerifyEmailView() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setAuthSession, isAuthenticated, user } = useAuth();
 
-  const token = searchParams.get('token') || searchParams.get('token_hash');
-  const type = searchParams.get('type') || 'signup';
-  const emailParam = searchParams.get('email') || '';
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.substring(1)
+    : window.location.hash;
+  const hashParams = new URLSearchParams(hash);
+
+  const accessToken =
+    hashParams.get('access_token') || searchParams.get('access_token');
+  const refreshToken =
+    hashParams.get('refresh_token') || searchParams.get('refresh_token');
+  const token =
+    accessToken ||
+    searchParams.get('token') ||
+    searchParams.get('token_hash') ||
+    hashParams.get('token') ||
+    hashParams.get('token_hash');
+
+  const type = hashParams.get('type') || searchParams.get('type') || 'signup';
+  const emailParam =
+    searchParams.get('email') || hashParams.get('email') || user?.email || '';
   const isDirectlyVerified =
     searchParams.get('isEmailVerified') === 'true' ||
     searchParams.get('verified') === 'true';
 
   const [status, setStatus] = useState(
-    isDirectlyVerified ? 'success' : token ? 'verifying' : 'instructions'
+    isDirectlyVerified || accessToken
+      ? 'success'
+      : token
+      ? 'verifying'
+      : 'instructions'
   );
   const [errorMessage, setErrorMessage] = useState(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendNotice, setResendNotice] = useState(null);
 
   // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(isDirectlyVerified);
+  const [isModalOpen, setIsModalOpen] = useState(isDirectlyVerified || !!accessToken);
   const [verifiedMessage, setVerifiedMessage] = useState(
-    'Email verified successfully!'
+    accessToken
+      ? 'Email verified successfully! You are now logged in.'
+      : 'Email verified successfully!'
   );
 
   useEffect(() => {
     // 0. If this is a password recovery link, immediately route to Reset Password view
-    const hash = window.location.hash.startsWith('#')
-      ? window.location.hash.substring(1)
-      : window.location.hash;
-    const hashParams = new URLSearchParams(hash);
     const isRecovery =
       type === 'recovery' ||
       type === 'reset' ||
       searchParams.get('type') === 'recovery' ||
-      hashParams.get('type') === 'recovery';
+      hashParams.get('type') === 'recovery' ||
+      hash.includes('type=recovery');
 
     if (isRecovery) {
+      const recoveryToken =
+        hashParams.get('access_token') ||
+        hashParams.get('token') ||
+        hashParams.get('token_hash') ||
+        searchParams.get('token') ||
+        searchParams.get('token_hash') ||
+        searchParams.get('access_token') ||
+        '';
+
+      const forwardParams = new URLSearchParams();
+      if (recoveryToken) forwardParams.set('token', recoveryToken);
+      forwardParams.set('type', 'recovery');
+
       navigate(
-        `/reset-password?${searchParams.toString()}${window.location.hash ? window.location.hash : ''}`,
+        `/reset-password?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
         { replace: true }
       );
+      return;
+    }
+
+    // 1. If an access_token is present in the redirect, authenticate the session immediately
+    if (accessToken) {
+      setAuthSession(accessToken, refreshToken);
+      setStatus('success');
+      setVerifiedMessage('Email verified successfully! You are now logged in.');
+      setIsModalOpen(true);
       return;
     }
 
@@ -60,11 +103,26 @@ export default function VerifyEmailView() {
       api
         .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
         .then((res) => {
-          // Response envelope unwrapped: { isEmailVerified: true, message: "Email verified successfully!" }
+          // If response returns session token or user, authenticate immediately
+          const sessionToken =
+            res?.accessToken ||
+            res?.data?.accessToken ||
+            res?.token ||
+            res?.session?.access_token;
+          if (sessionToken) {
+            setAuthSession(
+              sessionToken,
+              res?.refreshToken || res?.session?.refresh_token,
+              res?.user
+            );
+          }
+
           const successMsg =
             res?.message ||
             res?.data?.message ||
-            'Email verified successfully!';
+            (sessionToken
+              ? 'Email verified successfully! You are now logged in.'
+              : 'Email verified successfully!');
           setVerifiedMessage(successMsg);
           setStatus('success');
           setIsModalOpen(true);
@@ -73,6 +131,13 @@ export default function VerifyEmailView() {
           // Fallback check: in case endpoint accepts POST or alternative path
           try {
             const fallbackRes = await api.post('/auth/verify', { token, type });
+            const sessionToken =
+              fallbackRes?.accessToken ||
+              fallbackRes?.data?.accessToken ||
+              fallbackRes?.token;
+            if (sessionToken) {
+              setAuthSession(sessionToken, fallbackRes?.refreshToken, fallbackRes?.user);
+            }
             const successMsg =
               fallbackRes?.message ||
               fallbackRes?.data?.message ||
@@ -132,10 +197,23 @@ export default function VerifyEmailView() {
       {/* Verification Success Modal */}
       <EmailVerifiedModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onProceed={() => navigate('/login')}
+        onClose={() => {
+          setIsModalOpen(false);
+          if (isAuthenticated) navigate('/');
+        }}
+        onProceed={() => {
+          setIsModalOpen(false);
+          if (isAuthenticated) {
+            navigate('/');
+          } else {
+            navigate('/login');
+          }
+        }}
         message={verifiedMessage}
-        email={emailParam}
+        email={emailParam || user?.email || ''}
+        userName={user?.name || ''}
+        isAuthenticated={isAuthenticated}
+        proceedText={isAuthenticated ? 'Start Shopping' : 'Proceed to Login'}
       />
 
       <div style={{ width: '100%', maxWidth: '440px' }}>
