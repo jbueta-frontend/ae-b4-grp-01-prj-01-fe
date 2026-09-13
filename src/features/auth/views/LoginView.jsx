@@ -11,12 +11,15 @@ import {
   CheckCircle2,
   ArrowLeft,
 } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import Logo from '../../../shared/components/Logo';
 import EmailVerifiedModal from '../components/EmailVerifiedModal';
 import api from '../../../services/api';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function LoginView({ initialTab = 'login' }) {
+  const navigate = useNavigate();
+  const { setAuthSession, isAuthenticated, user } = useAuth();
   const {
     tab,
     setTab,
@@ -63,7 +66,6 @@ export default function LoginView({ initialTab = 'login' }) {
 
     if (isDirectlyVerified) {
       setIsVerifiedModalOpen(true);
-      setTab('login');
       return;
     }
 
@@ -71,11 +73,26 @@ export default function LoginView({ initialTab = 'login' }) {
       api
         .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
         .then((res) => {
+          const sessionToken =
+            res?.accessToken ||
+            res?.data?.accessToken ||
+            res?.token ||
+            res?.session?.access_token;
+          if (sessionToken) {
+            setAuthSession(
+              sessionToken,
+              res?.refreshToken || res?.session?.refresh_token,
+              res?.user
+            );
+          }
           setVerifiedModalMessage(
-            res?.message || res?.data?.message || 'Email verified successfully!'
+            res?.message ||
+              res?.data?.message ||
+              (sessionToken
+                ? 'Email verified successfully! You are now logged in.'
+                : 'Email verified successfully!')
           );
           setIsVerifiedModalOpen(true);
-          setTab('login');
         })
         .catch(() => {
           // ignore or handled elsewhere
@@ -94,12 +111,23 @@ export default function LoginView({ initialTab = 'login' }) {
       {/* Email Verified Modal */}
       <EmailVerifiedModal
         isOpen={isVerifiedModalOpen}
-        onClose={() => setIsVerifiedModalOpen(false)}
+        onClose={() => {
+          setIsVerifiedModalOpen(false);
+          if (isAuthenticated) navigate('/');
+        }}
         onProceed={() => {
           setIsVerifiedModalOpen(false);
-          setTab('login');
+          if (isAuthenticated) {
+            navigate('/');
+          } else {
+            setTab('login');
+          }
         }}
         message={verifiedModalMessage}
+        email={user?.email || ''}
+        userName={user?.name || ''}
+        isAuthenticated={isAuthenticated}
+        proceedText={isAuthenticated ? 'Start Shopping' : 'Proceed to Login'}
       />
       <div style={{ width: '100%', maxWidth: '420px' }}>
         {/* Brand Header */}
