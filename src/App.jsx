@@ -165,6 +165,8 @@ function App() {
 
                   {/* 6. Support & FAQ */}
                   <Route path="/support" element={<SupportView />} />
+                  <Route path="/faq" element={<SupportView />} />
+                  <Route path="/faqs" element={<SupportView />} />
                 </Route>
 
                 {/* 7. Admin Portal (Protected with Role Guard) */}
