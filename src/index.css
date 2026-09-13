@@ -873,4 +873,122 @@ img {
   z-index: 5;
 }
 
+/* ==========================================================================
+   Admin Viewport & Full-Screen Sidebar Compliance
+   ========================================================================== */
+.admin-viewport-root {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+  background-color: var(--admin-canvas, #f2ece4);
+  font-family: var(--font-sans);
+}
+
+.admin-sidebar {
+  width: 260px;
+  height: 100vh;
+  max-height: 100vh;
+  flex-shrink: 0;
+  background-color: #161619;
+  border-right: 1px solid #27272e;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform var(--transition-normal);
+}
+
+.admin-main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  position: relative;
+}
+
+.admin-header-bar {
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--admin-card-border, #dfd5ca);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 36px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-shrink: 0;
+}
+
+.admin-content-area {
+  flex: 1;
+  padding: 28px 36px 64px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-mobile-toggle {
+  display: none;
+}
+
+.admin-mobile-backdrop {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .admin-mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    border: 1px solid var(--border-hairline);
+    color: var(--text-main);
+    cursor: pointer;
+    margin-right: 12px;
+  }
+
+  .admin-header-bar {
+    padding: 0 16px;
+  }
+
+  .admin-content-area {
+    padding: 20px 16px 48px;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 100;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    transform: translateX(-100%);
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .admin-mobile-backdrop.mobile-open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 90;
+  }
+}
+
 

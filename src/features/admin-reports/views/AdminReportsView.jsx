@@ -41,7 +41,7 @@ export default function AdminReportsView() {
   } = useAdminReportsViewModel();
 
   const maxSold = data.topProducts.length > 0
-    ? Math.max(...data.topProducts.map((p) => Number(p.totalSold || p.quantity || 1)))
+    ? Math.max(...data.topProducts.map((p) => Number(p.soldQuantity || p.totalSold || p.quantity || 1)))
     : 1;
 
   return (
@@ -753,7 +753,7 @@ export default function AdminReportsView() {
               </thead>
               <tbody>
                 {data.topProducts.map((prod, idx) => {
-                  const sold = Number(prod.totalSold || prod.quantity || 0);
+                  const sold = Number(prod.soldQuantity ?? prod.totalSold ?? prod.quantity ?? 0);
                   const pct = Math.min(100, Math.round((sold / maxSold) * 100));
 
                   return (
@@ -802,8 +802,40 @@ export default function AdminReportsView() {
                           {idx + 1}
                         </span>
                       </td>
-                      <td style={{ padding: '16px 24px', fontWeight: 700 }}>
-                        {prod.name || prod.productName || 'Unnamed Toy'}
+                      <td style={{ padding: '16px 24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              flexShrink: 0,
+                              backgroundColor: '#f5f5f4',
+                              border: '1px solid #e7e5e4',
+                            }}
+                          >
+                            <img
+                              src={prod.heroImage || '/products/cyber_mech_figure.jpg'}
+                              alt={prod.name || 'Toy'}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/products/cyber_mech_figure.jpg';
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.875rem' }}>
+                              {prod.name || prod.productName || 'Unnamed Toy'}
+                            </div>
+                            {prod.category && (
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                {prod.category}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td
                         style={{
@@ -813,7 +845,7 @@ export default function AdminReportsView() {
                           fontSize: '0.8125rem',
                         }}
                       >
-                        {prod.sku || '—'}
+                        {prod.sku || 'N/A'}
                       </td>
                       {/* Visual Sales Progress Bar */}
                       <td style={{ padding: '16px 24px' }}>
@@ -946,11 +978,11 @@ export default function AdminReportsView() {
                   gap: '12px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                   <div
                     style={{
-                      width: '40px',
-                      height: '40px',
+                      width: '48px',
+                      height: '48px',
                       borderRadius: '8px',
                       overflow: 'hidden',
                       flexShrink: 0,
@@ -959,47 +991,59 @@ export default function AdminReportsView() {
                     }}
                   >
                     <img
-                      src={item.heroImage || item.imageUrl || '/products/zen_garden_pagoda.jpg'}
-                      alt={item.name || 'Toy'}
+                      src={item.heroImage || item.imageUrl || item.product?.imageUrl || '/products/cyber_mech_figure.jpg'}
+                      alt={item.name || item.product?.name || 'Toy'}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = '/products/zen_garden_pagoda.jpg';
+                        e.target.src = '/products/cyber_mech_figure.jpg';
                       }}
                     />
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <h4
                       style={{
-                        fontSize: '0.875rem',
+                        fontSize: '0.9375rem',
                         fontWeight: 700,
                         color: 'var(--text-main)',
-                        margin: '0 0 2px',
+                        margin: '0 0 3px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {item.name || item.productName || 'Toy Product'}
+                      {item.name || item.product?.name || item.productName || 'Toy Product'}
                     </h4>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      SKU: {item.sku || 'N/A'} • Threshold: {item.lowStockThreshold || item.inventory?.lowStockThreshold || 5} units
-                    </span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-main)' }}>
+                        SKU: {item.sku || item.product?.sku || 'N/A'}
+                      </span>
+                      <span>•</span>
+                      <span>Threshold: {item.lowStockThreshold || item.inventory?.lowStockThreshold || 5} units</span>
+                      {item.category && (
+                        <>
+                          <span>•</span>
+                          <span>{item.category}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                   <span
                     style={{
-                      fontSize: '0.875rem',
+                      fontSize: '0.8125rem',
                       fontWeight: 800,
-                      color: '#dc2626',
-                      backgroundColor: 'rgba(220, 38, 38, 0.08)',
-                      padding: '4px 8px',
+                      color: (item.stockQuantity ?? item.stock ?? 0) === 0 ? '#b91c1c' : '#c2410c',
+                      backgroundColor: (item.stockQuantity ?? item.stock ?? 0) === 0 ? 'rgba(220, 38, 38, 0.1)' : 'rgba(234, 88, 12, 0.1)',
+                      border: `1px solid ${(item.stockQuantity ?? item.stock ?? 0) === 0 ? 'rgba(220, 38, 38, 0.25)' : 'rgba(234, 88, 12, 0.25)'}`,
+                      padding: '4px 10px',
                       borderRadius: 'var(--radius-sm)',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    {item.stockQuantity ?? item.stock ?? 0} left
+                    {(item.stockQuantity ?? item.stock ?? 0) === 0 ? '0 left (Out of Stock)' : `${item.stockQuantity ?? item.stock ?? 0} left`}
                   </span>
                   <button
                     type="button"
