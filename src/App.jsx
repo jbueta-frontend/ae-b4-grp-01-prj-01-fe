@@ -16,6 +16,7 @@ import Navbar from './shared/components/Navbar';
 import Footer from './shared/components/Footer';
 import CartDrawer from './shared/components/CartDrawer';
 import CartToast from './shared/components/CartToast';
+import BackToTop from './shared/components/BackToTop';
 import AdminGuard from './shared/components/AdminGuard';
 import AdminLayout from './shared/components/AdminLayout';
 import CustomerGuard from './shared/components/CustomerGuard';
@@ -106,6 +107,7 @@ function App() {
             <Navbar />
             <CartDrawer />
             <CartToast />
+            <BackToTop />
 
             <main style={{ flex: 1 }}>
               <Routes>

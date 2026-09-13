@@ -801,3 +801,76 @@ img {
   }
 }
 
+/* ========================================================================= */
+/* Back to Top Floating Action & Tooltip                                     */
+/* ========================================================================= */
+
+.back-to-top-btn:hover {
+  background-color: var(--accent-hover, #b54e28) !important;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 22px rgba(200, 90, 50, 0.45), 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.back-to-top-btn:active {
+  transform: translateY(0) scale(0.95);
+}
+
+@media (max-width: 767px) {
+  .back-to-top-container {
+    bottom: 18px !important;
+    right: 16px !important;
+  }
+  
+  .back-to-top-btn {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* ========================================================================= */
+/* Scroll Hint Affordance Keyframes & Utilities                              */
+/* ========================================================================= */
+
+@keyframes pulseHorizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes pulseVertical {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.scroll-hint-pulse-h {
+  animation: pulseHorizontal 1.2s ease-in-out infinite;
+}
+
+.scroll-hint-pulse-v {
+  animation: pulseVertical 1.2s ease-in-out infinite;
+}
+
+.scroll-fade-edge-right {
+  position: relative;
+}
+
+.scroll-fade-edge-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(250, 247, 245, 0), rgba(250, 247, 245, 0.95));
+  z-index: 5;
+}
+
+

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import ScrollHint from '../../../shared/components/ScrollHint';
 import { useProductDetailViewModel } from '../viewmodels/useProductDetailViewModel';
 import {
   Star,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function ProductDetailView() {
+  const galleryScrollRef = useRef(null);
   const {
     product,
     loading,
@@ -245,8 +247,18 @@ export default function ProductDetailView() {
 
             {/* Thumbnail Rail */}
             {product.gallery?.length > 1 && (
-              <div style={{ display: 'flex', gap: '12px', overflowX: 'auto' }}>
-                {product.gallery.map((img, idx) => (
+              <div style={{ marginTop: '12px' }}>
+                {product.gallery.length > 3 && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6px' }}>
+                    <ScrollHint direction="horizontal" label="Swipe photos" targetRef={galleryScrollRef} />
+                  </div>
+                )}
+                <div
+                  ref={galleryScrollRef}
+                  className="custom-scrollbar"
+                  style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px' }}
+                >
+                  {product.gallery.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
@@ -274,6 +286,7 @@ export default function ProductDetailView() {
                     />
                   </button>
                 ))}
+                </div>
               </div>
             )}
           </div>
