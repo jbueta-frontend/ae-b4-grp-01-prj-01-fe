@@ -47,6 +47,7 @@ export default function Logo({
 
       {showText && (
         <span
+          className="brand-logo-text"
           style={{
             fontSize:
               pixelHeight >= 48

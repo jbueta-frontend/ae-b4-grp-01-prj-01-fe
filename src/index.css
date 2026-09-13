@@ -37,9 +37,9 @@
   --font-small: 14px;    /* Small / Captions */
 
   /* Responsive Fluid Scales (Scaling down gracefully on smaller viewports to exact desktop targets) */
-  --font-h1-fluid: clamp(40px, 5.5vw, 64px);
-  --font-h2-fluid: clamp(28px, 3.8vw, 40px);
-  --font-h3-fluid: clamp(22px, 2.5vw, 28px);
+  --font-h1-fluid: clamp(28px, 5.5vw, 64px);
+  --font-h2-fluid: clamp(22px, 4vw, 40px);
+  --font-h3-fluid: clamp(18px, 2.8vw, 28px);
 
   /* Elevation */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -58,8 +58,12 @@
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html {
+html,
+body {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 *,
@@ -88,6 +92,20 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+main {
+  flex: 1;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* System-wide Typography Hierarchy */
@@ -614,6 +632,11 @@ img {
   display: none !important;
 }
 
+/* Brand Logo Text Scaling */
+.brand-logo-text {
+  transition: font-size var(--transition-fast);
+}
+
 /* Catalog Responsive Layout */
 .catalog-layout-grid {
   display: grid;
@@ -633,7 +656,7 @@ img {
 /* Responsive Product Grid */
 .products-responsive-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
 }
 
@@ -675,8 +698,10 @@ img {
   z-index: 49;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   animation: fadeIn 0.2s ease-out;
+  max-height: calc(100vh - 58px);
+  overflow-y: auto;
 }
 
 /* Breakpoint: Small Desktop & Tablet (< 992px) */
@@ -706,6 +731,10 @@ img {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
     gap: 16px !important;
   }
+
+  .category-carousel-arrow {
+    display: none !important;
+  }
 }
 
 /* Breakpoint: Tablets & Mobile (< 768px) */
@@ -724,13 +753,13 @@ img {
   }
 
   .products-responsive-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)) !important;
+    gap: 14px !important;
   }
 
   .hero-slide-grid {
     grid-template-columns: 1fr !important;
-    gap: 28px !important;
+    gap: 24px !important;
     text-align: center;
   }
 
@@ -741,6 +770,7 @@ img {
   .hero-countdown-box {
     margin-left: auto !important;
     margin-right: auto !important;
+    width: 100% !important;
   }
 
   .category-showcase-arrows {
@@ -748,15 +778,26 @@ img {
   }
 }
 
-/* Breakpoint: Extra Small Phones (< 480px) */
-@media (max-width: 480px) {
+/* Breakpoint: Mobile Phones (< 540px) */
+@media (max-width: 539px) {
   .products-responsive-grid {
     grid-template-columns: 1fr !important;
-    gap: 14px !important;
+    gap: 16px !important;
+  }
+
+  .brand-logo-text {
+    font-size: 0.95rem !important;
   }
 
   .mobile-filter-drawer-content {
     max-width: 100% !important;
+  }
+}
+
+/* Breakpoint: Extra Small Phones (< 380px) */
+@media (max-width: 379px) {
+  .brand-logo-text {
+    display: none !important;
   }
 }
 

@@ -147,8 +147,8 @@ export default function CartView() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '36px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+            gap: 'clamp(20px, 3vw, 36px)',
             alignItems: 'flex-start',
           }}
         >
@@ -162,20 +162,22 @@ export default function CartView() {
                 className="card-clean"
                 style={{
                   display: 'flex',
-                  gap: '20px',
+                  gap: 'clamp(12px, 3vw, 20px)',
                   alignItems: 'center',
-                  padding: '20px',
+                  padding: 'clamp(14px, 3vw, 20px)',
+                  flexWrap: 'wrap',
                 }}
               >
                 <img
                   src={item.image}
                   alt={item.name}
                   style={{
-                    width: '96px',
-                    height: '96px',
+                    width: 'clamp(72px, 18vw, 96px)',
+                    height: 'clamp(72px, 18vw, 96px)',
                     objectFit: 'cover',
                     borderRadius: 'var(--radius-md)',
                     backgroundColor: 'var(--bg-subtle)',
+                    flexShrink: 0,
                   }}
                 />
 
