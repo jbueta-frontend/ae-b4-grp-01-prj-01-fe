@@ -3,7 +3,6 @@ import { ArrowUp } from 'lucide-react';
 
 export default function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,56 +30,17 @@ export default function BackToTop() {
   return (
     <div
       className="back-to-top-container"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'fixed',
         bottom: '24px',
         right: '24px',
         zIndex: 48,
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
         animation: 'fadeIn 0.2s ease-out',
       }}
     >
-      {/* Tooltip */}
-      <div
-        className={`back-to-top-tooltip ${isHovered ? 'tooltip-visible' : ''}`}
-        style={{
-          position: 'absolute',
-          bottom: 'calc(100% + 8px)',
-          backgroundColor: '#18181b',
-          color: '#ffffff',
-          fontSize: '0.75rem',
-          fontWeight: 700,
-          letterSpacing: '0.02em',
-          padding: '5px 10px',
-          borderRadius: '6px',
-          whiteSpace: 'nowrap',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.18)',
-          pointerEvents: 'none',
-          transition: 'opacity 0.18s ease, transform 0.18s ease',
-          opacity: isHovered ? 1 : 0,
-          transform: isHovered ? 'translateY(0)' : 'translateY(4px)',
-        }}
-        role="tooltip"
-      >
-        <span>Back to Top</span>
-        {/* Little Tooltip Arrow */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            borderWidth: '4px',
-            borderStyle: 'solid',
-            borderColor: '#18181b transparent transparent transparent',
-          }}
-        />
-      </div>
-
       {/* Floating Button */}
       <button
         type="button"
