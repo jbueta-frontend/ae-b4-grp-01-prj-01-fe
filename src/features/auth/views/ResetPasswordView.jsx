@@ -29,6 +29,10 @@ export default function ResetPasswordView() {
       hashParams.get('access_token');
     if (fromHash) return fromHash;
 
+    // 3. Check session storage recovery token
+    const fromSession = sessionStorage.getItem('fiddlemania_recovery_token');
+    if (fromSession) return fromSession;
+
     return localStorage.getItem('accessToken') || '';
   };
 
