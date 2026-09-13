@@ -38,6 +38,7 @@ export default function ProductCatalogView() {
     searchQuery,
     setSearchQuery,
     products,
+    allProducts,
     totalFilteredCount,
     totalProductsCount,
     currentPage,
@@ -97,7 +98,9 @@ export default function ProductCatalogView() {
       {/* ========================================================================= */}
       <CategoryShowcase
         categoryItems={categoryItems}
-        products={products}
+        products={allProducts && allProducts.length > 0 ? allProducts : products}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
         onQuickAdd={handleQuickAdd}
         addedNotice={addedNotice}
         onExploreCatalog={(cat) => {
