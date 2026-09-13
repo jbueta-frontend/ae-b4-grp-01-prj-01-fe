@@ -234,39 +234,15 @@ export default function Navbar() {
             </a>
           </nav>
 
-          {/* 3. Right side: Search Icon, Cart Icon, Login CTA, Mobile Menu Toggle */}
+          {/* 3. Right side: Search Icon, Cart Icon, Profile/Login, Mobile Menu Toggle */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              gap: '8px',
               flexShrink: 0,
             }}
           >
-            {/* Mobile Hamburger Menu Toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="mobile-only"
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: 'var(--radius-full)',
-                border: isMobileMenuOpen
-                  ? '1px solid var(--accent)'
-                  : '1px solid var(--border-hairline)',
-                backgroundColor: isMobileMenuOpen
-                  ? 'var(--accent-light)'
-                  : 'var(--bg-card)',
-                color: isMobileMenuOpen ? 'var(--accent)' : 'var(--text-main)',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all var(--transition-fast)',
-                cursor: 'pointer',
-              }}
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
             {/* Search Icon Button */}
             <button
               onClick={() => setIsSearchOpen((prev) => !prev)}
@@ -356,7 +332,7 @@ export default function Navbar() {
 
             {/* Equal-Sized Profile Icon (38px) with Dropdown */}
             {isAuthenticated ? (
-              <div ref={profileMenuRef} style={{ position: 'relative' }}>
+              <div ref={profileMenuRef} className="desktop-only" style={{ position: 'relative' }}>
                 <button
                   type="button"
                   onClick={() => setIsProfileMenuOpen((prev) => !prev)}
@@ -540,14 +516,13 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm desktop-only"
                 style={{
                   padding: '7px 16px',
                   borderRadius: 'var(--radius-full)',
                   fontSize: '0.875rem',
                   fontWeight: 700,
                   boxShadow: '0 2px 6px rgba(200, 90, 50, 0.25)',
-                  display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
                 }}
@@ -556,6 +531,31 @@ export default function Navbar() {
                 <span>Log In</span>
               </Link>
             )}
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="mobile-only"
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: 'var(--radius-full)',
+                border: isMobileMenuOpen
+                  ? '1px solid var(--accent)'
+                  : '1px solid var(--border-hairline)',
+                backgroundColor: isMobileMenuOpen
+                  ? 'var(--accent-light)'
+                  : 'var(--bg-card)',
+                color: isMobileMenuOpen ? 'var(--accent)' : 'var(--text-main)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all var(--transition-fast)',
+                cursor: 'pointer',
+              }}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
         </div>
 

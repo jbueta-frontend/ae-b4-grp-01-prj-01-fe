@@ -137,10 +137,10 @@ export default function HeroCarousel({ onSelectCategory }) {
           className="hero-slide-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '40px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+            gap: 'clamp(24px, 4vw, 40px)',
             alignItems: 'center',
-            minHeight: '420px',
+            minHeight: 'auto',
           }}
         >
           {/* ================================================================= */}
@@ -180,7 +180,7 @@ export default function HeroCarousel({ onSelectCategory }) {
               <span>{currentSlide.tag}</span>
             </div>
 
-            {/* Headline: 2-Line Bold Title (H1: 64px) */}
+            {/* Headline: 2-Line Bold Title */}
             <h1
               style={{
                 fontSize: 'var(--font-h1-fluid, 64px)',
@@ -189,6 +189,7 @@ export default function HeroCarousel({ onSelectCategory }) {
                 lineHeight: 1.1,
                 letterSpacing: '-0.03em',
                 marginBottom: '16px',
+                wordBreak: 'break-word',
               }}
             >
               {currentSlide.headline[0]} <br />
@@ -507,7 +508,7 @@ export default function HeroCarousel({ onSelectCategory }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              minHeight: '440px',
+              minHeight: 'clamp(240px, 40vw, 440px)',
             }}
           >
             {/* Prominent Scaled Toy Showcase Image */}
@@ -518,7 +519,7 @@ export default function HeroCarousel({ onSelectCategory }) {
                 position: 'relative',
                 width: '100%',
                 maxWidth: '560px',
-                height: '440px',
+                height: 'clamp(240px, 40vw, 440px)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

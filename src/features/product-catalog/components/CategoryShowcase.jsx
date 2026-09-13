@@ -442,11 +442,11 @@ export default function CategoryShowcase({
           {categoryProducts.length > 2 && (
             <button
               type="button"
-              className="desktop-only"
+              className="category-carousel-arrow desktop-only"
               onClick={() => scrollProducts('left')}
               style={{
                 position: 'absolute',
-                left: '-16px',
+                left: '4px',
                 top: '48%',
                 transform: 'translateY(-50%)',
                 zIndex: 10,
@@ -545,11 +545,11 @@ export default function CategoryShowcase({
           {categoryProducts.length > 2 && (
             <button
               type="button"
-              className="desktop-only"
+              className="category-carousel-arrow desktop-only"
               onClick={() => scrollProducts('right')}
               style={{
                 position: 'absolute',
-                right: '-16px',
+                right: '4px',
                 top: '48%',
                 transform: 'translateY(-50%)',
                 zIndex: 10,

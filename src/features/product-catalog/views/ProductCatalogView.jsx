@@ -128,9 +128,11 @@ export default function ProductCatalogView() {
           <div
             style={{
               display: 'flex',
-              alignItems: 'flex-end',
+              alignItems: 'flex-start',
               justifyContent: 'space-between',
-              marginBottom: '36px',
+              marginBottom: '32px',
+              flexWrap: 'wrap',
+              gap: '16px',
             }}
           >
             <div>

@@ -32,7 +32,7 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         backgroundColor: '#FFFFFF',
         border: '1px solid #D4CCC4',
         borderRadius: 'var(--radius-lg)',
-        padding: '16px',
+        padding: 'clamp(12px, 2.5vw, 16px)',
         display: 'flex',
         flexDirection: 'column',
         transition:
@@ -58,12 +58,14 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
       <div
         style={{
           position: 'absolute',
-          top: '16px',
-          left: '16px',
-          right: '16px',
+          top: '12px',
+          left: '12px',
+          right: '12px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          gap: '6px',
+          flexWrap: 'wrap',
           zIndex: 2,
           pointerEvents: 'none',
         }}
@@ -228,11 +230,11 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
         </span>
       </div>
 
-      {/* 4. Product Title (Body: 18px) */}
+      {/* 4. Product Title (Fluidly scaled) */}
       <Link
         to={`/products/${product.slug}`}
         style={{
-          fontSize: 'var(--font-body, 18px)',
+          fontSize: 'clamp(0.9375rem, 2vw, 1.125rem)',
           fontWeight: 700,
           color: 'var(--text-main)',
           lineHeight: 1.35,
@@ -284,22 +286,22 @@ export default function ProductCard({ product, onQuickAdd, isAdded }) {
 
 
 
-      {/* 7. Emphasized Add to Cart Button (Uniform 44px height) */}
+      {/* 7. Emphasized Add to Cart Button (Fluid 40-44px height) */}
       <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
         <button
           type="button"
           onClick={(e) => onQuickAdd(product, e)}
           className={`btn btn-block ${isAdded ? 'btn-secondary' : 'btn-primary'}`}
           style={{
-            height: '44px',
-            padding: '0 16px',
+            height: 'clamp(40px, 5vw, 44px)',
+            padding: '0 12px',
             borderRadius: 'var(--radius-md)',
             fontSize: '0.875rem',
             fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
+            gap: '6px',
             width: '100%',
             backgroundColor: isAdded ? '#16A34A' : 'var(--accent)',
             borderColor: isAdded ? '#16A34A' : 'var(--accent)',
