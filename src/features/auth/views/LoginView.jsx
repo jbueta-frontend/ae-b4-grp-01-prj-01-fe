@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAuthViewModel } from '../viewmodels/useAuthViewModel';
 import {
   Lock,
@@ -10,8 +11,10 @@ import {
   CheckCircle2,
   ArrowLeft,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Logo from '../../../shared/components/Logo';
+import EmailVerifiedModal from '../components/EmailVerifiedModal';
+import api from '../../../services/api';
 
 export default function LoginView({ initialTab = 'login' }) {
   const {
@@ -46,6 +49,40 @@ export default function LoginView({ initialTab = 'login' }) {
     handleGuestCheckout,
   } = useAuthViewModel(initialTab);
 
+  const [searchParams] = useSearchParams();
+  const [isVerifiedModalOpen, setIsVerifiedModalOpen] = useState(false);
+  const [verifiedModalMessage, setVerifiedModalMessage] = useState(
+    'Email verified successfully!'
+  );
+
+  useEffect(() => {
+    const isDirectlyVerified =
+      searchParams.get('isEmailVerified') === 'true' ||
+      searchParams.get('verified') === 'true';
+    const token = searchParams.get('token') || searchParams.get('token_hash');
+
+    if (isDirectlyVerified) {
+      setIsVerifiedModalOpen(true);
+      setTab('login');
+      return;
+    }
+
+    if (token) {
+      api
+        .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
+        .then((res) => {
+          setVerifiedModalMessage(
+            res?.message || res?.data?.message || 'Email verified successfully!'
+          );
+          setIsVerifiedModalOpen(true);
+          setTab('login');
+        })
+        .catch(() => {
+          // ignore or handled elsewhere
+        });
+    }
+  }, [searchParams, setTab]);
+
   return (
     <div
       style={{
@@ -54,6 +91,16 @@ export default function LoginView({ initialTab = 'login' }) {
         justifyContent: 'center',
       }}
     >
+      {/* Email Verified Modal */}
+      <EmailVerifiedModal
+        isOpen={isVerifiedModalOpen}
+        onClose={() => setIsVerifiedModalOpen(false)}
+        onProceed={() => {
+          setIsVerifiedModalOpen(false);
+          setTab('login');
+        }}
+        message={verifiedModalMessage}
+      />
       <div style={{ width: '100%', maxWidth: '420px' }}>
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
