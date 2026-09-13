@@ -4,6 +4,26 @@ import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck, 
 import Logo from '../../../shared/components/Logo';
 import api from '../../../services/api';
 
+// Helper to parse JWT payload without external libraries
+function parseJwt(tokenStr) {
+  try {
+    if (!tokenStr || typeof tokenStr !== 'string') return null;
+    const parts = tokenStr.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export default function ResetPasswordView() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -33,10 +53,25 @@ export default function ResetPasswordView() {
     const fromSession = sessionStorage.getItem('fiddlemania_recovery_token');
     if (fromSession) return fromSession;
 
-    return localStorage.getItem('accessToken') || '';
+    // Do NOT fall back to localStorage accessToken — a password reset requires an explicit recovery token
+    return '';
   };
 
   const [token, setToken] = useState(extractToken);
+  const [tokenValidityError, setTokenValidityError] = useState(() => {
+    const initialToken = extractToken();
+    if (!initialToken) return null;
+    const payload = parseJwt(initialToken);
+    if (payload) {
+      if (payload.exp && Date.now() / 1000 > payload.exp) {
+        return 'This password reset link has expired (links are valid for 1 hour). Please request a fresh reset link.';
+      }
+      if (payload.type && payload.type !== 'PASSWORD_RESET') {
+        return 'This link does not contain a valid password reset token. Please request a new link.';
+      }
+    }
+    return null;
+  });
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -47,8 +82,24 @@ export default function ResetPasswordView() {
 
   useEffect(() => {
     const foundToken = extractToken();
-    if (foundToken && (!token || token !== foundToken)) {
+    if (foundToken) {
       setToken(foundToken);
+      const payload = parseJwt(foundToken);
+      if (payload) {
+        if (payload.exp && Date.now() / 1000 > payload.exp) {
+          setTokenValidityError(
+            'This password reset link has expired (links are valid for 1 hour). Please request a fresh reset link.'
+          );
+        } else if (payload.type && payload.type !== 'PASSWORD_RESET') {
+          setTokenValidityError(
+            'This link does not contain a valid password reset token. Please request a new link.'
+          );
+        } else {
+          setTokenValidityError(null);
+        }
+      }
+    } else {
+      setToken('');
     }
   }, [searchParams]);
 
@@ -128,8 +179,8 @@ export default function ResetPasswordView() {
         </div>
 
         <div className="card-clean" style={{ padding: '32px 28px' }}>
-          {/* No token in URL — link is invalid or expired */}
-          {!token && !success ? (
+          {/* No token in URL or token invalid/expired */}
+          {(!token || tokenValidityError) && !success ? (
             <div style={{ textAlign: 'center' }}>
               <div
                 style={{
@@ -147,13 +198,14 @@ export default function ResetPasswordView() {
                 <AlertCircle size={32} strokeWidth={2} />
               </div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '8px' }}>
-                Invalid or Expired Link
+                {tokenValidityError ? 'Reset Link Expired or Invalid' : 'Invalid or Expired Link'}
               </h2>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
-                This password reset link is missing or has already expired. Please request a new one from the login page.
+                {tokenValidityError ||
+                  'This password reset link is missing or has already expired. Please request a new one from the login page.'}
               </p>
               <Link to="/login" className="btn btn-primary btn-block" style={{ padding: '12px' }}>
-                <span>Go to Login</span>
+                <span>Request New Reset Link</span>
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -393,10 +445,7 @@ export default function ResetPasswordView() {
                 <div
                   role="alert"
                   style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
-                    padding: '12px 14px',
+                    padding: '14px 16px',
                     backgroundColor: 'rgba(220, 38, 38, 0.08)',
                     border: '1px solid #DC2626',
                     borderRadius: 'var(--radius-md)',
@@ -406,8 +455,33 @@ export default function ResetPasswordView() {
                     marginBottom: '18px',
                   }}
                 >
-                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ fontWeight: 500 }}>{error}</span>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600 }}>{error}</div>
+                      {(error.toLowerCase().includes('invalid') || error.toLowerCase().includes('expired')) && (
+                        <div style={{ marginTop: '6px', fontSize: '0.8125rem', color: '#991B1B' }}>
+                          Password reset links are valid for 1 hour from when they are requested.
+                          <div style={{ marginTop: '8px' }}>
+                            <Link
+                              to="/login"
+                              style={{
+                                color: '#DC2626',
+                                fontWeight: 700,
+                                textDecoration: 'underline',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              <span>Request a new reset link</span>
+                              <ArrowRight size={14} />
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
