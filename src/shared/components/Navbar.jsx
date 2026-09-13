@@ -5,7 +5,7 @@ import {
   useNavigate,
   useSearchParams,
 } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Search, X, Package } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Search, X, Package, Menu } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
@@ -27,6 +27,7 @@ export default function Navbar() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [isBouncing, setIsBouncing] = useState(false);
   const searchInputRef = useRef(null);
@@ -52,6 +53,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsProfileMenuOpen(false);
+    setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -158,8 +160,8 @@ export default function Navbar() {
 
           {/* 2. Center: Navigation Links (Home, Categories, Product) */}
           <nav
+            className="desktop-only"
             style={{
-              display: 'flex',
               alignItems: 'center',
               gap: '28px',
             }}
@@ -232,7 +234,7 @@ export default function Navbar() {
             </a>
           </nav>
 
-          {/* 3. Right side: Search Icon, Cart Icon, Login CTA */}
+          {/* 3. Right side: Search Icon, Cart Icon, Login CTA, Mobile Menu Toggle */}
           <div
             style={{
               display: 'flex',
@@ -241,6 +243,30 @@ export default function Navbar() {
               flexShrink: 0,
             }}
           >
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              className="mobile-only"
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: 'var(--radius-full)',
+                border: isMobileMenuOpen
+                  ? '1px solid var(--accent)'
+                  : '1px solid var(--border-hairline)',
+                backgroundColor: isMobileMenuOpen
+                  ? 'var(--accent-light)'
+                  : 'var(--bg-card)',
+                color: isMobileMenuOpen ? 'var(--accent)' : 'var(--text-main)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all var(--transition-fast)',
+                cursor: 'pointer',
+              }}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
             {/* Search Icon Button */}
             <button
               onClick={() => setIsSearchOpen((prev) => !prev)}
@@ -600,6 +626,155 @@ export default function Navbar() {
                 </button>
               )}
             </form>
+          </div>
+        )}
+
+        {/* Mobile Navigation Sheet */}
+        {isMobileMenuOpen && (
+          <div className="mobile-nav-sheet">
+            <a
+              href="/#hero"
+              onClick={(e) => {
+                handleNavClick(e, 'hero');
+                setIsMobileMenuOpen(false);
+              }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--text-main)',
+                padding: '8px 0',
+                borderBottom: '1px solid var(--border-hairline)',
+                display: 'block',
+              }}
+            >
+              Home
+            </a>
+            <a
+              href="/#categories"
+              onClick={(e) => {
+                handleNavClick(e, 'categories');
+                setIsMobileMenuOpen(false);
+              }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--text-main)',
+                padding: '8px 0',
+                borderBottom: '1px solid var(--border-hairline)',
+                display: 'block',
+              }}
+            >
+              Browse Categories
+            </a>
+            <a
+              href="/#products"
+              onClick={(e) => {
+                handleNavClick(e, 'products');
+                setIsMobileMenuOpen(false);
+              }}
+              style={{
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--text-main)',
+                padding: '8px 0',
+                borderBottom: '1px solid var(--border-hairline)',
+                display: 'block',
+              }}
+            >
+              Explore Products
+            </a>
+
+            {isAuthenticated ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px' }}>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 600,
+                    color: 'var(--text-main)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 0',
+                  }}
+                >
+                  <User size={18} color="var(--accent)" />
+                  <span>My Profile ({user?.name || user?.email?.split('@')[0]})</span>
+                </Link>
+                <Link
+                  to="/orders"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 600,
+                    color: 'var(--text-main)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 0',
+                  }}
+                >
+                  <Package size={18} color="var(--accent)" />
+                  <span>My Purchases</span>
+                </Link>
+                {user?.role === 'ADMIN' && (
+                  <Link
+                    to="/admin/products"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{
+                      fontSize: '0.9375rem',
+                      fontWeight: 600,
+                      color: 'var(--accent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px 0',
+                    }}
+                  >
+                    <span>Admin Inventory Portal</span>
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    logout();
+                  }}
+                  style={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 600,
+                    color: '#dc2626',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 0',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <LogOut size={18} />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '10px', paddingTop: '8px' }}>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="btn btn-primary btn-block"
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="btn btn-outline btn-block"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>

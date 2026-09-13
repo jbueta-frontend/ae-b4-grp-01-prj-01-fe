@@ -442,6 +442,7 @@ export default function CategoryShowcase({
           {categoryProducts.length > 2 && (
             <button
               type="button"
+              className="desktop-only"
               onClick={() => scrollProducts('left')}
               style={{
                 position: 'absolute',
@@ -544,6 +545,7 @@ export default function CategoryShowcase({
           {categoryProducts.length > 2 && (
             <button
               type="button"
+              className="desktop-only"
               onClick={() => scrollProducts('right')}
               style={{
                 position: 'absolute',

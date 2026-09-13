@@ -16,10 +16,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Filter,
+  X,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export default function ProductCatalogView() {
   const location = useLocation();
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const {
     categories,
     categoryItems,
@@ -208,31 +212,90 @@ export default function ProductCatalogView() {
             </div>
           </div>
 
-          {/* Container Layout: Left Filter Option + Right Product Grid (User requirement) */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '260px 1fr',
-              gap: '32px',
-              alignItems: 'start',
-            }}
-          >
-            {/* Left Filter Sidebar */}
-            <CatalogFilters
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-              ageOptions={ageOptions}
-              selectedAge={selectedAge}
-              onSelectAge={setSelectedAge}
-              priceOptions={priceOptions}
-              selectedPrice={selectedPrice}
-              onSelectPrice={setSelectedPrice}
-              inStockOnly={inStockOnly}
-              onToggleInStock={setInStockOnly}
-              activeFilterCount={activeFilterCount}
-              onResetFilters={resetFilters}
-            />
+          {/* Mobile Filter Trigger Bar (< 992px) */}
+          <div className="catalog-mobile-filter-bar">
+            <button
+              type="button"
+              onClick={() => setIsMobileFilterOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: 'var(--radius-full, 9999px)',
+                backgroundColor: activeFilterCount > 0 ? 'var(--accent)' : 'var(--bg-card, #ffffff)',
+                border: activeFilterCount > 0 ? '1px solid var(--accent)' : '1px solid var(--border-hairline, #e8e3df)',
+                color: activeFilterCount > 0 ? '#ffffff' : 'var(--text-main)',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <SlidersHorizontal size={16} />
+              <span>Filter Toys</span>
+              {activeFilterCount > 0 && (
+                <span
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: 'var(--accent)',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  style={{
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: 'var(--accent)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+              <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                {products.length} of {totalFilteredCount || totalProductsCount} items
+              </span>
+            </div>
+          </div>
+
+          {/* Container Layout: Left Filter Option (Desktop) + Right Product Grid */}
+          <div className="catalog-layout-grid">
+            {/* Left Filter Sidebar (Desktop >= 992px) */}
+            <div className="catalog-sidebar-desktop">
+              <CatalogFilters
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                ageOptions={ageOptions}
+                selectedAge={selectedAge}
+                onSelectAge={setSelectedAge}
+                priceOptions={priceOptions}
+                selectedPrice={selectedPrice}
+                onSelectPrice={setSelectedPrice}
+                inStockOnly={inStockOnly}
+                onToggleInStock={setInStockOnly}
+                activeFilterCount={activeFilterCount}
+                onResetFilters={resetFilters}
+              />
+            </div>
 
             {/* Right Product Grid */}
             <div>
@@ -285,14 +348,7 @@ export default function ProductCatalogView() {
                 </div>
               ) : (
                 <>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns:
-                        'repeat(auto-fill, minmax(240px, 1fr))',
-                      gap: '20px',
-                    }}
-                  >
+                  <div className="products-responsive-grid">
                     {products.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -500,6 +556,85 @@ export default function ProductCatalogView() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Filter Drawer Overlay (< 992px) */}
+        {isMobileFilterOpen && (
+          <div
+            className="mobile-filter-drawer-backdrop"
+            onClick={() => setIsMobileFilterOpen(false)}
+          >
+            <div
+              className="mobile-filter-drawer-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingBottom: '16px',
+                  borderBottom: '1px solid var(--border-hairline, #e8e3df)',
+                  marginBottom: '16px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <SlidersHorizontal size={18} color="var(--accent)" />
+                  <h3 style={{ fontSize: '1.0625rem', fontWeight: 800, margin: 0 }}>
+                    Filter Toys
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid var(--border-hairline, #e8e3df)',
+                    backgroundColor: 'var(--bg-subtle, #f5f1ed)',
+                    cursor: 'pointer',
+                  }}
+                  aria-label="Close filters"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <CatalogFilters
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={(cat) => {
+                    setSelectedCategory(cat);
+                  }}
+                  ageOptions={ageOptions}
+                  selectedAge={selectedAge}
+                  onSelectAge={setSelectedAge}
+                  priceOptions={priceOptions}
+                  selectedPrice={selectedPrice}
+                  onSelectPrice={setSelectedPrice}
+                  inStockOnly={inStockOnly}
+                  onToggleInStock={setInStockOnly}
+                  activeFilterCount={activeFilterCount}
+                  onResetFilters={resetFilters}
+                />
+              </div>
+
+              <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-hairline, #e8e3df)', display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="btn btn-primary btn-block"
+                >
+                  View {totalFilteredCount || totalProductsCount} Toys
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ========================================================================= */}
