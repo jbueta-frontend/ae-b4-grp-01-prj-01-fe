@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { validateAuthForm, validateForgotPasswordForm } from '../models/authModel';
@@ -38,12 +38,12 @@ export function useAuthViewModel(defaultTab = 'login') {
     }
   }, [isAuthenticated, user, navigate]);
 
-  const handleTabSwitch = (newTab) => {
+  const handleTabSwitch = useCallback((newTab) => {
     setTab(newTab);
     setIsForgotPassword(false);
     setApiError(null);
     setErrors({});
-  };
+  }, []);
 
   const handleNameChange = (e) => {
     setName(e.target.value);
