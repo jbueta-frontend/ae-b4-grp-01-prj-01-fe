@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCheckoutViewModel } from '../viewmodels/useCheckoutViewModel';
 import {
@@ -7,6 +8,8 @@ import {
   ArrowLeft,
   CreditCard,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Banknote,
   Wallet,
   Trash2,
@@ -45,6 +48,12 @@ export default function CheckoutView() {
     updateQuantity,
     removeFromCart,
   } = useCheckoutViewModel();
+
+  const [isExpandedItems, setIsExpandedItems] = useState(false);
+  const COLLAPSED_LIMIT = 3;
+  const showAllItems = isExpandedItems || isEditingBag || items.length <= COLLAPSED_LIMIT;
+  const visibleItems = showAllItems ? items : items.slice(0, COLLAPSED_LIMIT);
+  const hiddenCount = items.length - COLLAPSED_LIMIT;
 
   if (items.length === 0) {
     return (
@@ -1058,19 +1067,21 @@ export default function CheckoutView() {
                 </div>
               )}
 
-              {/* Items List */}
+              {/* Items List (Pattern A: Progressive Disclosure + Pattern C: Sleek Custom Scrollbar) */}
               <div
+                className="custom-scrollbar"
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '14px',
-                  marginBottom: '20px',
-                  maxHeight: '380px',
-                  overflowY: 'auto',
-                  paddingRight: '4px',
+                  marginBottom: items.length > COLLAPSED_LIMIT && !isEditingBag ? '12px' : '20px',
+                  maxHeight: showAllItems && items.length > COLLAPSED_LIMIT ? '340px' : 'none',
+                  overflowY: showAllItems && items.length > COLLAPSED_LIMIT ? 'auto' : 'visible',
+                  paddingRight: showAllItems && items.length > COLLAPSED_LIMIT ? '6px' : '0',
+                  transition: 'all 0.2s ease',
                 }}
               >
-                {items.map((item) => {
+                {visibleItems.map((item) => {
                   const itemKey = `${item.id}-${item.variant}`;
                   const isSelected = selectedItemKeys.includes(itemKey);
 
@@ -1270,6 +1281,49 @@ export default function CheckoutView() {
                   );
                 })}
               </div>
+
+              {/* Progressive Disclosure Toggle Button (Pattern A) */}
+              {items.length > COLLAPSED_LIMIT && !isEditingBag && (
+                <button
+                  type="button"
+                  onClick={() => setIsExpandedItems(!isExpandedItems)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: 'var(--radius-md, 8px)',
+                    backgroundColor: isExpandedItems ? 'transparent' : 'var(--bg-subtle, #f5f1ed)',
+                    border: '1px solid var(--border-hairline, #e8e3df)',
+                    color: 'var(--accent, #c85a32)',
+                    fontSize: '0.8125rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    marginBottom: '16px',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--accent-light, rgba(200, 90, 50, 0.08))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = isExpandedItems ? 'transparent' : 'var(--bg-subtle, #f5f1ed)';
+                  }}
+                >
+                  {isExpandedItems ? (
+                    <>
+                      <span>Show fewer items</span>
+                      <ChevronUp size={15} />
+                    </>
+                  ) : (
+                    <>
+                      <span>View all {items.length} items (+{hiddenCount} more)</span>
+                      <ChevronDown size={15} />
+                    </>
+                  )}
+                </button>
+              )}
 
               {/* 5. Clearly Visible Monetary Breakdown (Crucial UX) */}
               <div
