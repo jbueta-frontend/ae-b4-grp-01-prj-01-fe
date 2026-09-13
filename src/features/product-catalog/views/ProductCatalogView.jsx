@@ -97,8 +97,13 @@ export default function ProductCatalogView() {
       {/* ========================================================================= */}
       <CategoryShowcase
         categoryItems={categoryItems}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
+        products={products}
+        onQuickAdd={handleQuickAdd}
+        addedNotice={addedNotice}
+        onExploreCatalog={(cat) => {
+          setSelectedCategory(cat);
+          scrollToSection('products');
+        }}
       />
 
       {/* ========================================================================= */}

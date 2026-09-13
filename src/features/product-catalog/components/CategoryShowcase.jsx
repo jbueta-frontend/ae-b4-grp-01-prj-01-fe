@@ -1,8 +1,16 @@
-import { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  Award,
+  TreePine,
+  Layers,
+} from 'lucide-react';
 import { DATABASE_CATEGORIES } from '../models/productModel';
-
-export const BROWSE_CATEGORIES = DATABASE_CATEGORIES;
+import ProductCard from './ProductCard';
 
 const CATEGORY_IMAGE_MAP = {
   'Action Figures': '/products/cyber_mech_figure.jpg',
@@ -13,71 +21,120 @@ const CATEGORY_IMAGE_MAP = {
   'STEM & Educational': '/products/solar_rover_stem.jpg',
 };
 
+const CATEGORY_METADATA = {
+  'Building Sets': {
+    tagline: 'Architectural wonder blocks engineered for tactile balance & spatial reasoning',
+    featureBadge: '100% Solid European Beechwood',
+    ageRange: 'Ages 3+ to 8+',
+  },
+  'STEM & Educational': {
+    tagline: 'Kinetic gears, robotics & early physics puzzles for inquisitive young minds',
+    featureBadge: 'Kinetic & Cognitive Play',
+    ageRange: 'Ages 5+ to 8+',
+  },
+  'Action Figures': {
+    tagline: 'Artisan hand-carved posable heroes & adventure story keepsakes',
+    featureBadge: 'Artisan Articulated Joints',
+    ageRange: 'Ages 3+',
+  },
+  'Board Games & Puzzles': {
+    tagline: 'Timeless strategy games, cognitive mazes, and intergenerational family challenges',
+    featureBadge: 'Solid Timber Boards',
+    ageRange: 'All Ages',
+  },
+  'Plush Toys': {
+    tagline: 'Organic cotton, gentle sensory textures, and bedtime heirloom companions',
+    featureBadge: 'Hypoallergenic Organic Cotton',
+    ageRange: 'Ages 0+',
+  },
+  'Outdoor & Sports': {
+    tagline: 'Active gross-motor coordination, balanced ride-ons, and durable movement toys',
+    featureBadge: 'Weather-Treated Hardwood',
+    ageRange: 'Ages 2+',
+  },
+};
+
 export default function CategoryShowcase({
   categoryItems = DATABASE_CATEGORIES,
-  selectedCategory = 'All Toys',
-  onSelectCategory,
+  products = [],
+  onQuickAdd,
+  addedNotice,
+  onExploreCatalog,
 }) {
-  const scrollRef = useRef(null);
+  const productsScrollRef = useRef(null);
 
-  const displayCategories =
-    Array.isArray(categoryItems) && categoryItems.length > 0
+  // Normalize categories list from database or props
+  const displayCategories = useMemo(() => {
+    return Array.isArray(categoryItems) && categoryItems.length > 0
       ? categoryItems
       : DATABASE_CATEGORIES;
+  }, [categoryItems]);
 
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -300 : 300;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  // Default active category to the first real category ('Building Sets' or displayCategories[0])
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const building = displayCategories.find(
+      (c) => (c.name || c.categoryKey) === 'Building Sets'
+    );
+    return building ? building.name || building.categoryKey : displayCategories[0]?.name || 'Building Sets';
+  });
+
+  // Filter products for currently active category in showcase
+  const categoryProducts = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    return products.filter((p) => {
+      const pCat = (p.category || '').toLowerCase().trim();
+      const aCat = (activeCategory || '').toLowerCase().trim();
+      return pCat === aCat || pCat.includes(aCat) || aCat.includes(pCat);
+    });
+  }, [products, activeCategory]);
+
+  // Scroll handler for product carousel
+  const scrollProducts = (direction) => {
+    if (productsScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -320 : 320;
+      productsScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
 
-  const handleCategorySelect = (categoryName) => {
-    if (onSelectCategory) {
-      onSelectCategory(categoryName);
-    }
-    const target = document.getElementById('products');
-    if (target) {
-      const navHeight = 58;
-      const targetY =
-        target.getBoundingClientRect().top + window.pageYOffset - navHeight;
-      window.scrollTo({ top: targetY, behavior: 'smooth' });
-    }
+  const currentMeta = CATEGORY_METADATA[activeCategory] || {
+    tagline: 'Handcrafted wooden pieces designed for wonder, discovery, and enduring play',
+    featureBadge: '100% Non-Toxic Beechwood',
+    ageRange: 'Child-Safe Certified',
   };
-
-  const isAllToysSelected =
-    !selectedCategory || selectedCategory === 'All Toys';
 
   return (
     <section
       id="categories"
       style={{
-        padding: '60px 0 52px',
+        padding: '56px 0 64px',
         backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid var(--border-hairline)',
+        borderBottom: '1px solid var(--border-hairline, #e8e3df)',
       }}
     >
       <div className="container">
-        {/* Section Header with Eyebrow, Title and Navigation Arrows */}
+        {/* 1. Header: Eyebrow, Title and Product Carousel Controls */}
         <div
           style={{
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
-            marginBottom: '32px',
+            marginBottom: '28px',
+            flexWrap: 'wrap',
+            gap: '16px',
           }}
         >
           <div>
-            {/* Eyebrow with Circle Dot Badge */}
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontSize: 'var(--font-small, 14px)',
+                fontSize: '0.8125rem',
                 fontWeight: 700,
-                color: 'var(--accent)',
-                marginBottom: '8px',
+                color: 'var(--accent, #c85a32)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                marginBottom: '6px',
               }}
             >
               <span
@@ -85,271 +142,350 @@ export default function CategoryShowcase({
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--accent)',
+                  backgroundColor: 'var(--accent, #c85a32)',
                   display: 'inline-block',
                 }}
               />
-              <span>Categories</span>
+              <span>Curated Collections</span>
             </div>
 
-            {/* Section Headline (H2: 40px) */}
             <h2
               style={{
-                fontSize: 'var(--font-h2-fluid, 40px)',
+                fontSize: 'var(--font-h2-fluid, 36px)',
                 fontWeight: 800,
-                color: 'var(--text-main)',
+                color: 'var(--text-main, #18181b)',
                 letterSpacing: '-0.02em',
-                lineHeight: 1.18,
+                margin: 0,
+                lineHeight: 1.2,
               }}
             >
               Browse by Category
             </h2>
           </div>
 
-          {/* Top-Right Navigation Arrows */}
-          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-            <button
-              onClick={() => scroll('left')}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-hairline)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--text-main)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-              aria-label="Scroll categories left"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
-                e.currentTarget.style.borderColor = '#D4CECA';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = 'var(--border-hairline)';
-              }}
-            >
-              <ChevronLeft size={18} />
-            </button>
+          {/* Navigation Arrows for Category Product Carousel */}
+          {categoryProducts.length > 3 && (
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => scrollProducts('left')}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: 'var(--radius-md, 8px)',
+                  border: '1px solid var(--border-hairline, #e8e3df)',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--text-main, #18181b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+                }}
+                aria-label="Scroll products left"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-subtle, #f5f1ed)';
+                  e.currentTarget.style.borderColor = 'var(--accent, #c85a32)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = 'var(--border-hairline, #e8e3df)';
+                }}
+              >
+                <ChevronLeft size={18} />
+              </button>
 
-            <button
-              onClick={() => scroll('right')}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--border-hairline)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--text-main)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-              aria-label="Scroll categories right"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-subtle)';
-                e.currentTarget.style.borderColor = '#D4CECA';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = 'var(--border-hairline)';
-              }}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => scrollProducts('right')}
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: 'var(--radius-md, 8px)',
+                  border: '1px solid var(--border-hairline, #e8e3df)',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--text-main, #18181b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+                }}
+                aria-label="Scroll products right"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-subtle, #f5f1ed)';
+                  e.currentTarget.style.borderColor = 'var(--accent, #c85a32)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = 'var(--border-hairline, #e8e3df)';
+                }}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Horizontal Category Cards Strip */}
+        {/* 2. Interactive Category Tabs Strip (Clicking updates in-place without jumping down) */}
         <div
-          ref={scrollRef}
+          className="custom-scrollbar"
           style={{
             display: 'flex',
-            gap: '16px',
+            gap: '12px',
             overflowX: 'auto',
-            paddingBottom: '8px',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
+            paddingBottom: '14px',
+            marginBottom: '24px',
           }}
         >
-          {/* All Toys card */}
-          <div
-            onClick={() => handleCategorySelect('All Toys')}
-            style={{
-              flex: '0 0 145px',
-              height: '145px',
-              backgroundColor: isAllToysSelected
-                ? 'var(--accent-light)'
-                : '#FFFFFF',
-              border: isAllToysSelected
-                ? '2px solid var(--accent)'
-                : '1px solid #D4CCC4',
-              borderRadius: 'var(--radius-lg)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: isAllToysSelected
-                ? '0 8px 20px rgba(200, 90, 50, 0.18)'
-                : '0 4px 12px rgba(0, 0, 0, 0.05)',
-              padding: '12px',
-              textAlign: 'center',
-            }}
-            onMouseEnter={(e) => {
-              if (!isAllToysSelected) {
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.borderColor = 'var(--accent)';
-                e.currentTarget.style.boxShadow =
-                  '0 8px 20px rgba(0, 0, 0, 0.08)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isAllToysSelected) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = '#D4CCC4';
-                e.currentTarget.style.boxShadow =
-                  '0 4px 12px rgba(0, 0, 0, 0.05)';
-              }
-            }}
-          >
-            <div
-              style={{
-                width: '54px',
-                height: '54px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--bg-subtle)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: isAllToysSelected
-                  ? 'var(--accent)'
-                  : 'var(--text-main)',
-              }}
-            >
-              <Layers size={24} />
-            </div>
-            <span
-              style={{
-                fontSize: 'var(--font-small, 14px)',
-                fontWeight: 700,
-                color: isAllToysSelected
-                  ? 'var(--accent)'
-                  : 'var(--text-main)',
-              }}
-            >
-              All Toys
-            </span>
-          </div>
-
-          {/* Database Category Cards */}
           {displayCategories.map((cat) => {
             const catName = cat.name || cat.categoryKey;
-            const isSelected =
-              selectedCategory?.toLowerCase() === catName?.toLowerCase();
+            const isSelected = activeCategory?.toLowerCase() === catName?.toLowerCase();
             const imgSrc =
               CATEGORY_IMAGE_MAP[catName] || cat.thumbnail || cat.imageUrl;
 
+            // Count products in this category
+            const count = products.filter((p) => {
+              const pCat = (p.category || '').toLowerCase().trim();
+              const cName = catName.toLowerCase().trim();
+              return pCat === cName || pCat.includes(cName) || cName.includes(pCat);
+            }).length;
+
             return (
-              <div
+              <button
                 key={cat.id || cat.categoryId || catName}
-                onClick={() => handleCategorySelect(catName)}
+                type="button"
+                onClick={() => setActiveCategory(catName)}
                 style={{
-                  flex: '0 0 155px',
-                  height: '145px',
-                  backgroundColor: isSelected
-                    ? 'var(--accent-light)'
-                    : '#FFFFFF',
-                  border: isSelected
-                    ? '2px solid var(--accent)'
-                    : '1px solid #D4CCC4',
-                  borderRadius: 'var(--radius-lg)',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
                   gap: '12px',
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  border: isSelected
+                    ? '2px solid var(--accent, #c85a32)'
+                    : '1px solid var(--border-hairline, #e8e3df)',
+                  backgroundColor: isSelected
+                    ? 'rgba(200, 90, 50, 0.08)'
+                    : '#FFFFFF',
+                  color: isSelected
+                    ? 'var(--accent, #c85a32)'
+                    : 'var(--text-main, #18181b)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  flexShrink: 0,
+                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                   boxShadow: isSelected
-                    ? '0 8px 20px rgba(200, 90, 50, 0.18)'
-                    : '0 4px 12px rgba(0, 0, 0, 0.05)',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.transform = 'translateY(-3px)';
-                    e.currentTarget.style.borderColor = 'var(--accent)';
-                    e.currentTarget.style.boxShadow =
-                      '0 8px 20px rgba(0, 0, 0, 0.08)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = '#D4CCC4';
-                    e.currentTarget.style.boxShadow =
-                      '0 4px 12px rgba(0, 0, 0, 0.05)';
-                  }
+                    ? '0 4px 14px rgba(200, 90, 50, 0.15)'
+                    : '0 1px 3px rgba(0, 0, 0, 0.02)',
                 }}
               >
                 <div
                   style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: 'var(--radius-md)',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
                     overflow: 'hidden',
-                    backgroundColor: 'var(--bg-subtle)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    backgroundColor: 'var(--bg-subtle, #f5f1ed)',
+                    flexShrink: 0,
                   }}
                 >
                   <img
                     src={imgSrc}
                     alt={catName}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => {
-                      e.currentTarget.src =
-                        CATEGORY_IMAGE_MAP[catName] ||
-                        '/products/zen_garden_pagoda.jpg';
+                      e.currentTarget.src = '/products/zen_garden_pagoda.jpg';
                     }}
-                    loading="lazy"
                   />
                 </div>
-                <span
-                  style={{
-                    fontSize: 'var(--font-small, 13px)',
-                    fontWeight: 700,
-                    color: isSelected ? 'var(--accent)' : 'var(--text-main)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '135px',
-                  }}
-                  title={catName}
-                >
-                  {catName}
-                </span>
-              </div>
+
+                <div style={{ textAlign: 'left' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: isSelected ? 800 : 600, display: 'block' }}>
+                    {catName}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #71717a)' }}>
+                    {count > 0 ? `${count} pieces` : 'Collection'}
+                  </span>
+                </div>
+              </button>
             );
           })}
         </div>
+
+        {/* 3. Category Editorial & Story Banner */}
+        <div
+          style={{
+            backgroundColor: '#faf7f4',
+            border: '1px solid #e8e1d9',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            marginBottom: '28px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '18px',
+          }}
+        >
+          <div style={{ maxWidth: '640px' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                color: 'var(--accent, #c85a32)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                marginBottom: '6px',
+              }}
+            >
+              <Sparkles size={14} />
+              <span>{activeCategory} Spotlight</span>
+            </div>
+            <h3
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 800,
+                color: 'var(--text-main, #18181b)',
+                margin: '0 0 6px',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {activeCategory}
+            </h3>
+            <p
+              style={{
+                margin: 0,
+                fontSize: '0.875rem',
+                color: 'var(--text-muted, #71717a)',
+                lineHeight: 1.55,
+              }}
+            >
+              {currentMeta.tagline}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '6px 12px',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e8e1d9',
+                color: 'var(--text-main)',
+              }}
+            >
+              <TreePine size={14} color="var(--accent)" />
+              <span>{currentMeta.featureBadge}</span>
+            </span>
+
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '6px 12px',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e8e1d9',
+                color: 'var(--text-main)',
+              }}
+            >
+              <ShieldCheck size={14} color="#16a34a" />
+              <span>{currentMeta.ageRange}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* 4. Category Products Showcase (Horizontal Slider) */}
+        {categoryProducts.length > 0 ? (
+          <div
+            ref={productsScrollRef}
+            className="custom-scrollbar"
+            style={{
+              display: 'flex',
+              gap: '20px',
+              overflowX: 'auto',
+              paddingBottom: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            {categoryProducts.map((product) => (
+              <div
+                key={product.id || product.productId}
+                style={{
+                  flex: '0 0 270px',
+                  minWidth: '270px',
+                }}
+              >
+                <ProductCard
+                  product={product}
+                  onQuickAdd={onQuickAdd}
+                  isAdded={addedNotice === product.id}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div
+            style={{
+              padding: '48px 24px',
+              textAlign: 'center',
+              backgroundColor: 'var(--bg-subtle, #f5f1ed)',
+              borderRadius: '14px',
+              border: '1px dashed var(--border-hairline, #e8e3df)',
+              marginBottom: '20px',
+            }}
+          >
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9375rem', fontWeight: 500 }}>
+              New handcrafted {activeCategory} pieces are currently in timber workshop finishing.
+            </p>
+          </div>
+        )}
+
+        {/* 5. Contextual Action: Explore Full Category in Deep Catalog */}
+        {onExploreCatalog && categoryProducts.length > 0 && (
+          <div style={{ textAlign: 'center', marginTop: '12px' }}>
+            <button
+              type="button"
+              onClick={() => onExploreCatalog(activeCategory)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: 'var(--accent, #c85a32)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(200, 90, 50, 0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <span>Explore all {categoryProducts.length} {activeCategory} toys with full age & price filters in the Catalog</span>
+              <ArrowRight size={15} />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
