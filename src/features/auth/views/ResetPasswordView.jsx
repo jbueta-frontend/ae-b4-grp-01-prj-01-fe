@@ -1,15 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
 import Logo from '../../../shared/components/Logo';
 import api from '../../../services/api';
 
 export default function ResetPasswordView() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  // Accept both ?token= and ?token_hash= (Supabase-style links)
-  const token = searchParams.get('token') || searchParams.get('token_hash') || '';
 
+  // Extract token from multiple potential formats (URL query, hash fragment, or active recovery session)
+  const extractToken = () => {
+    const fromSearch =
+      searchParams.get('token') ||
+      searchParams.get('token_hash') ||
+      searchParams.get('access_token') ||
+      searchParams.get('code');
+    if (fromSearch) return fromSearch;
+
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+    const fromHash =
+      hashParams.get('access_token') ||
+      hashParams.get('token') ||
+      hashParams.get('token_hash');
+    if (fromHash) return fromHash;
+
+    return localStorage.getItem('accessToken') || '';
+  };
+
+  const [token, setToken] = useState(extractToken);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,12 +39,23 @@ export default function ResetPasswordView() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    const foundToken = extractToken();
+    if (foundToken && (!token || token !== foundToken)) {
+      setToken(foundToken);
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (!token) {
-      setError('Password reset token is missing. Please request a new reset link from the login page.');
+    const activeToken = token || extractToken();
+
+    if (!activeToken) {
+      setError(
+        'Password reset token is missing. Please request a new reset link from the login page.'
+      );
       return;
     }
     if (password.length < 8) {
@@ -38,9 +70,16 @@ export default function ResetPasswordView() {
     setLoading(true);
     try {
       await api.post('/auth/reset-password', {
-        token,
+        token: activeToken,
+        password: password,
         newPassword: password,
       });
+
+      // Clear any temporary tokens so user must log in with their new password
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('fiddlemania_user');
+
       setSuccess(true);
     } catch (err) {
       setError(
