@@ -70,15 +70,6 @@ export function useProductCatalogViewModel() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [addedNotice, setAddedNotice] = useState(null);
 
-  // Sync initialCategory from localStorage into URL if not present
-  useEffect(() => {
-    if (initialCategory && initialCategory !== 'All Toys' && !searchParams.get('cat')) {
-      const next = new URLSearchParams(searchParams);
-      next.set('cat', initialCategory);
-      setSearchParams(next, { replace: true });
-    }
-  }, []);
-
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
