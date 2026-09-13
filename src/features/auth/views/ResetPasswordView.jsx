@@ -10,21 +10,23 @@ export default function ResetPasswordView() {
 
   // Extract token from multiple potential formats (URL query, hash fragment, or active recovery session)
   const extractToken = () => {
+    // 1. Prioritize explicit token / token_hash from URL query
     const fromSearch =
       searchParams.get('token') ||
       searchParams.get('token_hash') ||
-      searchParams.get('access_token') ||
-      searchParams.get('code');
+      searchParams.get('code') ||
+      searchParams.get('access_token');
     if (fromSearch) return fromSearch;
 
+    // 2. Prioritize explicit token / token_hash from URL hash
     const hash = window.location.hash.startsWith('#')
       ? window.location.hash.substring(1)
       : window.location.hash;
     const hashParams = new URLSearchParams(hash);
     const fromHash =
-      hashParams.get('access_token') ||
       hashParams.get('token') ||
-      hashParams.get('token_hash');
+      hashParams.get('token_hash') ||
+      hashParams.get('access_token');
     if (fromHash) return fromHash;
 
     return localStorage.getItem('accessToken') || '';
@@ -69,11 +71,20 @@ export default function ResetPasswordView() {
 
     setLoading(true);
     try {
-      await api.post('/auth/reset-password', {
-        token: activeToken,
-        password: password,
-        newPassword: password,
-      });
+      await api.post(
+        '/auth/reset-password',
+        {
+          token: activeToken,
+          accessToken: activeToken,
+          password: password,
+          newPassword: password,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${activeToken}`,
+          },
+        }
+      );
 
       // Clear any temporary tokens so user must log in with their new password
       localStorage.removeItem('accessToken');
@@ -82,12 +93,13 @@ export default function ResetPasswordView() {
 
       setSuccess(true);
     } catch (err) {
-      setError(
-        err.response?.data?.error?.message ||
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to reset password. The link may have expired — please request a new one.'
-      );
+      const backendErrorMsg =
+        err?.error?.message ||
+        err?.message ||
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        'Failed to reset password. The link may have expired — please request a new one.';
+      setError(backendErrorMsg);
     } finally {
       setLoading(false);
     }
