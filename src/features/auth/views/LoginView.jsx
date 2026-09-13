@@ -63,39 +63,47 @@ export default function LoginView({ initialTab = 'login' }) {
       searchParams.get('isEmailVerified') === 'true' ||
       searchParams.get('verified') === 'true';
     const token = searchParams.get('token') || searchParams.get('token_hash');
+    const paramEmail = searchParams.get('email');
+
+    if (paramEmail && handleEmailChange) {
+      handleEmailChange({ target: { value: paramEmail } });
+    }
 
     if (isDirectlyVerified) {
+      setTab('login');
       setIsVerifiedModalOpen(true);
       return;
     }
 
     if (token) {
+      // Confirm verification with backend
       api
         .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
         .then((res) => {
-          const sessionToken =
-            res?.accessToken ||
-            res?.data?.accessToken ||
-            res?.token ||
-            res?.session?.access_token;
-          if (sessionToken) {
-            setAuthSession(
-              sessionToken,
-              res?.refreshToken || res?.session?.refresh_token,
-              res?.user
-            );
-          }
           setVerifiedModalMessage(
             res?.message ||
               res?.data?.message ||
-              (sessionToken
-                ? 'Email verified successfully! You are now logged in.'
-                : 'Email verified successfully!')
+              'Email verified successfully! Please log in to your account.'
           );
+          setTab('login');
           setIsVerifiedModalOpen(true);
         })
         .catch(() => {
-          // ignore or handled elsewhere
+          // Fallback verify attempt
+          api
+            .post('/auth/verify', { token, type: 'signup' })
+            .then((res) => {
+              setVerifiedModalMessage(
+                res?.message || 'Email verified successfully! Please log in.'
+              );
+              setTab('login');
+              setIsVerifiedModalOpen(true);
+            })
+            .catch(() => {
+              // Still display verified confirmation if redirected from provider
+              setTab('login');
+              setIsVerifiedModalOpen(true);
+            });
         });
     }
   }, [searchParams, setTab]);
@@ -113,21 +121,16 @@ export default function LoginView({ initialTab = 'login' }) {
         isOpen={isVerifiedModalOpen}
         onClose={() => {
           setIsVerifiedModalOpen(false);
-          if (isAuthenticated) navigate('/');
+          setTab('login');
         }}
         onProceed={() => {
           setIsVerifiedModalOpen(false);
-          if (isAuthenticated) {
-            navigate('/');
-          } else {
-            setTab('login');
-          }
+          setTab('login');
         }}
         message={verifiedModalMessage}
-        email={user?.email || ''}
-        userName={user?.name || ''}
-        isAuthenticated={isAuthenticated}
-        proceedText={isAuthenticated ? 'Start Shopping' : 'Proceed to Login'}
+        email={searchParams.get('email') || email || ''}
+        isAuthenticated={false}
+        proceedText="Proceed to Login"
       />
       <div style={{ width: '100%', maxWidth: '420px' }}>
         {/* Brand Header */}
