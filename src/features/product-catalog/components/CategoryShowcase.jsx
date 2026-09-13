@@ -14,6 +14,7 @@ import api from '../../../services/api';
 import { getCategories } from '../../../services/productService';
 import { DATABASE_CATEGORIES, mapApiProduct } from '../models/productModel';
 import ProductCard from './ProductCard';
+import ScrollHint from '../../../shared/components/ScrollHint';
 
 const CATEGORY_IMAGE_MAP = {
   'Action Figures': '/products/cyber_mech_figure.jpg',
@@ -67,6 +68,7 @@ export default function CategoryShowcase({
   onExploreCatalog,
 }) {
   const productsScrollRef = useRef(null);
+  const tabsScrollRef = useRef(null);
 
   // Live database state
   const [dbProducts, setDbProducts] = useState(products || []);
@@ -232,22 +234,34 @@ export default function CategoryShowcase({
             <span>Curated Collections</span>
           </div>
 
-          <h2
+          <div
             style={{
-              fontSize: 'var(--font-h2-fluid, 36px)',
-              fontWeight: 800,
-              color: 'var(--text-main, #18181b)',
-              letterSpacing: '-0.02em',
-              margin: 0,
-              lineHeight: 1.2,
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
             }}
           >
-            Browse by Category
-          </h2>
+            <h2
+              style={{
+                fontSize: 'var(--font-h2-fluid, 36px)',
+                fontWeight: 800,
+                color: 'var(--text-main, #18181b)',
+                letterSpacing: '-0.02em',
+                margin: 0,
+                lineHeight: 1.2,
+              }}
+            >
+              Browse by Category
+            </h2>
+            <ScrollHint direction="horizontal" label="Swipe categories" targetRef={tabsScrollRef} />
+          </div>
         </div>
 
         {/* 2. Interactive Category Tabs Strip (Clicking updates in-place without page jump) */}
         <div
+          ref={tabsScrollRef}
           className="custom-scrollbar"
           style={{
             display: 'flex',
@@ -438,6 +452,11 @@ export default function CategoryShowcase({
 
         {/* 4. Category Products Showcase Track with Floating Left & Right Scroll Buttons directly on the Products */}
         <div style={{ position: 'relative' }}>
+          {categoryProducts.length > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+              <ScrollHint direction="horizontal" label="Swipe collection" targetRef={productsScrollRef} />
+            </div>
+          )}
           {/* Floating Left Scroll Button (Centered directly on the products carousel) */}
           {categoryProducts.length > 2 && (
             <button

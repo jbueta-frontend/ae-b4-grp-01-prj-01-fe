@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingBag, Star } from 'lucide-react';
+import ScrollHint from '../../../shared/components/ScrollHint';
 
 export const HERO_SLIDES = [
   {
@@ -584,6 +585,26 @@ export default function HeroCarousel({ onSelectCategory }) {
               />
             );
           })}
+        </div>
+
+        {/* Mobile Vertical Scroll Cue to guide users downward */}
+        <div
+          className="mobile-only"
+          style={{
+            justifyContent: 'center',
+            marginTop: '16px',
+          }}
+        >
+          <ScrollHint
+            direction="vertical"
+            label="Scroll to explore"
+            className="mobile-only"
+            style={{
+              backgroundColor: 'rgba(200, 90, 50, 0.10)',
+              color: 'var(--accent, #c85a32)',
+              border: '1px solid rgba(200, 90, 50, 0.22)',
+            }}
+          />
         </div>
       </div>
     </section>
