@@ -39,6 +39,7 @@ import ResetPasswordView from './features/auth/views/ResetPasswordView';
 import ProfileView from './features/profile/views/ProfileView';
 import SupportView from './features/support/views/SupportView';
 import LegalPolicyView from './features/support/views/LegalPolicyView';
+import NewUserWelcomeSetupModal from './features/auth/components/NewUserWelcomeSetupModal';
 
 // Admin Persona Views
 import AdminReportsView from './features/admin-reports/views/AdminReportsView';
@@ -164,6 +165,7 @@ function App() {
             <CartDrawer />
             <CartToast />
             <BackToTop />
+            <NewUserWelcomeSetupModal />
 
             <main style={{ flex: 1 }}>
               <Routes>
