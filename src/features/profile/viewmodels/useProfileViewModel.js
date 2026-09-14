@@ -80,13 +80,16 @@ export function useProfileViewModel() {
   });
 
   const [addressData, setAddressData] = useState(() => {
-    if (user?.address) {
+    if (user?.address && user.address.addressLine1) {
       return { ...INITIAL_PROFILE_STATE.address, ...user.address };
     }
-    try {
-      const saved = localStorage.getItem('fiddlemania_user_address');
-      if (saved) return { ...INITIAL_PROFILE_STATE.address, ...JSON.parse(saved) };
-    } catch {}
+    const userKey = user?.userId || user?.id || user?.email;
+    if (userKey) {
+      try {
+        const saved = localStorage.getItem(`fiddlemania_user_address_${userKey}`);
+        if (saved) return { ...INITIAL_PROFILE_STATE.address, ...JSON.parse(saved) };
+      } catch {}
+    }
     return INITIAL_PROFILE_STATE.address;
   });
 
@@ -118,7 +121,7 @@ export function useProfileViewModel() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  // Fetch live profile fields from backend on mount
+  // Fetch live profile fields and addresses from backend on mount
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -138,8 +141,44 @@ export function useProfileViewModel() {
             role: liveUser.role || prev.role,
             createdAt: liveUser.createdAt || prev.createdAt,
           }));
-          if (liveUser.address) {
-            setAddressData((prev) => ({ ...prev, ...liveUser.address }));
+        }
+
+        // Fetch real addresses from backend
+        const addresses = await api.get('/addresses').catch(() => []);
+        if (isMounted && Array.isArray(addresses) && addresses.length > 0) {
+          const defaultAddr =
+            addresses.find((a) => a.isDefaultShipping || a.isDefault) || addresses[0];
+          if (defaultAddr) {
+            const mapped = {
+              id: defaultAddr.addressId || defaultAddr.id || '',
+              addressId: defaultAddr.addressId || defaultAddr.id || '',
+              recipientName: defaultAddr.recipientName || '',
+              phone: defaultAddr.phone || '',
+              addressLine1: defaultAddr.addressLine1 || '',
+              addressLine2: defaultAddr.addressLine2 || '',
+              city: defaultAddr.city || '',
+              stateProvince: defaultAddr.stateProvince || '',
+              postalCode: defaultAddr.postalCode || '',
+              country: defaultAddr.country || 'Philippines',
+            };
+            setAddressData(mapped);
+            setAddressDraft(mapped);
+            updateProfile({ address: mapped });
+            const userKey =
+              liveUser?.userId ||
+              liveUser?.id ||
+              liveUser?.email ||
+              user?.userId ||
+              user?.id ||
+              user?.email;
+            if (userKey) {
+              try {
+                localStorage.setItem(
+                  `fiddlemania_user_address_${userKey}`,
+                  JSON.stringify(mapped)
+                );
+              } catch {}
+            }
           }
         }
       } catch {
@@ -161,8 +200,14 @@ export function useProfileViewModel() {
   }, [isEditingPersonal, personalData]);
 
   useEffect(() => {
-    if (isEditingAddress) setAddressDraft(addressData);
-  }, [isEditingAddress, addressData]);
+    if (isEditingAddress) {
+      setAddressDraft({
+        ...addressData,
+        recipientName: addressData.recipientName || user?.name || user?.fullName || '',
+        phone: addressData.phone || user?.phone || '',
+      });
+    }
+  }, [isEditingAddress, addressData, user]);
 
   const showNotice = (type, message) => {
     setNotification({ type, message });
@@ -238,15 +283,63 @@ export function useProfileViewModel() {
     }
 
     try {
-      await api.patch('/users/address', addressDraft).catch(() => {});
-      setAddressData(addressDraft);
-      // Sync address into AuthContext so checkout and other pages pick it up immediately
-      updateProfile({ address: addressDraft });
-      try {
-        localStorage.setItem('fiddlemania_user_address', JSON.stringify(addressDraft));
-      } catch {}
+      const payload = {
+        recipientName: addressDraft.recipientName,
+        phone: addressDraft.phone,
+        addressLine1: addressDraft.addressLine1,
+        addressLine2: addressDraft.addressLine2 || '',
+        city: addressDraft.city,
+        stateProvince: addressDraft.stateProvince,
+        postalCode: addressDraft.postalCode,
+        country: addressDraft.country || 'Philippines',
+        isDefault: true,
+      };
+
+      let savedRecord = null;
+      const existingId =
+        addressDraft.id ||
+        addressDraft.addressId ||
+        addressData.id ||
+        addressData.addressId;
+
+      if (existingId) {
+        try {
+          const res = await api.put(`/addresses/${existingId}`, payload);
+          savedRecord = res?.data || res;
+        } catch {
+          // If PUT fails or id invalid, fall back to creating
+        }
+      }
+
+      if (!savedRecord) {
+        const res = await api.post('/addresses', payload);
+        savedRecord = res?.data || res;
+      }
+
+      const finalAddress = {
+        ...addressDraft,
+        id: savedRecord?.addressId || savedRecord?.id || existingId || '',
+        addressId: savedRecord?.addressId || savedRecord?.id || existingId || '',
+      };
+
+      setAddressData(finalAddress);
+      setAddressDraft(finalAddress);
       setIsEditingAddress(false);
       setAddressErrors({});
+
+      // Sync address into AuthContext and user-scoped storage
+      updateProfile({ address: finalAddress });
+      const userKey = user?.userId || user?.id || user?.email;
+      if (userKey) {
+        try {
+          localStorage.setItem(
+            `fiddlemania_user_address_${userKey}`,
+            JSON.stringify(finalAddress)
+          );
+        } catch {}
+      }
+      localStorage.removeItem('fiddlemania_user_address');
+
       showNotice('success', 'Delivery address saved successfully.');
     } catch (err) {
       showNotice('error', err.message || 'Failed to update delivery address.');
