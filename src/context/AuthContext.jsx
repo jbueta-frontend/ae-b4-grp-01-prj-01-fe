@@ -148,9 +148,8 @@ export function AuthProvider({ children }) {
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
       localStorage.removeItem('fiddlemania_is_guest');
-      // Flag that a newly registered account needs initial setup
+      // Flag that a newly registered account needs initial setup once verified
       localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
-      localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
 
       setUser(userData);
       setIsGuest(false);

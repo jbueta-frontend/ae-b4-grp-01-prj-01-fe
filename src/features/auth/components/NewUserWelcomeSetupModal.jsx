@@ -49,19 +49,30 @@ export default function NewUserWelcomeSetupModal() {
       return;
     }
 
-    // Detect Email Verification flow
-    const isEmailVerification =
-      type === 'signup' ||
-      type === 'email_verification' ||
-      type === 'invite' ||
-      hash.toLowerCase().includes('type=signup') ||
-      hash.toLowerCase().includes('type=email_verification') ||
-      searchParams.get('isEmailVerified') === 'true' ||
-      searchParams.get('verified') === 'true' ||
-      Boolean(
-        searchParams.get('token') &&
-          (location.pathname === '/verify-email' || location.pathname === '/login')
-      );
+    // Strict check: if user is on /verify-email instructions screen (waiting to check inbox), DO NOT display modal
+    const isInstructionsScreen =
+      location.pathname === '/verify-email' &&
+      !searchParams.get('token') &&
+      !searchParams.get('token_hash') &&
+      !hashParams.get('access_token') &&
+      !searchParams.get('access_token') &&
+      searchParams.get('verified') !== 'true' &&
+      searchParams.get('isEmailVerified') !== 'true';
+
+    if (isInstructionsScreen) {
+      setIsOpen(false);
+      return;
+    }
+
+    // Auto-activate session if tokens are in URL
+    const accessToken =
+      hashParams.get('access_token') || searchParams.get('access_token');
+    const refreshToken =
+      hashParams.get('refresh_token') || searchParams.get('refresh_token');
+
+    if (accessToken && !isAuthenticated && setAuthSession) {
+      setAuthSession(accessToken, refreshToken);
+    }
 
     const emailInUrl =
       searchParams.get('email') ||
@@ -75,32 +86,28 @@ export default function NewUserWelcomeSetupModal() {
     if (emailInUrl) setVerifiedEmail(emailInUrl);
     if (nameInStorage) setVerifiedName(nameInStorage);
 
-    // If access token is in URL hash/params, auto-activate session
-    const accessToken =
-      hashParams.get('access_token') || searchParams.get('access_token');
-    const refreshToken =
-      hashParams.get('refresh_token') || searchParams.get('refresh_token');
-
-    if (accessToken && !isAuthenticated && setAuthSession) {
-      setAuthSession(accessToken, refreshToken);
-    }
-
-    // Call backend verification if token is present
-    const token = searchParams.get('token') || searchParams.get('token_hash');
-    if (token) {
-      api.get(`/auth/verify-email?token=${encodeURIComponent(token)}`).catch(() => {});
-    }
-
     const currentEmail = user?.email || emailInUrl || '';
     const userId = user?.userId || user?.id || currentEmail || 'registered_user';
     const hasBeenWelcomed = localStorage.getItem(`fiddlemania_setup_welcomed_${userId}`);
-    const isSetupPending =
-      localStorage.getItem('fiddlemania_show_welcome_setup_modal') === 'true' ||
-      localStorage.getItem('fiddlemania_new_account_setup_pending') === 'true';
 
-    // Show modal if user just verified email OR if newly registered user has pending setup
-    if ((isEmailVerification || isSetupPending) && !hasBeenWelcomed) {
+    // The modal MUST ONLY trigger if email verification has successfully taken place:
+    // 1. URL has verified=true or isEmailVerified=true
+    // 2. Email verification was confirmed by API: fiddlemania_email_verified_success === 'true'
+    // 3. Explicit trigger from successful verification: fiddlemania_show_welcome_setup_modal === 'true'
+    // 4. Verification token was present in URL and confirmed
+    // 5. User is logged in and confirmed as verified with pending setup
+    const isVerificationConfirmed =
+      searchParams.get('verified') === 'true' ||
+      searchParams.get('isEmailVerified') === 'true' ||
+      localStorage.getItem('fiddlemania_email_verified_success') === 'true' ||
+      localStorage.getItem('fiddlemania_show_welcome_setup_modal') === 'true' ||
+      Boolean(accessToken && (type === 'signup' || type === 'email_verification')) ||
+      Boolean(isAuthenticated && user?.isEmailVerified && localStorage.getItem('fiddlemania_new_account_setup_pending') === 'true');
+
+    if (isVerificationConfirmed && !hasBeenWelcomed) {
       setIsOpen(true);
+    } else {
+      setIsOpen(false);
     }
   }, [isAuthenticated, user, location, setAuthSession]);
 
