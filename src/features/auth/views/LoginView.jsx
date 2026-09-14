@@ -388,110 +388,47 @@ export default function LoginView({ initialTab = 'login' }) {
                 />
               </div>
 
-              {/* Form In-Container Notification Card */}
+              {/* Form Inline Alert Toast */}
               {apiError && (
                 <div
                   role="alert"
                   style={{
-                    padding: '14px 16px',
-                    backgroundColor: '#FEF2F2',
-                    border: '1px solid #FECACA',
-                    borderLeft: '4px solid #DC2626',
-                    borderRadius: '12px',
-                    marginBottom: '20px',
-                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.05)',
+                    padding: '12px 14px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                    border: '1px solid #DC2626',
+                    borderRadius: '8px',
+                    color: '#DC2626',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.45',
+                    marginBottom: '18px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <div
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(220, 38, 38, 0.12)',
-                        color: '#DC2626',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        marginTop: '1px',
-                      }}
-                    >
-                      <AlertCircle size={16} strokeWidth={2.4} />
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {apiError.toLowerCase().includes('no account') ? (
-                        <>
-                          <div
-                            style={{
-                              fontSize: '0.875rem',
-                              fontWeight: 700,
-                              color: '#991B1B',
-                              marginBottom: '4px',
-                              lineHeight: 1.3,
-                              textAlign: 'left',
-                            }}
-                          >
-                            No Account Found
-                          </div>
-                          <p
-                            style={{
-                              fontSize: '0.8125rem',
-                              color: '#7F1D1D',
-                              lineHeight: 1.5,
-                              margin: '0 0 10px 0',
-                              wordBreak: 'break-word',
-                              textAlign: 'left',
-                            }}
-                          >
-                            There is no account existing from{' '}
-                            <strong style={{ fontWeight: 700, color: '#991B1B' }}>
-                              {email?.trim() || 'this email address'}
-                            </strong>
-                            . Please check for typos or create a new account to continue.
-                          </p>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <AlertCircle
+                      size={18}
+                      style={{ flexShrink: 0, marginTop: '2px', color: '#DC2626' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500, color: '#DC2626' }}>{apiError}</div>
+                      {apiError.toLowerCase().includes('no account') && (
+                        <div style={{ marginTop: '6px' }}>
                           <button
                             type="button"
-                            id="switch-to-register-from-alert-btn"
+                            id="click-here-create-account-btn"
                             onClick={() => setTab('register')}
                             style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '7px 14px',
-                              backgroundColor: '#DC2626',
-                              color: '#FFFFFF',
+                              background: 'transparent',
                               border: 'none',
-                              borderRadius: '8px',
-                              fontSize: '0.8125rem',
+                              padding: 0,
+                              color: '#DC2626',
                               fontWeight: 700,
+                              textDecoration: 'underline',
                               cursor: 'pointer',
-                              boxShadow: '0 2px 6px rgba(220, 38, 38, 0.22)',
-                              transition: 'background-color 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#B91C1C';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#DC2626';
+                              fontSize: '0.8125rem',
                             }}
                           >
-                            <span>Create New Account</span>
-                            <ArrowRight size={13} />
+                            Click here to create a new account &rarr;
                           </button>
-                        </>
-                      ) : (
-                        <div
-                          style={{
-                            fontSize: '0.84375rem',
-                            fontWeight: 600,
-                            color: '#991B1B',
-                            lineHeight: 1.45,
-                            textAlign: 'left',
-                          }}
-                        >
-                          {apiError}
                         </div>
                       )}
                     </div>
