@@ -2,8 +2,20 @@
 
 > **Repository:** `ae-b4-grp-01-prj-01-fe`  
 > **Backend Integration:** `ae-b4-grp-01-prj-01-be` (`https://ae-b4-grp-01-prj-01-be.vercel.app/api/v1`)  
-> **Tech Stack:** React 19, Vite, React Router v7, Axios, Lucide React, Custom CSS  
+> **Tech Stack:** React 19, Vite 8, React Router v7, Axios, Lucide React, Custom CSS Design System  
 > **Architectural Pattern:** Feature-based MVVM (Model–View–ViewModel)
+
+[![Framework](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Bundler](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Routing](https://img.shields.io/badge/React_Router-v7-CA4245?logo=react-router&logoColor=white)](https://reactrouter.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+---
+
+## 📖 Comprehensive System Documentation
+
+For complete, in-depth architectural specifications, frontend-backend communication protocols, REST API endpoints catalog, and sequence lifecycle diagrams, refer to:
+👉 **[SYSTEM_DOCUMENTATION.md](./SYSTEM_DOCUMENTATION.md)**
 
 ---
 
@@ -23,12 +35,13 @@ In the context of the entire FiddleMania project architecture, this frontend app
 The frontend drives the full purchase lifecycle from initial discovery to delivery tracking:
 - **Product Discovery & Exploration:** Dynamic product catalog with multifaceted filtering (by categories such as *Wooden, STEM, Plush, Ages 0–3*, age ranges, and price tiers), real-time search, and product details with high-resolution image galleries, technical specifications, and verified customer reviews.
 - **Persistent Cart Experience:** Centralized cart state persisted across sessions with real-time recalculations, quick-access slide-out cart drawer, instant-feedback toast notifications, and zero-loss item persistence.
-- **Streamlined Checkout Tunnel:** A guided 3-stage checkout pipeline (Shipping Address $\rightarrow$ Carbon-Neutral Delivery Tier $\rightarrow$ Payment & Billing) that validates customer data and simulates order authorization.
-- **Post-Purchase Assurance & Tracking:** Order confirmation summaries with unique order IDs (`FM-XXXXXX`) and live shipment tracking timelines (`TRK-XXXXXXXX`) that show progression from order placed to final delivery.
+- **Streamlined Checkout Tunnel:** A guided 2-stage checkout pipeline (Shipping Address $\rightarrow$ Payment & Billing) that validates customer data, automatically calculates server-authoritative 8% tax and carbon-neutral shipping, and simulates order authorization.
+- **Post-Purchase Assurance & Tracking:** Order confirmation summaries with unique order IDs (`ORD-XXXXX`) and live shipment tracking timelines (`TRK-XXXXXXXX`) that show progression from order placed to final delivery.
 
 ### 2. Client-Side Security & Identity Management
 - Integrates seamlessly with the backend JWT authentication service (`/auth/login`, `/auth/register`, `/auth/me`, `/auth/refresh-token`).
 - Features silent access token refreshing via Axios response interceptors upon receiving HTTP `401 Unauthorized`.
+- Automatically enforces user-scoped local storage isolation (`fiddlemania_user_address_<userId>`) to eliminate cross-account address bleeding in shared browser environments.
 - Supports both authenticated customer profiles (order histories, saved shipping addresses) and guest checkout paths without friction.
 - Resilient input recovery and clean error handling to prevent credential leaks and raw error dumping.
 
@@ -40,10 +53,10 @@ The frontend drives the full purchase lifecycle from initial discovery to delive
 
 ### 4. Enterprise-Ready Store Operations Touchpoints
 - Customer Self-Service & Support portal with searchable FAQs and inquiry dispatch.
-- Foundation routes for Administrative Operations:
-  - Fulfillment Terminal (`/admin/orders`)
-  - Stock & Inventory Management (`/admin/inventory`)
-  - Analytics & Reports Dashboard (`/admin/reports`)
+- Fully wired Administrative Operations portal with role-based access guards (`AdminGuard`):
+  - Fulfillment Terminal (`/admin/orders`) with status state machine (`PENDING` $\rightarrow$ `CONFIRMED` $\rightarrow$ `SHIPPED` $\rightarrow$ `DELIVERED`)
+  - Stock & Inventory Management (`/admin/inventory`) with modal restock actions
+  - Analytics & Reports Dashboard (`/admin/reports`) with real-time sales curves and presets
 
 ---
 
@@ -62,7 +75,7 @@ src/
 │   ├── admin-fulfillment/  # Warehouse dispatch & order fulfillment
 │   ├── admin-inventory/    # Stock levels & product catalog management
 │   ├── admin-reports/      # Sales and business analytics
-│   ├── auth/               # Customer login, registration & recovery
+│   ├── auth/               # Customer login, registration, verify email & recovery
 │   ├── cart/               # Full cart page & line-item modifiers
 │   ├── checkout/           # Multi-step checkout funnel & payment
 │   ├── order-history/      # Customer order log & receipt confirmation
@@ -71,10 +84,16 @@ src/
 │   ├── shipment-tracking/  # Package tracking & carrier timeline
 │   └── support/            # Customer service desk, FAQ, & contact form
 ├── services/               # HTTP client & API interceptors
-│   └── api.js              # Axios instance with bearer tokens & automatic token refresh
-├── shared/                 # Reusable UI components and helper utilities
-│   ├── components/         # Navbar, Footer, CartDrawer, CartToast, ErrorBoundary
-│   └── utils/              # Currency formatting (PHP ₱), unified error handlers
+│   ├── api.js              # Axios instance with bearer tokens & automatic token refresh
+│   ├── adminService.js     # BI metrics, admin orders, warehouse restock endpoints
+│   ├── orderService.js     # Checkout summary, order creation, order queries
+│   ├── productService.js   # Products, categories, and single product fetchers
+│   ├── paymentService.js   # Payment Intent generation & simulated webhook triggers
+│   ├── reviewService.js    # Customer product reviews and rating submission
+│   └── shipmentService.js  # Tracking number lookup and shipping milestones
+├── shared/                 # Reusable UI components, layout chrome, and guards
+│   ├── components/         # Navbar, Footer, CartDrawer, CartToast, AdminGuard, CustomerGuard
+│   └── utils/              # Currency formatting, unified error handlers
 ├── App.jsx                 # Application routing, layout chrome, and route definitions
 ├── index.css               # Global theme tokens, typography, and utility classes
 └── main.jsx                # Application root mounting & DOM bootstrapping
@@ -92,7 +111,7 @@ src/
 | **HTTP Client** | [Axios](https://axios-http.com/) | Promise-based HTTP client with request/response interceptors |
 | **Icons** | [Lucide React](https://lucide.dev/) | Consistent, clean iconography |
 | **Styling** | Vanilla CSS Design System | Custom CSS variables, responsive typography, and glassmorphism |
-| **Font** | Plus Jakarta Sans | Google Web Font for modern typography |
+| **Font** | Plus Jakarta Sans / Inter | Google Web Fonts for modern typography |
 
 ---
 
@@ -118,7 +137,7 @@ VITE_API_URL=https://ae-b4-grp-01-prj-01-be.vercel.app/api/v1
 ### 2. Installation
 Clone the repository and install dependencies:
 ```bash
-git clone <repository-url>
+git clone https://github.com/jbueta-frontend/ae-b4-grp-01-prj-01-fe.git
 cd ae-b4-grp-01-prj-01-fe
 npm install
 ```
@@ -148,10 +167,12 @@ npm run lint
 
 ---
 
-## 🌐 Deployment
+## 🌐 Deployment & Branches
 
-The frontend is optimized for zero-config deployment on **Vercel** with client-side route rewrites handled via `vercel.json`:
+- **`staging`**: Active development and integration testing branch.
+- **`main`**: Production deployment branch connected to Vercel CI/CD.
 
+Zero-config deployment on **Vercel** with client-side route rewrites handled via `vercel.json`:
 ```json
 {
   "rewrites": [
