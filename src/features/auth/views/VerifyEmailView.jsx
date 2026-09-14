@@ -82,6 +82,7 @@ export default function VerifyEmailView() {
       if (accessToken && setAuthSession) {
         setAuthSession(accessToken, refreshToken);
       }
+      localStorage.setItem('fiddlemania_email_verified_success', 'true');
       localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
       localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
       setStatus('success');
@@ -99,6 +100,15 @@ export default function VerifyEmailView() {
             res?.data?.message ||
             'Email verified successfully!';
           setVerifiedMessage(successMsg);
+
+          const accToken = res?.accessToken || res?.data?.accessToken;
+          const refToken = res?.refreshToken || res?.data?.refreshToken;
+          const verifiedUser = res?.user || res?.data?.user;
+          if (accToken && setAuthSession) {
+            setAuthSession(accToken, refToken, verifiedUser);
+          }
+
+          localStorage.setItem('fiddlemania_email_verified_success', 'true');
           localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
           localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
           setStatus('success');
@@ -112,6 +122,7 @@ export default function VerifyEmailView() {
               fallbackRes?.data?.message ||
               'Email verified successfully!';
             setVerifiedMessage(successMsg);
+            localStorage.setItem('fiddlemania_email_verified_success', 'true');
             localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
             localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
             setStatus('success');
