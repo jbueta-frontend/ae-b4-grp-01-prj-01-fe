@@ -20,7 +20,6 @@ import BackToTop from './shared/components/BackToTop';
 import AdminGuard from './shared/components/AdminGuard';
 import AdminLayout from './shared/components/AdminLayout';
 import CustomerGuard from './shared/components/CustomerGuard';
-import EmailVerifiedModal from './features/auth/components/EmailVerifiedModal';
 
 // Feature Views
 import ProductCatalogView from './features/product-catalog/views/ProductCatalogView';
@@ -126,6 +125,7 @@ function AuthRedirectHandler() {
 
     if (
       (isSignupVerification || (verificationToken && !isRecovery)) &&
+      location.pathname !== '/verify-email' &&
       location.pathname !== '/login'
     ) {
       const email =
@@ -139,7 +139,7 @@ function AuthRedirectHandler() {
       if (email) forwardParams.set('email', email);
 
       navigate(
-        `/login?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
+        `/verify-email?${forwardParams.toString()}${window.location.hash ? window.location.hash : ''}`,
         { replace: true }
       );
     }

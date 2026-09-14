@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sparkles,
   MapPin,
@@ -11,48 +11,137 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import api from '../../../services/api';
 
 export default function NewUserWelcomeSetupModal() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, setAuthSession } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [verifiedName, setVerifiedName] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+    const searchParams = new URLSearchParams(location.search);
+
+    const type = (
+      hashParams.get('type') ||
+      searchParams.get('type') ||
+      ''
+    ).toLowerCase();
+
+    // Skip if this is a password recovery flow
+    const isRecovery =
+      type === 'recovery' ||
+      type === 'reset' ||
+      hash.toLowerCase().includes('type=recovery') ||
+      hash.toLowerCase().includes('type=reset') ||
+      location.search.toLowerCase().includes('type=recovery') ||
+      location.search.toLowerCase().includes('type=reset') ||
+      location.pathname === '/reset-password';
+
+    if (isRecovery) {
       setIsOpen(false);
       return;
     }
 
-    const userId = user.userId || user.id || user.email;
+    // Detect Email Verification flow
+    const isEmailVerification =
+      type === 'signup' ||
+      type === 'email_verification' ||
+      type === 'invite' ||
+      hash.toLowerCase().includes('type=signup') ||
+      hash.toLowerCase().includes('type=email_verification') ||
+      searchParams.get('isEmailVerified') === 'true' ||
+      searchParams.get('verified') === 'true' ||
+      Boolean(
+        searchParams.get('token') &&
+          (location.pathname === '/verify-email' || location.pathname === '/login')
+      );
+
+    const emailInUrl =
+      searchParams.get('email') ||
+      hashParams.get('email') ||
+      localStorage.getItem('fiddlemania_last_registered_email') ||
+      '';
+
+    const nameInStorage =
+      localStorage.getItem('fiddlemania_last_registered_name') || '';
+
+    if (emailInUrl) setVerifiedEmail(emailInUrl);
+    if (nameInStorage) setVerifiedName(nameInStorage);
+
+    // If access token is in URL hash/params, auto-activate session
+    const accessToken =
+      hashParams.get('access_token') || searchParams.get('access_token');
+    const refreshToken =
+      hashParams.get('refresh_token') || searchParams.get('refresh_token');
+
+    if (accessToken && !isAuthenticated && setAuthSession) {
+      setAuthSession(accessToken, refreshToken);
+    }
+
+    // Call backend verification if token is present
+    const token = searchParams.get('token') || searchParams.get('token_hash');
+    if (token) {
+      api.get(`/auth/verify-email?token=${encodeURIComponent(token)}`).catch(() => {});
+    }
+
+    const currentEmail = user?.email || emailInUrl || '';
+    const userId = user?.userId || user?.id || currentEmail || 'registered_user';
     const hasBeenWelcomed = localStorage.getItem(`fiddlemania_setup_welcomed_${userId}`);
     const isSetupPending =
       localStorage.getItem('fiddlemania_show_welcome_setup_modal') === 'true' ||
       localStorage.getItem('fiddlemania_new_account_setup_pending') === 'true';
 
-    // Show modal if flagged as a newly registered user who hasn't completed setup prompt
-    if (isSetupPending && !hasBeenWelcomed) {
+    // Show modal if user just verified email OR if newly registered user has pending setup
+    if ((isEmailVerification || isSetupPending) && !hasBeenWelcomed) {
       setIsOpen(true);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, location, setAuthSession]);
 
   const handleDismiss = () => {
-    if (user) {
-      const userId = user.userId || user.id || user.email;
-      localStorage.setItem(`fiddlemania_setup_welcomed_${userId}`, 'true');
-    }
+    const currentEmail = verifiedEmail || user?.email || localStorage.getItem('fiddlemania_last_registered_email') || '';
+    const userId = user?.userId || user?.id || currentEmail || 'registered_user';
+    localStorage.setItem(`fiddlemania_setup_welcomed_${userId}`, 'true');
     localStorage.removeItem('fiddlemania_show_welcome_setup_modal');
     localStorage.removeItem('fiddlemania_new_account_setup_pending');
+
+    // Clean verification params from URL so refresh doesn't re-trigger
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+
     setIsOpen(false);
+    if (location.pathname === '/verify-email') {
+      navigate('/');
+    }
   };
 
   const handleProceedToSetup = () => {
-    handleDismiss();
-    navigate('/profile?tab=personal');
-  };
+    const currentEmail = verifiedEmail || user?.email || localStorage.getItem('fiddlemania_last_registered_email') || '';
+    const userId = user?.userId || user?.id || currentEmail || 'registered_user';
+    localStorage.setItem(`fiddlemania_setup_welcomed_${userId}`, 'true');
+    localStorage.removeItem('fiddlemania_show_welcome_setup_modal');
+    localStorage.removeItem('fiddlemania_new_account_setup_pending');
 
-  const handleProceedToAddress = () => {
-    handleDismiss();
-    navigate('/addresses');
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+
+    setIsOpen(false);
+
+    if (isAuthenticated || localStorage.getItem('accessToken')) {
+      navigate('/profile?tab=personal');
+    } else {
+      navigate(
+        `/login?redirect=${encodeURIComponent('/profile?tab=personal')}${
+          currentEmail ? `&email=${encodeURIComponent(currentEmail)}` : ''
+        }`
+      );
+    }
   };
 
   // Close on Escape key
@@ -69,7 +158,12 @@ export default function NewUserWelcomeSetupModal() {
   if (!isOpen) return null;
 
   const displayName =
-    user?.name || user?.fullName || (user?.email ? user.email.split('@')[0] : 'there');
+    user?.name ||
+    user?.fullName ||
+    verifiedName ||
+    localStorage.getItem('fiddlemania_last_registered_name') ||
+    (verifiedEmail ? verifiedEmail.split('@')[0] : '') ||
+    (user?.email ? user.email.split('@')[0] : 'there');
 
   return (
     <div
@@ -247,10 +341,10 @@ export default function NewUserWelcomeSetupModal() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '4px 12px',
+              padding: '5px 14px',
               borderRadius: '9999px',
-              backgroundColor: 'rgba(200, 90, 50, 0.08)',
-              color: '#C85A32',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              color: '#059669',
               fontSize: '0.75rem',
               fontWeight: 800,
               textTransform: 'uppercase',
@@ -258,7 +352,8 @@ export default function NewUserWelcomeSetupModal() {
               marginBottom: '10px',
             }}
           >
-            <span>Registration Successful</span>
+            <ShieldCheck size={14} strokeWidth={2.4} />
+            <span>Email Verified &bull; Account Ready</span>
           </div>
 
           {/* Title */}
@@ -285,7 +380,7 @@ export default function NewUserWelcomeSetupModal() {
               marginBottom: '22px',
             }}
           >
-            Your account is verified and ready. To prepare for a seamless heirloom shopping
+            Your email address has been verified! To prepare for a seamless heirloom shopping
             and checkout experience, please take a moment to set up your personal details and
             default shipping address.
           </p>

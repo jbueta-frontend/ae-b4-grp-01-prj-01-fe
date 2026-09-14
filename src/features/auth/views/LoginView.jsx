@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import Logo from '../../../shared/components/Logo';
-import EmailVerifiedModal from '../components/EmailVerifiedModal';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -55,76 +54,24 @@ export default function LoginView({ initialTab = 'login' }) {
   } = useAuthViewModel(initialTab);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isVerifiedModalOpen, setIsVerifiedModalOpen] = useState(false);
-  const [verifiedModalMessage, setVerifiedModalMessage] = useState(
-    'Email verified successfully!'
-  );
   const hasProcessedVerificationRef = useRef(false);
-
-  const handleCloseVerifiedModal = () => {
-    setIsVerifiedModalOpen(false);
-    hasProcessedVerificationRef.current = true;
-    setTab('login');
-    // Clean up verification parameters from URL so the modal never re-triggers
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('verified');
-    nextParams.delete('isEmailVerified');
-    nextParams.delete('token');
-    nextParams.delete('token_hash');
-    setSearchParams(nextParams, { replace: true });
-  };
 
   useEffect(() => {
     if (hasProcessedVerificationRef.current) return;
+
+    const paramEmail = searchParams.get('email');
+    if (paramEmail && handleEmailChange) {
+      handleEmailChange({ target: { value: paramEmail } });
+    }
 
     const isDirectlyVerified =
       searchParams.get('isEmailVerified') === 'true' ||
       searchParams.get('verified') === 'true';
     const token = searchParams.get('token') || searchParams.get('token_hash');
-    const paramEmail = searchParams.get('email');
 
-    if (paramEmail && handleEmailChange) {
-      handleEmailChange({ target: { value: paramEmail } });
-    }
-
-    if (isDirectlyVerified) {
+    if (isDirectlyVerified || token) {
       hasProcessedVerificationRef.current = true;
       setTab('login');
-      setIsVerifiedModalOpen(true);
-      return;
-    }
-
-    if (token) {
-      hasProcessedVerificationRef.current = true;
-      // Confirm verification with backend
-      api
-        .get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
-        .then((res) => {
-          setVerifiedModalMessage(
-            res?.message ||
-              res?.data?.message ||
-              'Email verified successfully! Please log in to your account.'
-          );
-          setTab('login');
-          setIsVerifiedModalOpen(true);
-        })
-        .catch(() => {
-          // Fallback verify attempt
-          api
-            .post('/auth/verify', { token, type: 'signup' })
-            .then((res) => {
-              setVerifiedModalMessage(
-                res?.message || 'Email verified successfully! Please log in.'
-              );
-              setTab('login');
-              setIsVerifiedModalOpen(true);
-            })
-            .catch(() => {
-              // Still display verified confirmation if redirected from provider
-              setTab('login');
-              setIsVerifiedModalOpen(true);
-            });
-        });
     }
   }, [searchParams, setTab]);
 
@@ -136,17 +83,6 @@ export default function LoginView({ initialTab = 'login' }) {
         justifyContent: 'center',
       }}
     >
-      {/* Email Verified Modal */}
-      <EmailVerifiedModal
-        isOpen={isVerifiedModalOpen}
-        onClose={handleCloseVerifiedModal}
-        onProceed={handleCloseVerifiedModal}
-        message={verifiedModalMessage}
-        email={searchParams.get('email') || email || ''}
-        isAuthenticated={false}
-        proceedText="Proceed to Login"
-      />
-
       <div style={{ width: '100%', maxWidth: '420px' }}>
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>

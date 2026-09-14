@@ -159,6 +159,7 @@ export function useAuthViewModel(defaultTab = 'login') {
         localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
         localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
         localStorage.setItem('fiddlemania_last_registered_email', email.trim());
+        localStorage.setItem('fiddlemania_last_registered_name', registrationName);
         // After registration, redirect to verify-email instructions page
         navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
         return;

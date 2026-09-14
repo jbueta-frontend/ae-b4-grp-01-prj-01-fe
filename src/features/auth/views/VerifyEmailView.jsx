@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Mail, AlertCircle, ArrowRight, RefreshCw, AlertTriangle } from 'lucide-react';
 import Logo from '../../../shared/components/Logo';
-import EmailVerifiedModal from '../components/EmailVerifiedModal';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -44,13 +43,8 @@ export default function VerifyEmailView() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendNotice, setResendNotice] = useState(null);
-
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(isDirectlyVerified || !!accessToken);
   const [verifiedMessage, setVerifiedMessage] = useState(
-    accessToken
-      ? 'Email verified successfully! You are now logged in.'
-      : 'Email verified successfully!'
+    'Email verified successfully!'
   );
 
   useEffect(() => {
@@ -85,9 +79,13 @@ export default function VerifyEmailView() {
 
     // 1. If an access_token or direct verification is present
     if (accessToken || isDirectlyVerified) {
+      if (accessToken && setAuthSession) {
+        setAuthSession(accessToken, refreshToken);
+      }
+      localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
+      localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
       setStatus('success');
-      setVerifiedMessage('Email verified successfully! Please log in to your account.');
-      setIsModalOpen(true);
+      setVerifiedMessage('Email verified successfully!');
       return;
     }
 
@@ -99,10 +97,11 @@ export default function VerifyEmailView() {
           const successMsg =
             res?.message ||
             res?.data?.message ||
-            'Email verified successfully! Please log in to your account.';
+            'Email verified successfully!';
           setVerifiedMessage(successMsg);
+          localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
+          localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
           setStatus('success');
-          setIsModalOpen(true);
         })
         .catch(async (err) => {
           // Fallback check: in case endpoint accepts POST or alternative path
@@ -111,10 +110,11 @@ export default function VerifyEmailView() {
             const successMsg =
               fallbackRes?.message ||
               fallbackRes?.data?.message ||
-              'Email verified successfully! Please log in to your account.';
+              'Email verified successfully!';
             setVerifiedMessage(successMsg);
+            localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
+            localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
             setStatus('success');
-            setIsModalOpen(true);
             return;
           } catch {
             // Check if error indicates it was already verified
@@ -125,9 +125,10 @@ export default function VerifyEmailView() {
               '';
 
             if (msg.toLowerCase().includes('already verified')) {
-              setVerifiedMessage('Email is already verified! Please log in to your account.');
+              setVerifiedMessage('Email is already verified!');
+              localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
+              localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
               setStatus('success');
-              setIsModalOpen(true);
             } else {
               setStatus('error');
               setErrorMessage(
@@ -137,7 +138,7 @@ export default function VerifyEmailView() {
           }
         });
     }
-  }, [token, type, isDirectlyVerified]);
+  }, [token, type, isDirectlyVerified, accessToken, refreshToken, setAuthSession]);
 
   const handleResend = async () => {
     if (!emailParam) {
@@ -164,23 +165,6 @@ export default function VerifyEmailView() {
         justifyContent: 'center',
       }}
     >
-      {/* Verification Success Modal */}
-      <EmailVerifiedModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          navigate('/login');
-        }}
-        onProceed={() => {
-          setIsModalOpen(false);
-          navigate('/login');
-        }}
-        message={verifiedMessage}
-        email={emailParam || user?.email || ''}
-        userName={user?.name || ''}
-        isAuthenticated={false}
-        proceedText="Proceed to Login"
-      />
 
       <div style={{ width: '100%', maxWidth: '440px' }}>
         {/* Brand Header */}
@@ -257,18 +241,21 @@ export default function VerifyEmailView() {
                 Your email has been confirmed in our database. You can now sign in and explore the full heirloom toy catalog.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <Link to="/login" className="btn btn-primary btn-block" style={{ padding: '12px' }}>
-                  <span>Proceed to Sign In</span>
+                <Link
+                  to="/profile?tab=personal"
+                  className="btn btn-primary btn-block"
+                  style={{ padding: '12px' }}
+                >
+                  <span>Set Up Profile &amp; Address</span>
                   <ArrowRight size={16} />
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(true)}
+                <Link
+                  to="/"
                   className="btn btn-outline btn-block"
-                  style={{ padding: '10px', fontSize: '0.8125rem' }}
+                  style={{ padding: '10px', fontSize: '0.84375rem' }}
                 >
-                  View Verification Details
-                </button>
+                  Start Exploring Toys
+                </Link>
               </div>
             </div>
           )}
