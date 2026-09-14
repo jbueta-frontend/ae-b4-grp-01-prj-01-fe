@@ -14,6 +14,7 @@ import {
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import Logo from '../../../shared/components/Logo';
 import EmailVerifiedModal from '../components/EmailVerifiedModal';
+import AccountNotFoundToast from '../components/AccountNotFoundToast';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -44,6 +45,8 @@ export default function LoginView({ initialTab = 'login' }) {
     forgotMessage,
     forgotError,
     handleForgotPasswordSubmit,
+    accountNotFoundToast,
+    closeAccountNotFoundToast,
     errors,
     loading,
     apiError,
@@ -143,6 +146,17 @@ export default function LoginView({ initialTab = 'login' }) {
         email={searchParams.get('email') || email || ''}
         isAuthenticated={false}
         proceedText="Proceed to Login"
+      />
+
+      {/* Account Not Found Toast Notification */}
+      <AccountNotFoundToast
+        isOpen={accountNotFoundToast?.isOpen}
+        email={accountNotFoundToast?.email || email}
+        onClose={closeAccountNotFoundToast}
+        onRegister={() => {
+          setTab('register');
+          closeAccountNotFoundToast();
+        }}
       />
       <div style={{ width: '100%', maxWidth: '420px' }}>
         {/* Brand Header */}
@@ -454,9 +468,6 @@ export default function LoginView({ initialTab = 'login' }) {
                 <div
                   role="alert"
                   style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
                     padding: '12px 14px',
                     backgroundColor: 'rgba(220, 38, 38, 0.08)',
                     border: '1px solid #DC2626',
@@ -467,11 +478,35 @@ export default function LoginView({ initialTab = 'login' }) {
                     marginBottom: '18px',
                   }}
                 >
-                  <AlertCircle
-                    size={18}
-                    style={{ flexShrink: 0, marginTop: '2px' }}
-                  />
-                  <span style={{ fontWeight: 500 }}>{apiError}</span>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <AlertCircle
+                      size={18}
+                      style={{ flexShrink: 0, marginTop: '2px' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600 }}>{apiError}</div>
+                      {apiError.toLowerCase().includes('no account') && (
+                        <div style={{ marginTop: '6px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setTab('register')}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              padding: 0,
+                              color: '#DC2626',
+                              fontWeight: 700,
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            Click here to create a new account &rarr;
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

@@ -25,6 +25,15 @@ export function useAuthViewModel(defaultTab = 'login') {
   const [forgotMessage, setForgotMessage] = useState(null);
   const [forgotError, setForgotError] = useState(null);
 
+  const [accountNotFoundToast, setAccountNotFoundToast] = useState({
+    isOpen: false,
+    email: '',
+  });
+
+  const closeAccountNotFoundToast = useCallback(() => {
+    setAccountNotFoundToast((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
   const { user, isAuthenticated, login, register, continueAsGuest } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,6 +52,7 @@ export function useAuthViewModel(defaultTab = 'login') {
     setIsForgotPassword(false);
     setApiError(null);
     setErrors({});
+    setAccountNotFoundToast({ isOpen: false, email: '' });
   }, []);
 
   const handleNameChange = (e) => {
@@ -55,6 +65,7 @@ export function useAuthViewModel(defaultTab = 'login') {
     setEmail(e.target.value);
     if (apiError) setApiError(null);
     if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+    setAccountNotFoundToast((prev) => (prev.isOpen ? { ...prev, isOpen: false } : prev));
   };
 
   const handlePasswordChange = (e) => {
@@ -176,6 +187,37 @@ export function useAuthViewModel(defaultTab = 'login') {
         return;
       }
 
+      // If login failed, check if the account actually exists in the database
+      if (tab === 'login') {
+        const trimmedEmail = email.trim();
+        let accountExists = true;
+        try {
+          // POST /auth/forgot-password returns data.resetLink ONLY if the email exists in DB
+          const checkRes = await api.post('/auth/forgot-password', { email: trimmedEmail });
+          const hasResetLink = Boolean(
+            checkRes?.resetLink ||
+            checkRes?.data?.resetLink ||
+            checkRes?.data?.data?.resetLink
+          );
+          if (!hasResetLink) {
+            accountExists = false;
+          }
+        } catch {
+          if (status === 404) accountExists = false;
+        }
+
+        if (!accountExists) {
+          setAccountNotFoundToast({
+            isOpen: true,
+            email: trimmedEmail,
+          });
+          setApiError(
+            `There is no account existing from "${trimmedEmail}". Please register for a new account.`
+          );
+          return;
+        }
+      }
+
       setApiError(getAuthErrorMessage(err, tab));
     } finally {
       setLoading(false);
@@ -223,6 +265,8 @@ export function useAuthViewModel(defaultTab = 'login') {
     forgotMessage,
     forgotError,
     handleForgotPasswordSubmit,
+    accountNotFoundToast,
+    closeAccountNotFoundToast,
     errors,
     loading,
     apiError,
