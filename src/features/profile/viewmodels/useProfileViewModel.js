@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import {
@@ -19,9 +19,42 @@ export function useProfileViewModel() {
     deleteAccount,
   } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  // Active Tab
-  const [activeTab, setActiveTab] = useState('personal');
+  // Active Tab: Support /addresses and ?tab=address / ?tab=personal
+  const [activeTab, setActiveTab] = useState(() => {
+    if (
+      location.pathname === '/addresses' ||
+      searchParams.get('tab') === 'address' ||
+      searchParams.get('tab') === 'addresses'
+    ) {
+      return 'address';
+    }
+    if (searchParams.get('tab') === 'security') {
+      return 'security';
+    }
+    if (searchParams.get('tab') === 'account') {
+      return 'account';
+    }
+    return 'personal';
+  });
+
+  useEffect(() => {
+    if (
+      location.pathname === '/addresses' ||
+      searchParams.get('tab') === 'address' ||
+      searchParams.get('tab') === 'addresses'
+    ) {
+      setActiveTab('address');
+    } else if (searchParams.get('tab') === 'personal') {
+      setActiveTab('personal');
+    } else if (searchParams.get('tab') === 'security') {
+      setActiveTab('security');
+    } else if (searchParams.get('tab') === 'account') {
+      setActiveTab('account');
+    }
+  }, [location.pathname, searchParams]);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 

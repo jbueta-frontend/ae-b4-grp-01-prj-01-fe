@@ -146,6 +146,9 @@ export function useAuthViewModel(defaultTab = 'login') {
           navigate('/admin/reports', { replace: true });
           return;
         }
+        if (localStorage.getItem('fiddlemania_new_account_setup_pending') === 'true') {
+          localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
+        }
       } else {
         const registrationName = name.trim() || email.split('@')[0];
         const res = await register(email, password, registrationName);
@@ -153,6 +156,9 @@ export function useAuthViewModel(defaultTab = 'login') {
           navigate('/admin/reports', { replace: true });
           return;
         }
+        localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
+        localStorage.setItem('fiddlemania_show_welcome_setup_modal', 'true');
+        localStorage.setItem('fiddlemania_last_registered_email', email.trim());
         // After registration, redirect to verify-email instructions page
         navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
         return;
