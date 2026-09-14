@@ -48,14 +48,42 @@ export function AuthProvider({ children }) {
         try {
           const res = await api.get('/auth/me');
           const userData = res.user || res;
-          // Merge locally-cached address if backend didn't return one
-          if (!userData.address) {
+          userData.isEmailVerified = true;
+
+          // Attempt to load user's real address from backend /addresses
+          const userKey = userData.userId || userData.id || userData.email;
+          try {
+            const addresses = await api.get('/addresses');
+            if (Array.isArray(addresses) && addresses.length > 0) {
+              const defaultAddr =
+                addresses.find((a) => a.isDefaultShipping || a.isDefault) || addresses[0];
+              if (defaultAddr) {
+                userData.address = {
+                  id: defaultAddr.addressId || defaultAddr.id || '',
+                  addressId: defaultAddr.addressId || defaultAddr.id || '',
+                  recipientName: defaultAddr.recipientName || '',
+                  phone: defaultAddr.phone || '',
+                  addressLine1: defaultAddr.addressLine1 || '',
+                  addressLine2: defaultAddr.addressLine2 || '',
+                  city: defaultAddr.city || '',
+                  stateProvince: defaultAddr.stateProvince || '',
+                  postalCode: defaultAddr.postalCode || '',
+                  country: defaultAddr.country || 'Philippines',
+                };
+              }
+            }
+          } catch {}
+
+          // Fallback to user-scoped cache if backend didn't return one
+          if (!userData.address && userKey) {
             try {
-              const raw = localStorage.getItem('fiddlemania_user_address');
+              const raw = localStorage.getItem(`fiddlemania_user_address_${userKey}`);
               if (raw) userData.address = JSON.parse(raw);
             } catch {}
           }
-          userData.isEmailVerified = true;
+          // Remove legacy un-scoped address so it never leaks across accounts
+          localStorage.removeItem('fiddlemania_user_address');
+
           setUser(userData);
           localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
           setIsGuest(false);
@@ -122,6 +150,7 @@ export function AuthProvider({ children }) {
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
       localStorage.removeItem('fiddlemania_is_guest');
+      localStorage.removeItem('fiddlemania_user_address');
 
       setUser(userData);
       setIsGuest(false);
@@ -148,6 +177,7 @@ export function AuthProvider({ children }) {
       if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('fiddlemania_user', JSON.stringify(userData));
       localStorage.removeItem('fiddlemania_is_guest');
+      localStorage.removeItem('fiddlemania_user_address');
       // Flag that a newly registered account needs initial setup once verified
       localStorage.setItem('fiddlemania_new_account_setup_pending', 'true');
 
@@ -174,10 +204,15 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    const userKey = user?.userId || user?.id || user?.email;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('fiddlemania_user');
     localStorage.removeItem('fiddlemania_is_guest');
+    localStorage.removeItem('fiddlemania_user_address');
+    if (userKey) {
+      localStorage.removeItem(`fiddlemania_user_address_${userKey}`);
+    }
     setUser(null);
     setIsGuest(false);
   };
@@ -186,6 +221,12 @@ export function AuthProvider({ children }) {
     setUser((prev) => {
       const merged = { ...prev, ...updatedFields };
       localStorage.setItem('fiddlemania_user', JSON.stringify(merged));
+      const userKey = merged.userId || merged.id || merged.email;
+      if (updatedFields.address && userKey) {
+        try {
+          localStorage.setItem(`fiddlemania_user_address_${userKey}`, JSON.stringify(updatedFields.address));
+        } catch {}
+      }
       return merged;
     });
   };

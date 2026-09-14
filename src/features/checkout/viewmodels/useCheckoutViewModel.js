@@ -58,37 +58,45 @@ export function useCheckoutViewModel() {
   useEffect(() => {
     if (!user) return;
 
-    // Priority 1: user.address sub-object (set by profile's handleSaveAddress via updateProfile)
-    const profileAddr = user.address || null;
+    // Clean up any legacy un-scoped key
+    localStorage.removeItem('fiddlemania_user_address');
 
-    // Priority 2: localStorage key written directly by profile page
+    // Priority 1: user.address sub-object
+    const profileAddr =
+      user.address && user.address.addressLine1 ? user.address : null;
+
+    // Priority 2: user-scoped localStorage key
     let localAddr = null;
-    try {
-      const raw = localStorage.getItem('fiddlemania_user_address');
-      if (raw) localAddr = JSON.parse(raw);
-    } catch {}
+    const userKey = user.userId || user.id || user.email;
+    if (userKey) {
+      try {
+        const raw = localStorage.getItem(`fiddlemania_user_address_${userKey}`);
+        if (raw) localAddr = JSON.parse(raw);
+      } catch {}
+    }
 
-    // Merge: profile address wins over localStorage; both win over blank initial state.
+    // Merge: profile address wins over local cache; both win over blank initial state.
     const resolvedAddr = profileAddr || localAddr || {};
 
     setShippingAddress((prev) => ({
       ...prev,
-      // Identity fields always from user object
+      // Identity fields: User name takes precedence over address recipient unless address specifically set
       fullName:
         resolvedAddr.recipientName ||
-        resolvedAddr.fullName ||
         user.name ||
         user.fullName ||
+        user.displayName ||
         prev.fullName ||
         '',
       email: user.email || prev.email || '',
-      // Address fields from saved profile address (always override blank defaults)
-      addressLine1: resolvedAddr.addressLine1 || prev.addressLine1 || '',
-      addressLine2: resolvedAddr.addressLine2 || prev.addressLine2 || '',
-      city: resolvedAddr.city || prev.city || '',
-      stateProvince: resolvedAddr.stateProvince || prev.stateProvince || '',
-      postalCode: resolvedAddr.postalCode || prev.postalCode || '',
-      country: resolvedAddr.country || prev.country || 'Philippines',
+      phone: resolvedAddr.phone || user.phone || prev.phone || '',
+      // Address fields from saved profile address (or blank defaults for new account)
+      addressLine1: resolvedAddr.addressLine1 || '',
+      addressLine2: resolvedAddr.addressLine2 || '',
+      city: resolvedAddr.city || '',
+      stateProvince: resolvedAddr.stateProvince || '',
+      postalCode: resolvedAddr.postalCode || '',
+      country: resolvedAddr.country || 'Philippines',
     }));
   }, [user]);
 
